@@ -86,15 +86,21 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .gb-pct{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);min-width:44px;text-align:right;}
 
 /* 아바타 섹션 */
-.avatar-section{padding:24px 20px 20px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--border);}
-.avatar-art{width:100px;height:100px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-.avatar-art svg{width:88px;height:88px;}
-.avatar-info{flex:1;min-width:0;}
-.avatar-stage{font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--accent);letter-spacing:1px;margin-bottom:6px;}
-.avatar-msg{font-size:13px;color:var(--text-dim);line-height:1.6;}
-.avatar-progress-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
-.ap-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
-.ap-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s;}
+.avatar-section{padding:28px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
+.avatar-art{width:140px;height:140px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.avatar-art svg{width:124px;height:124px;}
+.avatar-stage{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);letter-spacing:2px;text-align:center;}
+.avatar-nickname-row{display:flex;align-items:center;justify-content:center;gap:8px;}
+.avatar-nickname{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--text);letter-spacing:1px;}
+.pencil-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:border-color .2s,color .2s;flex-shrink:0;}
+.pencil-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nickname-edit-row{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;}
+.nickname-input{flex:1;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px;font-family:'Black Han Sans',sans-serif;outline:none;letter-spacing:1px;text-align:center;}
+.nickname-save-btn{background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;}
+.avatar-msg{font-size:13px;color:var(--text-dim);line-height:1.6;text-align:center;max-width:260px;}
+.avatar-progress-row{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;}
+.ap-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.ap-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .5s;}
 .ap-pct{font-size:12px;color:var(--accent);font-weight:700;min-width:32px;text-align:right;}
 
 /* 목표 그리드 */
@@ -256,13 +262,15 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <!-- 아바타 -->
     <div class="avatar-section">
       <div class="avatar-art" id="avatarArt"></div>
-      <div class="avatar-info">
-        <div class="avatar-stage" id="avatarStage">1단계 · 알</div>
-        <div class="avatar-msg" id="avatarMsg">오늘도 파이팅!</div>
-        <div class="avatar-progress-row">
-          <div class="ap-track"><div class="ap-fill" id="apFill" style="width:0%"></div></div>
-          <div class="ap-pct" id="apPct">0%</div>
-        </div>
+      <div class="avatar-stage" id="avatarStage">1단계 · 알</div>
+      <div class="avatar-nickname-row" id="avatarNicknameRow">
+        <div class="avatar-nickname" id="avatarNickname">나의 캐릭터</div>
+        <button class="pencil-btn" onclick="startEditNickname()">✏️</button>
+      </div>
+      <div class="avatar-msg" id="avatarMsg">오늘도 파이팅!</div>
+      <div class="avatar-progress-row">
+        <div class="ap-track"><div class="ap-fill" id="apFill" style="width:0%"></div></div>
+        <div class="ap-pct" id="apPct">0%</div>
       </div>
     </div>
 
@@ -645,14 +653,20 @@ window.createUser = async function() {
   const id=document.getElementById('newUserId').value.trim();
   const pw=document.getElementById('newUserPw').value.trim();
   if(!name||!id||!pw){showToast('❌ 모든 항목을 입력하세요');return;}
-  const snap=await get(ref(db,`users/${id}`));
-  if(snap.exists()){showToast('❌ 이미 존재하는 아이디');return;}
-  await set(ref(db,`users/${id}`),{name,password:pw,role:'user'});
-  document.getElementById('newUserName').value='';
-  document.getElementById('newUserId').value='';
-  document.getElementById('newUserPw').value='';
-  showToast(`✅ ${name} 계정 생성 완료!`);
-  renderAdminList();
+  // 아이디 유효성: 영문/숫자만
+  if(!/^[a-zA-Z0-9_]+$/.test(id)){showToast('❌ 아이디는 영문/숫자/_만 사용 가능');return;}
+  try {
+    const snap=await get(ref(db,`users/${id}`));
+    if(snap.exists()){showToast('❌ 이미 존재하는 아이디');return;}
+    await set(ref(db,`users/${id}`),{name,password:pw,role:'user'});
+    document.getElementById('newUserName').value='';
+    document.getElementById('newUserId').value='';
+    document.getElementById('newUserPw').value='';
+    showToast(`✅ ${name} 계정 생성 완료!`);
+    renderAdminList();
+  } catch(e) {
+    showToast('❌ 계정 생성 실패: '+e.message);
+  }
 };
 
 // ===== 진척 계산 =====
@@ -716,6 +730,9 @@ function renderAvatar(){
   document.getElementById('avatarStage').textContent=`${stage+1}단계 · ${STAGE_NAMES[stage]}`;
   document.getElementById('apFill').style.width=p+'%';
   document.getElementById('apPct').textContent=p+'%';
+  // 닉네임
+  const nick = localDash.nickname || currentUser.name || '나의 캐릭터';
+  document.getElementById('avatarNickname').textContent=nick;
   const now=new Date();
   const doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
   document.getElementById('avatarMsg').textContent=CHEERS[doy%CHEERS.length];
@@ -766,7 +783,10 @@ function renderDetail(idx){
   if(!g){
     // 새 목표 추가
     panel.innerHTML=`<div class="add-goal-card">
-      <div class="unit-card-title" style="margin-bottom:6px;">새 목표 추가</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="unit-card-title">새 목표 추가</div>
+        <button onclick="closeDetailPanel()" style="background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+      </div>
       <div class="unit-card-sub" style="margin-bottom:16px;color:var(--text-dim);font-size:13px;">목표 이름을 입력하고 단위를 설정하세요</div>
       <input class="add-goal-input" id="newGoalTitle" type="text" placeholder="목표 이름 입력">
       <div class="unit-opts" id="unitOpts${idx}"></div>
@@ -829,13 +849,15 @@ window.enterEditUnit=function(idx){
   const goals=getAllGoals(); const g=goals[idx];
   const panel=document.getElementById('detailSection');
   panel.innerHTML=`<div class="unit-card">
-    <div class="unit-card-title">${esc(g.title)}</div>
-    <div class="unit-card-sub">단위를 수정하세요</div>
-    <div class="unit-opts" id="unitOpts${idx}"></div>
-    <div style="display:flex;gap:8px;margin-top:4px;">
-      <button class="unit-confirm-btn" style="flex:1" onclick="confirmUnit(${idx})">수정 완료</button>
-      <button onclick="renderDetail(${idx})" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:8px;padding:13px;font-size:14px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">취소</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="unit-card-title">목표 수정</div>
+      <button onclick="renderDetail(${idx})" style="background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
+    <div style="font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">목표 제목</div>
+    <input id="editGoalTitle${idx}" type="text" value="${escAttr(g.title||'')}" placeholder="목표 이름" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:20px;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    <div style="font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">달성 단위</div>
+    <div class="unit-opts" id="unitOpts${idx}"></div>
+    <button class="unit-confirm-btn" onclick="confirmEditGoal(${idx})">수정 완료</button>
   </div>`;
   selectedUnit[idx]=g.unit;
   renderUnitOpts(`unitOpts${idx}`,g.unit,idx);
@@ -946,6 +968,48 @@ window.toggleDay=async function(idx,day){
 
 // ===== UTILS =====
 window.renderDetail=renderDetail;
+
+window.closeDetailPanel=function(){
+  activeGoalIdx=null;
+  renderGoalGrid();
+  document.getElementById('detailSection').innerHTML='<div class="detail-empty">목표를 선택하면<br>상세 내용이 펼쳐집니다</div>';
+};
+
+window.confirmEditGoal=async function(idx){
+  const titleEl=document.getElementById(`editGoalTitle${idx}`);
+  const title=titleEl?titleEl.value.trim():'';
+  const u=selectedUnit[idx];
+  if(!title){showToast('❌ 목표 이름을 입력하세요');return;}
+  if(!u){showToast('❌ 단위를 선택하세요');return;}
+  if(!localDash.goals[idx]) localDash.goals[idx]={};
+  localDash.goals[idx].title=title;
+  localDash.goals[idx].unit=u;
+  await saveDash();
+  showToast('✅ 수정 완료!');
+  renderGoalGrid(); renderDetail(idx);
+};
+
+window.startEditNickname=function(){
+  const row=document.getElementById('avatarNicknameRow');
+  const cur=localDash.nickname||currentUser.name||'나의 캐릭터';
+  row.innerHTML=`<div class="nickname-edit-row">
+    <input class="nickname-input" id="nicknameInput" type="text" value="${escAttr(cur)}" maxlength="12" placeholder="애칭 입력">
+    <button class="nickname-save-btn" onclick="saveNickname()">저장</button>
+  </div>`;
+  document.getElementById('nicknameInput').focus();
+  document.getElementById('nicknameInput').addEventListener('keydown',e=>{if(e.key==='Enter') window.saveNickname();});
+};
+
+window.saveNickname=async function(){
+  const val=(document.getElementById('nicknameInput')||{}).value?.trim();
+  if(!val){showToast('❌ 애칭을 입력하세요');return;}
+  localDash.nickname=val;
+  await saveDash();
+  showToast('✅ 애칭 저장 완료!');
+  renderAvatar();
+};
+
+function escAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 function showToast(msg){
   const t=document.getElementById('toast');

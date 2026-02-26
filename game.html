@@ -9,261 +9,275 @@
 :root {
   --bg:#0d0d0d; --surface:#161616; --surface2:#1f1f1f; --border:#2a2a2a;
   --accent:#c8f135; --accent2:#f1c835; --accent3:#35c8f1;
-  --text:#f0f0f0; --text-dim:#888; --danger:#f13535; --radius:12px;
+  --text:#f0f0f0; --text-dim:#666; --danger:#f13535; --radius:14px;
+  --mobile:480px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow-x:hidden;}
-.screen{display:none;min-height:100vh;}
-.screen.active{display:flex;}
+body{background:#000;color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
+
+/* PC 좌우 배경 */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(135deg,#0a0a0a 0px,#0a0a0a 2px,#000 2px,#000 12px);z-index:0;}
+
+.screen{display:none;min-height:100vh;position:relative;z-index:1;}
+.screen.active{display:block;}
+
+/* 모바일 컨테이너 */
+.mobile-wrap{max-width:var(--mobile);margin:0 auto;background:var(--bg);min-height:100vh;position:relative;}
 
 /* LOADING */
-#loadingScreen{align-items:center;justify-content:center;flex-direction:column;gap:20px;}
-.loading-logo{font-family:'Black Han Sans',sans-serif;font-size:38px;letter-spacing:5px;color:var(--accent);}
+#loadingScreen.active{display:flex;align-items:center;justify-content:center;}
+#loadingScreen .mobile-wrap{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+.loading-logo{font-family:'Black Han Sans',sans-serif;font-size:40px;letter-spacing:6px;color:var(--accent);}
 .loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* LOGIN */
-#loginScreen{flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
-#loginScreen::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(200,241,53,.07) 0%,transparent 70%);top:-150px;left:-150px;pointer-events:none;}
-#loginScreen::after{content:'';position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(53,200,241,.05) 0%,transparent 70%);bottom:-50px;right:-50px;pointer-events:none;}
-.login-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:380px;max-width:92vw;position:relative;z-index:1;}
-.login-logo{font-family:'Black Han Sans',sans-serif;font-size:38px;letter-spacing:5px;color:var(--accent);text-align:center;margin-bottom:4px;}
-.login-sub{text-align:center;color:var(--text-dim);font-size:12px;letter-spacing:3px;margin-bottom:40px;}
+#loginScreen.active{display:flex;align-items:center;justify-content:center;}
+#loginScreen .mobile-wrap{display:flex;align-items:center;justify-content:center;padding:32px 24px;}
+.login-box{width:100%;}
+.login-logo{font-family:'Black Han Sans',sans-serif;font-size:42px;letter-spacing:6px;color:var(--accent);text-align:center;margin-bottom:4px;}
+.login-sub{text-align:center;color:var(--text-dim);font-size:12px;letter-spacing:4px;margin-bottom:48px;}
 .input-group{margin-bottom:16px;}
-.input-group label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:7px;letter-spacing:1.5px;text-transform:uppercase;}
-.input-group input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:13px 16px;color:var(--text);font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s;}
+.input-group label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;}
+.input-group input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;color:var(--text);font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s;}
 .input-group input:focus{border-color:var(--accent);}
-.btn-primary{width:100%;background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;margin-top:8px;transition:opacity .2s,transform .1s;letter-spacing:1px;}
+.btn-primary{width:100%;background:var(--accent);color:#0d0d0d;border:none;border-radius:10px;padding:16px;font-size:16px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;margin-top:8px;transition:opacity .2s;letter-spacing:1px;}
 .btn-primary:hover{opacity:.88;}
-.btn-primary:active{transform:scale(.98);}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
-.login-error{color:var(--danger);font-size:13px;text-align:center;margin-top:14px;display:none;}
+.login-error{color:var(--danger);font-size:13px;text-align:center;margin-top:12px;display:none;}
 
 /* NAV */
-.topnav{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(13,13,13,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100;}
-.nav-logo{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);letter-spacing:3px;}
-.nav-badge{font-size:10px;color:var(--accent2);letter-spacing:1px;margin-left:6px;vertical-align:middle;}
-.nav-right{display:flex;align-items:center;gap:10px;}
-.nav-user{font-size:13px;color:var(--text-dim);}
-.btn-sm{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:border-color .2s,color .2s;white-space:nowrap;}
+.topnav{height:52px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.nav-logo{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--accent);letter-spacing:3px;}
+.nav-badge{font-size:10px;color:var(--accent2);margin-left:5px;}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-user{font-size:12px;color:var(--text-dim);}
+.btn-sm{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:border-color .2s,color .2s;}
 .btn-sm:hover{border-color:var(--accent);color:var(--accent);}
 
 /* ADMIN */
-#adminScreen{flex-direction:column;padding-top:56px;}
-.page-content{padding:32px 24px;max-width:820px;margin:0 auto;width:100%;}
-.section-title{font-family:'Black Han Sans',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:20px;color:var(--accent);}
-.admin-hero{text-align:center;padding:36px 0 28px;border-bottom:1px solid var(--border);margin-bottom:36px;}
-.admin-hero-title{font-family:'Black Han Sans',sans-serif;font-size:26px;letter-spacing:4px;color:var(--accent2);margin-bottom:8px;}
-.admin-hero-sub{color:var(--text-dim);font-size:14px;}
-.create-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:460px;margin:0 auto;}
-.form-row{margin-bottom:16px;}
-.form-row label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;}
-.form-row input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s;}
+.page-pad{padding:24px 20px;}
+.section-title{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:18px;color:var(--accent);}
+.admin-hero{text-align:center;padding:32px 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px;}
+.admin-hero-title{font-family:'Black Han Sans',sans-serif;font-size:24px;letter-spacing:4px;color:var(--accent2);margin-bottom:6px;}
+.admin-hero-sub{color:var(--text-dim);font-size:13px;}
+.create-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.form-row input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s;}
 .form-row input:focus{border-color:var(--accent2);}
-.btn-accent{background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:13px 24px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:opacity .2s,transform .1s;letter-spacing:1px;}
+.btn-accent{background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:12px 22px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:opacity .2s;}
 .btn-accent:hover{opacity:.85;}
 .btn-accent.full{width:100%;margin-top:4px;}
-.admin-user-list{margin-top:44px;}
-.user-chip-list{display:flex;flex-wrap:wrap;gap:10px;max-width:460px;margin:0 auto;}
-.user-chip{background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:8px 18px;display:flex;align-items:center;gap:10px;}
-.user-chip-name{font-weight:700;font-size:14px;}
-.user-chip-id{color:var(--text-dim);font-size:12px;}
+.user-chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;}
+.user-chip{background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:7px 16px;display:flex;align-items:center;gap:8px;}
+.user-chip-name{font-weight:700;font-size:13px;}
+.user-chip-id{color:var(--text-dim);font-size:11px;}
 
-/* ===== NEW DASHBOARD ===== */
-#dashboardScreen{flex-direction:column;padding-top:56px;}
+/* ====== DASHBOARD ====== */
+#dashboardScreen .mobile-wrap{padding-bottom:32px;}
 
-/* 전체 진척률 바 */
-.global-progress-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;}
-.gp-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;}
-.gp-label{font-family:'Black Han Sans',sans-serif;font-size:13px;letter-spacing:2px;color:var(--text-dim);white-space:nowrap;}
-.gp-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
-.gp-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .6s ease;}
-.gp-pct{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--accent);min-width:48px;text-align:right;}
+/* 전체 진척률 */
+.global-bar{padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border);}
+.gb-row{display:flex;align-items:center;gap:12px;}
+.gb-label{font-size:11px;letter-spacing:2px;color:var(--text-dim);white-space:nowrap;}
+.gb-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.gb-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .6s ease;}
+.gb-pct{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);min-width:44px;text-align:right;}
 
-/* 메인 3단 레이아웃 */
-.dash-layout{display:grid;grid-template-columns:220px 1fr 220px;gap:0;flex:1;max-width:1100px;margin:0 auto;width:100%;padding:0 0 32px;}
+/* 아바타 섹션 */
+.avatar-section{padding:24px 20px 20px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--border);}
+.avatar-art{width:100px;height:100px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.avatar-art svg{width:88px;height:88px;}
+.avatar-info{flex:1;min-width:0;}
+.avatar-stage{font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--accent);letter-spacing:1px;margin-bottom:6px;}
+.avatar-msg{font-size:13px;color:var(--text-dim);line-height:1.6;}
+.avatar-progress-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.ap-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.ap-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s;}
+.ap-pct{font-size:12px;color:var(--accent);font-weight:700;min-width:32px;text-align:right;}
 
-/* 좌측 목표 버튼 */
-.goal-sidebar{padding:24px 16px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
-.goal-sidebar-title{font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;padding:0 4px;}
-.goal-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .2s,background .2s,transform .1s;text-align:left;width:100%;font-family:'Noto Sans KR',sans-serif;}
-.goal-btn:hover:not(.disabled){border-color:var(--accent);transform:translateX(2px);}
-.goal-btn.active{border-color:var(--accent);background:rgba(200,241,53,.08);}
-.goal-btn.disabled{opacity:.35;cursor:default;border-style:dashed;}
-.goal-btn-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.goal-btn-pct{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);}
+/* 목표 그리드 */
+.goals-section{padding:20px 20px 0;}
+.goals-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.goals-section-title{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:2px;color:var(--text-dim);}
+.goal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.goal-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;cursor:pointer;text-align:left;transition:border-color .2s,background .2s;font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden;}
+.goal-btn:hover:not(.disabled){border-color:var(--accent);}
+.goal-btn.active{border-color:var(--accent);background:rgba(200,241,53,.07);}
+.goal-btn.disabled{border-style:dashed;opacity:.4;cursor:default;}
+.goal-btn-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .goal-btn.disabled .goal-btn-title{color:var(--text-dim);}
-.goal-btn.disabled .goal-btn-pct{display:none;}
-.goal-btn-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px;}
-.goal-btn-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease;}
+.goal-btn-pct{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);}
+.goal-btn-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;}
+.goal-btn-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
+.goal-btn-need{font-size:11px;color:var(--text-dim);margin-top:4px;}
 
-/* 중앙 상세 */
-.detail-panel{padding:24px;overflow-y:auto;}
-.detail-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-dim);font-size:15px;text-align:center;line-height:1.8;}
+/* 상세 패널 */
+.detail-section{padding:20px;}
+.detail-divider{height:1px;background:var(--border);margin:0 20px 20px;}
 
 /* 단위 설정 */
-.unit-setup{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;}
-.unit-setup-title{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:8px;}
-.unit-setup-sub{color:var(--text-dim);font-size:13px;margin-bottom:24px;}
-.unit-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;}
-.unit-opt{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 10px;cursor:pointer;text-align:center;font-size:13px;font-weight:500;transition:border-color .2s,background .2s;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+.unit-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;}
+.unit-card-title{font-family:'Black Han Sans',sans-serif;font-size:17px;letter-spacing:1px;margin-bottom:6px;}
+.unit-card-sub{color:var(--text-dim);font-size:13px;margin-bottom:20px;}
+.unit-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
+.unit-opt{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 8px;cursor:pointer;text-align:center;font-size:13px;font-weight:500;transition:border-color .2s,background .2s;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
 .unit-opt:hover{border-color:var(--accent);}
 .unit-opt.selected{border-color:var(--accent);background:rgba(200,241,53,.1);color:var(--accent);}
-.unit-confirm-btn{background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:13px 32px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:opacity .2s;}
-.unit-confirm-btn:hover{opacity:.85;}
+.unit-confirm-btn{width:100%;background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
 
-/* 달력 영역 */
-.calendar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.cal-goal-title{font-family:'Black Han Sans',sans-serif;font-size:20px;letter-spacing:2px;}
-.cal-meta{display:flex;align-items:center;gap:12px;}
-.cal-unit-badge{background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:12px;color:var(--text-dim);}
-.edit-unit-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:5px 12px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:border-color .2s,color .2s;}
+/* 달력 */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-goal-name{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:1px;}
+.cal-meta{display:flex;align-items:center;gap:8px;}
+.cal-unit-badge{background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:3px 10px;font-size:11px;color:var(--text-dim);}
+.edit-unit-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:4px 10px;font-size:11px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
 .edit-unit-btn:hover{border-color:var(--accent);color:var(--accent);}
-
-.month-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
-.month-nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 14px;font-size:14px;cursor:pointer;transition:border-color .2s;}
+.month-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.month-nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px;font-size:14px;cursor:pointer;}
 .month-nav-btn:hover{border-color:var(--accent);}
-.month-label{font-family:'Black Han Sans',sans-serif;font-size:16px;letter-spacing:2px;}
-
-/* 달력 그리드 */
-.cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
-.cal-day-label{text-align:center;font-size:11px;color:var(--text-dim);padding:4px 0;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
-.cal-cell{aspect-ratio:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,background .2s,transform .1s;position:relative;user-select:none;}
-.cal-cell:hover:not(.empty):not(.future){border-color:var(--accent);transform:scale(1.04);}
+.month-nav-btn:disabled{opacity:.3;cursor:default;}
+.month-label{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:1px;}
+.cal-day-row{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;}
+.cal-day-lbl{text-align:center;font-size:10px;color:var(--text-dim);padding:3px 0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-cell{aspect-ratio:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,background .15s;user-select:none;}
+.cal-cell:active{transform:scale(.93);}
 .cal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
-.cal-cell.future{opacity:.35;cursor:default;}
+.cal-cell.future{opacity:.3;cursor:default;}
 .cal-cell.done{background:var(--accent);border-color:var(--accent);}
-.cal-cell.done .cal-date{color:#0d0d0d;}
-.cal-cell.week-complete{background:rgba(200,241,53,.15);border-color:rgba(200,241,53,.5);}
-.cal-date{font-size:12px;font-weight:500;}
-.cal-check{font-size:14px;margin-top:2px;opacity:0;}
-.cal-cell.done .cal-check{opacity:1;color:#0d0d0d;}
-.cal-today{border-color:var(--accent3) !important;}
-.cal-today .cal-date{color:var(--accent3);}
+.cal-cell.done .cal-dn{color:#0d0d0d;}
+.cal-cell.done .cal-chk{opacity:1;color:#0d0d0d;}
+.cal-cell.week-ok{background:rgba(200,241,53,.12);border-color:rgba(200,241,53,.4);}
+.cal-today{border-color:var(--accent3)!important;}
+.cal-today .cal-dn{color:var(--accent3);}
+.cal-dn{font-size:11px;font-weight:500;}
+.cal-chk{font-size:10px;opacity:0;}
+.month-stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:12px;display:flex;align-items:center;gap:12px;}
+.ms-label{font-size:12px;color:var(--text-dim);white-space:nowrap;}
+.ms-track{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.ms-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s;}
+.ms-nums{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--accent);white-space:nowrap;}
 
-/* 월간 진척 */
-.month-progress{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-top:16px;display:flex;align-items:center;gap:16px;}
-.mp-label{font-size:13px;color:var(--text-dim);white-space:nowrap;}
-.mp-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
-.mp-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s ease;}
-.mp-nums{font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--accent);white-space:nowrap;}
+/* 한번 완료 */
+.once-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;text-align:center;}
+.once-title{font-family:'Black Han Sans',sans-serif;font-size:16px;margin-bottom:6px;}
+.once-sub{color:var(--text-dim);font-size:12px;margin-bottom:24px;}
+.once-btn{background:var(--surface2);border:2px solid var(--border);border-radius:50%;width:80px;height:80px;font-size:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:border-color .2s,transform .15s;}
+.once-btn:active{transform:scale(.9);}
+.once-btn.done{background:rgba(200,241,53,.15);border-color:var(--accent);}
+.once-done{margin-top:12px;font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--accent);}
 
-/* 한번 완료 UI */
-.once-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;text-align:center;}
-.once-title{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:8px;}
-.once-sub{color:var(--text-dim);font-size:13px;margin-bottom:28px;}
-.once-btn{background:var(--surface2);border:2px solid var(--border);border-radius:50%;width:100px;height:100px;font-size:36px;cursor:pointer;transition:border-color .2s,transform .15s;display:inline-flex;align-items:center;justify-content:center;}
-.once-btn:hover{border-color:var(--accent);transform:scale(1.08);}
-.once-btn.completed{background:rgba(200,241,53,.15);border-color:var(--accent);}
-.once-done-label{margin-top:16px;font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);}
+/* 목표 추가 카드 */
+.add-goal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.add-goal-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:14px;}
+.add-goal-input:focus{border-color:var(--accent);}
 
-/* 우측 아바타 */
-.avatar-sidebar{padding:24px 16px;border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:16px;}
-.avatar-stage-label{font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
-.avatar-canvas-wrap{width:140px;height:140px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
-.avatar-canvas{image-rendering:pixelated;width:128px;height:128px;}
-.avatar-stage-name{font-family:'Black Han Sans',sans-serif;font-size:16px;letter-spacing:2px;color:var(--accent);}
-.avatar-msg{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text-dim);line-height:1.6;text-align:center;width:100%;}
+/* 빈 상세 */
+.detail-empty{text-align:center;padding:48px 20px;color:var(--text-dim);font-size:14px;line-height:1.8;}
 
 /* TOAST */
-.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#0d0d0d;padding:12px 26px;border-radius:100px;font-weight:700;font-size:14px;transition:transform .3s ease;z-index:999;pointer-events:none;white-space:nowrap;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#0d0d0d;padding:11px 24px;border-radius:100px;font-weight:700;font-size:14px;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-
-/* 반응형 */
-@media(max-width:900px){
-  .dash-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;}
-  .goal-sidebar{flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--border);padding:16px;}
-  .goal-btn{flex:1;min-width:140px;}
-  .avatar-sidebar{flex-direction:row;flex-wrap:wrap;border-left:none;border-top:1px solid var(--border);justify-content:center;}
-}
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
 <div id="loadingScreen" class="screen active">
-  <div class="loading-logo">QUEST</div>
-  <div class="loading-spinner"></div>
+  <div class="mobile-wrap">
+    <div class="loading-logo">QUEST</div>
+    <div class="loading-spinner"></div>
+  </div>
 </div>
 
 <!-- LOGIN -->
 <div id="loginScreen" class="screen">
-  <div class="login-box">
-    <div class="login-logo">QUEST</div>
-    <div class="login-sub">BOARD</div>
-    <div class="input-group"><label>아이디</label><input type="text" id="loginId" placeholder="아이디 입력" autocomplete="username"></div>
-    <div class="input-group"><label>비밀번호</label><input type="password" id="loginPw" placeholder="비밀번호 입력" autocomplete="current-password"></div>
-    <button class="btn-primary" id="loginBtn" onclick="doLogin()">로그인</button>
-    <div class="login-error" id="loginError">아이디 또는 비밀번호가 올바르지 않습니다.</div>
+  <div class="mobile-wrap">
+    <div class="login-box">
+      <div class="login-logo">QUEST</div>
+      <div class="login-sub">BOARD</div>
+      <div class="input-group"><label>아이디</label><input type="text" id="loginId" placeholder="아이디 입력" autocomplete="username"></div>
+      <div class="input-group"><label>비밀번호</label><input type="password" id="loginPw" placeholder="비밀번호 입력" autocomplete="current-password"></div>
+      <button class="btn-primary" id="loginBtn" onclick="doLogin()">로그인</button>
+      <div class="login-error" id="loginError">아이디 또는 비밀번호가 올바르지 않습니다.</div>
+    </div>
   </div>
 </div>
 
 <!-- ADMIN -->
 <div id="adminScreen" class="screen">
-  <nav class="topnav">
-    <div class="nav-logo">QUEST <span class="nav-badge">ADMIN</span></div>
-    <div class="nav-right"><button class="btn-sm" onclick="doLogout()">로그아웃</button></div>
-  </nav>
-  <div class="page-content">
-    <div class="admin-hero">
-      <div class="admin-hero-title">ADMIN PANEL</div>
-      <div class="admin-hero-sub">유저 계정을 생성하고 관리하세요</div>
-    </div>
-    <div class="create-form">
-      <div class="section-title" style="font-size:16px;margin-bottom:20px;">새 계정 생성</div>
-      <div class="form-row"><label>이름</label><input type="text" id="newUserName" placeholder="유저 이름"></div>
-      <div class="form-row"><label>아이디</label><input type="text" id="newUserId" placeholder="로그인 아이디"></div>
-      <div class="form-row"><label>비밀번호</label><input type="text" id="newUserPw" placeholder="비밀번호"></div>
-      <button class="btn-accent full" onclick="createUser()">계정 생성</button>
-    </div>
-    <div class="admin-user-list">
-      <div class="section-title" style="font-size:16px;text-align:center;margin-bottom:16px;">등록된 유저</div>
-      <div class="user-chip-list" id="adminUserChips"></div>
+  <div class="mobile-wrap">
+    <nav class="topnav">
+      <div class="nav-logo">QUEST <span class="nav-badge">ADMIN</span></div>
+      <div class="nav-right"><button class="btn-sm" onclick="doLogout()">로그아웃</button></div>
+    </nav>
+    <div class="page-pad">
+      <div class="admin-hero">
+        <div class="admin-hero-title">ADMIN</div>
+        <div class="admin-hero-sub">유저 계정을 생성하고 관리하세요</div>
+      </div>
+      <div class="create-form">
+        <div class="section-title" style="font-size:15px;margin-bottom:16px;">새 계정 생성</div>
+        <div class="form-row"><label>이름</label><input type="text" id="newUserName" placeholder="유저 이름"></div>
+        <div class="form-row"><label>아이디</label><input type="text" id="newUserId" placeholder="로그인 아이디"></div>
+        <div class="form-row"><label>비밀번호</label><input type="text" id="newUserPw" placeholder="비밀번호"></div>
+        <button class="btn-accent full" onclick="createUser()">계정 생성</button>
+      </div>
+      <div style="margin-top:32px;">
+        <div class="section-title" style="font-size:15px;margin-bottom:12px;">등록된 유저</div>
+        <div class="user-chip-list" id="adminUserChips"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboardScreen" class="screen">
-  <nav class="topnav">
-    <div class="nav-logo">QUEST</div>
-    <div class="nav-right">
-      <span class="nav-user" id="navUserName"></span>
-      <button class="btn-sm" onclick="doLogout()">로그아웃</button>
-    </div>
-  </nav>
-
-  <!-- 전체 진척률 바 -->
-  <div class="global-progress-bar">
-    <div class="gp-inner">
-      <div class="gp-label">이번 달 전체</div>
-      <div class="gp-track"><div class="gp-fill" id="gpFill" style="width:0%"></div></div>
-      <div class="gp-pct" id="gpPct">0%</div>
-    </div>
-  </div>
-
-  <!-- 3단 레이아웃 -->
-  <div class="dash-layout">
-    <!-- 좌측: 목표 버튼 -->
-    <div class="goal-sidebar">
-      <div class="goal-sidebar-title">목표</div>
-      <div id="goalBtnList"></div>
-    </div>
-
-    <!-- 중앙: 상세 -->
-    <div class="detail-panel" id="detailPanel">
-      <div class="detail-empty">← 목표를 선택하세요</div>
-    </div>
-
-    <!-- 우측: 아바타 -->
-    <div class="avatar-sidebar">
-      <div class="avatar-stage-label">나의 아바타</div>
-      <div class="avatar-canvas-wrap">
-        <canvas class="avatar-canvas" id="avatarCanvas" width="16" height="16"></canvas>
+  <div class="mobile-wrap">
+    <nav class="topnav">
+      <div class="nav-logo">QUEST</div>
+      <div class="nav-right">
+        <span class="nav-user" id="navUserName"></span>
+        <button class="btn-sm" onclick="doLogout()">로그아웃</button>
       </div>
-      <div class="avatar-stage-name" id="avatarStageName">1단계</div>
-      <div class="avatar-msg" id="avatarMsg">오늘도 파이팅!</div>
+    </nav>
+
+    <!-- 전체 진척률 -->
+    <div class="global-bar">
+      <div class="gb-row">
+        <div class="gb-label">이번 달</div>
+        <div class="gb-track"><div class="gb-fill" id="gbFill" style="width:0%"></div></div>
+        <div class="gb-pct" id="gbPct">0%</div>
+      </div>
+    </div>
+
+    <!-- 아바타 -->
+    <div class="avatar-section">
+      <div class="avatar-art" id="avatarArt"></div>
+      <div class="avatar-info">
+        <div class="avatar-stage" id="avatarStage">1단계 · 알</div>
+        <div class="avatar-msg" id="avatarMsg">오늘도 파이팅!</div>
+        <div class="avatar-progress-row">
+          <div class="ap-track"><div class="ap-fill" id="apFill" style="width:0%"></div></div>
+          <div class="ap-pct" id="apPct">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 목표 그리드 -->
+    <div class="goals-section">
+      <div class="goals-section-header">
+        <div class="goals-section-title">🎯 목표</div>
+      </div>
+      <div class="goal-grid" id="goalGrid"></div>
+    </div>
+
+    <!-- 상세 패널 -->
+    <div class="detail-divider" style="margin-top:20px;"></div>
+    <div class="detail-section" id="detailSection">
+      <div class="detail-empty">목표를 선택하면<br>상세 내용이 펼쳐집니다</div>
     </div>
   </div>
 </div>
@@ -281,25 +295,16 @@ const firebaseConfig = {
   projectId: "grow-goal",
   storageBucket: "grow-goal.firebasestorage.app",
   messagingSenderId: "587441793315",
-  appId: "1:587441793315:web:8ae5325a2af90953ce4496",
-  measurementId: "G-YPQ00335VX"
+  appId: "1:587441793315:web:8ae5325a2af90953ce4496"
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // ===== 상수 =====
-const UNIT_LABELS = {
-  once: '한 번',
-  daily: '매일',
-  w1: '주 1회',
-  w2: '주 2~3회',
-  w4: '주 4~5회',
-  w6: '주 6회'
-};
-const UNIT_FREQ = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6 };
-
-// 고정 목표 슬롯 (1번은 고정)
-const FIXED_GOAL = { title: '12시에 눕기', fixed: true };
+const UNIT_LABELS = { once:'한 번', daily:'매일', w1:'주 1회', w2:'주 2~3회', w4:'주 4~5회', w6:'주 6회' };
+const UNIT_FREQ   = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6 };
+const FIXED_TITLE = '12시에 눕기';
+const MAX_GOALS   = 6;
 
 // ===== 365개 응원 멘트 =====
 const CHEERS = [
@@ -354,716 +359,600 @@ const CHEERS = [
   "오늘도 파이팅!","작은 것이 모여 위대해져요","당신의 하루가 소중해요","오늘도 잘 이겨냈어요","한 걸음이 기적의 시작"
 ];
 
-// ===== 아바타 픽셀 데이터 (10단계, 16×16) =====
-// 팔레트: 0=투명, 1=검정, 2=갈색, 3=노랑, 4=초록, 5=하늘, 6=빨강, 7=주황, 8=분홍, 9=흰색, A=밝은초록, B=연갈색
-const PAL = {
-  0:'rgba(0,0,0,0)', 1:'#1a1a1a', 2:'#8B5E3C', 3:'#F5C518', 4:'#2ecc40',
-  5:'#35c8f1', 6:'#e74c3c', 7:'#f39c12', 8:'#f1a7d0', 9:'#f0f0f0',
-  A:'#c8f135', B:'#d4a574'
-};
-
-// 10단계 아바타 픽셀맵 (16×16, 각 단계 고유 동물)
-const AVATAR_STAGES = [
+// ===== SVG 아바타 (10단계) =====
+const AVATARS = [
   // 1단계: 알
-  {name:'알',pixels:`0000000000000000
-0000001110000000
-0000012221000000
-0000121221100000
-0001212222110000
-0001222222110000
-0001222922110000
-0001222222110000
-0001222222110000
-0000122221100000
-0000012221000000
-0000001110000000
-0000000000000000
-0000000000000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="40" cy="44" rx="22" ry="28" fill="#f0e8d0" stroke="#c8b89a" stroke-width="2"/>
+    <ellipse cx="33" cy="36" rx="4" ry="6" fill="rgba(255,255,255,0.3)"/>
+    <text x="40" y="52" text-anchor="middle" font-size="20">🥚</text>
+  </svg>`,
   // 2단계: 병아리
-  {name:'병아리',pixels:`0000000000000000
-0000033330000000
-0003337333300000
-0003337333300000
-0033337333330000
-0033399333330000
-0033399333830000
-0033339999330000
-0003333333300000
-0000333333000000
-0000007700000000
-0000007700000000
-0000000000000000
-0000000000000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="48" r="20" fill="#f5c518"/>
+    <circle cx="40" cy="28" r="14" fill="#f5c518"/>
+    <circle cx="35" cy="25" r="3" fill="#1a1a1a"/>
+    <circle cx="45" cy="25" r="3" fill="#1a1a1a"/>
+    <circle cx="35.5" cy="24.5" r="1" fill="white"/>
+    <circle cx="45.5" cy="24.5" r="1" fill="white"/>
+    <polygon points="40,30 37,34 43,34" fill="#f39c12"/>
+    <ellipse cx="28" cy="48" rx="7" ry="10" fill="#f5c518" transform="rotate(-20,28,48)"/>
+    <ellipse cx="52" cy="48" rx="7" ry="10" fill="#f5c518" transform="rotate(20,52,48)"/>
+    <line x1="34" y1="68" x2="30" y2="75" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
+    <line x1="40" y1="68" x2="40" y2="75" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="68" x2="50" y2="75" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
   // 3단계: 고양이
-  {name:'고양이',pixels:`0000000000000000
-0001100000011000
-0011110000111100
-0011119991111100
-0011929929111100
-0001199991110000
-0000119911000000
-0000111111000000
-0000122221000000
-0001222222100000
-0001222222100000
-0000122221000000
-0002100001200000
-0002100001200000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="48" r="22" fill="#d4a574"/>
+    <circle cx="40" cy="30" r="16" fill="#d4a574"/>
+    <polygon points="24,20 20,8 32,18" fill="#d4a574"/>
+    <polygon points="56,20 60,8 48,18" fill="#d4a574"/>
+    <polygon points="25,19 22,11 31,18" fill="#f8b4b4"/>
+    <polygon points="55,19 58,11 49,18" fill="#f8b4b4"/>
+    <circle cx="34" cy="28" r="3.5" fill="#1a1a1a"/>
+    <circle cx="46" cy="28" r="3.5" fill="#1a1a1a"/>
+    <circle cx="34.8" cy="27.2" r="1.2" fill="white"/>
+    <circle cx="46.8" cy="27.2" r="1.2" fill="white"/>
+    <ellipse cx="40" cy="33" rx="4" ry="2.5" fill="#f8b4b4"/>
+    <path d="M36,35 Q40,38 44,35" fill="none" stroke="#c8846a" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="22" y1="30" x2="10" y2="27" stroke="#c8846a" stroke-width="1.5"/>
+    <line x1="22" y1="33" x2="10" y2="33" stroke="#c8846a" stroke-width="1.5"/>
+    <line x1="22" y1="36" x2="10" y2="39" stroke="#c8846a" stroke-width="1.5"/>
+    <line x1="58" y1="30" x2="70" y2="27" stroke="#c8846a" stroke-width="1.5"/>
+    <line x1="58" y1="33" x2="70" y2="33" stroke="#c8846a" stroke-width="1.5"/>
+    <line x1="58" y1="36" x2="70" y2="39" stroke="#c8846a" stroke-width="1.5"/>
+    <path d="M32,70 Q40,66 48,70" fill="none" stroke="#c8846a" stroke-width="2"/>
+  </svg>`,
   // 4단계: 강아지
-  {name:'강아지',pixels:`0000000000000000
-0002200000000000
-0022200000000000
-0022299000000000
-0122992299000000
-0122299922100000
-0012299922100000
-0001222221000000
-0001222221000000
-0001222291000000
-0000122210000000
-0000122210000000
-0001100011000000
-0001100011000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="46" r="22" fill="#c8986a"/>
+    <circle cx="40" cy="28" r="16" fill="#c8986a"/>
+    <ellipse cx="24" cy="34" rx="9" ry="14" fill="#b8845a" transform="rotate(-10,24,34)"/>
+    <ellipse cx="56" cy="34" rx="9" ry="14" fill="#c8986a" transform="rotate(10,56,34)"/>
+    <circle cx="34" cy="26" r="3.5" fill="#1a1a1a"/>
+    <circle cx="46" cy="26" r="3.5" fill="#1a1a1a"/>
+    <circle cx="34.8" cy="25.2" r="1.2" fill="white"/>
+    <circle cx="46.8" cy="25.2" r="1.2" fill="white"/>
+    <ellipse cx="40" cy="32" rx="7" ry="5" fill="#b8845a"/>
+    <ellipse cx="40" cy="31" rx="5" ry="3" fill="#f8b4b4"/>
+    <path d="M34,35 Q40,40 46,35" fill="none" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="40" cy="56" rx="12" ry="6" fill="#e8b87a"/>
+    <line x1="32" y1="68" x2="29" y2="76" stroke="#c8986a" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="69" x2="40" y2="77" stroke="#c8986a" stroke-width="4" stroke-linecap="round"/>
+    <line x1="48" y1="68" x2="51" y2="76" stroke="#c8986a" stroke-width="4" stroke-linecap="round"/>
+  </svg>`,
   // 5단계: 여우
-  {name:'여우',pixels:`0000000000000000
-0007700000077000
-0077770000777700
-0077739993777700
-0177799997777100
-0177799997771100
-0017779997710000
-0001777777100000
-0001777777100000
-0001777777100000
-0000177771000000
-0000177771000000
-0002177712000000
-0002100012000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="46" r="20" fill="#e8783a"/>
+    <circle cx="40" cy="28" r="15" fill="#e8783a"/>
+    <polygon points="26,20 18,6 34,18" fill="#e8783a"/>
+    <polygon points="54,20 62,6 46,18" fill="#e8783a"/>
+    <polygon points="27,19 20,8 33,18" fill="#f8f0e8"/>
+    <polygon points="53,19 60,8 47,18" fill="#f8f0e8"/>
+    <ellipse cx="40" cy="32" rx="10" ry="8" fill="#f8f0e8"/>
+    <circle cx="34" cy="26" r="3.5" fill="#1a1a1a"/>
+    <circle cx="46" cy="26" r="3.5" fill="#1a1a1a"/>
+    <circle cx="34.8" cy="25.2" r="1.2" fill="white"/>
+    <circle cx="46.8" cy="25.2" r="1.2" fill="white"/>
+    <ellipse cx="40" cy="33" rx="4" ry="2.5" fill="#1a1a1a"/>
+    <path d="M35,36 Q40,40 45,36" fill="none" stroke="#c85a2a" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M15,65 Q40,72 65,65 Q55,78 40,76 Q25,78 15,65Z" fill="#f8f0e8" stroke="#e8783a" stroke-width="1"/>
+    <circle cx="62" cy="46" r="4" fill="#1a1a1a"/>
+  </svg>`,
   // 6단계: 판다
-  {name:'판다',pixels:`0000000000000000
-0011100000111000
-0191100001191000
-0119999999911000
-0119929299911000
-0199922299991000
-0199922299991000
-0019992299910000
-0001999999100000
-0000199991000000
-0000199991000000
-0000119911000000
-0000119911000000
-0000100001000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="46" r="22" fill="#f8f8f8"/>
+    <circle cx="40" cy="28" r="16" fill="#f8f8f8"/>
+    <ellipse cx="29" cy="25" rx="8" ry="7" fill="#2a2a2a"/>
+    <ellipse cx="51" cy="25" rx="8" ry="7" fill="#2a2a2a"/>
+    <circle cx="29" cy="23" r="4" fill="#f8f8f8"/>
+    <circle cx="51" cy="23" r="4" fill="#f8f8f8"/>
+    <circle cx="30" cy="24" r="2.5" fill="#1a1a1a"/>
+    <circle cx="52" cy="24" r="2.5" fill="#1a1a1a"/>
+    <circle cx="30.8" cy="23.2" r="0.9" fill="white"/>
+    <circle cx="52.8" cy="23.2" r="0.9" fill="white"/>
+    <ellipse cx="40" cy="33" rx="5" ry="3.5" fill="#d4d4d4"/>
+    <circle cx="40" cy="32" r="2.5" fill="#f8a0a0"/>
+    <path d="M35,36 Q40,40 45,36" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
+    <ellipse cx="25" cy="50" rx="8" ry="12" fill="#2a2a2a"/>
+    <ellipse cx="55" cy="50" rx="8" ry="12" fill="#2a2a2a"/>
+    <circle cx="22" cy="18" r="6" fill="#2a2a2a"/>
+    <circle cx="58" cy="18" r="6" fill="#2a2a2a"/>
+    <line x1="34" y1="68" x2="30" y2="76" stroke="#2a2a2a" stroke-width="4" stroke-linecap="round"/>
+    <line x1="46" y1="68" x2="50" y2="76" stroke="#2a2a2a" stroke-width="4" stroke-linecap="round"/>
+  </svg>`,
   // 7단계: 토끼
-  {name:'토끼',pixels:`0000000000000000
-0001100000110000
-0001100000110000
-0009900000990000
-0009990099990000
-0099992299990000
-0099922999990000
-0099929299990000
-0009999999900000
-0009999999900000
-0009929299900000
-0000992299000000
-0001199911000000
-0001100011000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="28" cy="18" rx="7" ry="18" fill="#f0f0f0" stroke="#ddd" stroke-width="1"/>
+    <ellipse cx="52" cy="18" rx="7" ry="18" fill="#f0f0f0" stroke="#ddd" stroke-width="1"/>
+    <ellipse cx="28" cy="18" rx="4" ry="14" fill="#f8b4b4"/>
+    <ellipse cx="52" cy="18" rx="4" ry="14" fill="#f8b4b4"/>
+    <circle cx="40" cy="46" r="22" fill="#f0f0f0"/>
+    <circle cx="40" cy="30" r="15" fill="#f0f0f0"/>
+    <circle cx="34" cy="28" r="3.5" fill="#e87eb0"/>
+    <circle cx="46" cy="28" r="3.5" fill="#e87eb0"/>
+    <circle cx="34.6" cy="27.4" r="1.2" fill="#1a1a1a"/>
+    <circle cx="46.6" cy="27.4" r="1.2" fill="#1a1a1a"/>
+    <ellipse cx="40" cy="33" rx="4" ry="2.5" fill="#f8b4b4"/>
+    <path d="M35,36 Q40,40 45,36" fill="none" stroke="#d4849a" stroke-width="1.5" stroke-linecap="round"/>
+    <ellipse cx="40" cy="56" rx="14" ry="8" fill="#e8e8e8"/>
+    <line x1="32" y1="68" x2="28" y2="76" stroke="#e0e0e0" stroke-width="4" stroke-linecap="round"/>
+    <line x1="48" y1="68" x2="52" y2="76" stroke="#e0e0e0" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="18" cy="50" r="5" fill="#f8b4b4"/>
+    <circle cx="62" cy="50" r="5" fill="#f8b4b4"/>
+  </svg>`,
   // 8단계: 사자
-  {name:'사자',pixels:`0000000000000000
-0000727722700000
-0007277277270000
-0072729972720000
-0727729972720000
-0727722227270000
-0727722227270000
-0727722222720000
-0727222222720000
-0072222222700000
-0007222222000000
-0000722270000000
-0000022200000000
-0000002000000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="40" r="28" fill="#e8a830" opacity="0.4"/>
+    <circle cx="40" cy="40" r="22" fill="#e8a830" opacity="0.6"/>
+    <circle cx="40" cy="40" r="16" fill="#e8a830"/>
+    <circle cx="40" cy="36" r="16" fill="#e8c840"/>
+    <circle cx="40" cy="32" r="14" fill="#f5d040"/>
+    <circle cx="34" cy="30" r="3.5" fill="#1a1a1a"/>
+    <circle cx="46" cy="30" r="3.5" fill="#1a1a1a"/>
+    <circle cx="34.8" cy="29.2" r="1.2" fill="white"/>
+    <circle cx="46.8" cy="29.2" r="1.2" fill="white"/>
+    <ellipse cx="40" cy="36" rx="6" ry="4" fill="#e8a830"/>
+    <ellipse cx="40" cy="35" rx="4.5" ry="2.8" fill="#f8a0a0"/>
+    <path d="M33,40 Q40,45 47,40" fill="none" stroke="#c87820" stroke-width="2" stroke-linecap="round"/>
+    <line x1="24" y1="32" x2="12" y2="28" stroke="#c87820" stroke-width="1.5"/>
+    <line x1="24" y1="36" x2="12" y2="36" stroke="#c87820" stroke-width="1.5"/>
+    <line x1="24" y1="40" x2="12" y2="44" stroke="#c87820" stroke-width="1.5"/>
+    <line x1="56" y1="32" x2="68" y2="28" stroke="#c87820" stroke-width="1.5"/>
+    <line x1="56" y1="36" x2="68" y2="36" stroke="#c87820" stroke-width="1.5"/>
+    <line x1="56" y1="40" x2="68" y2="44" stroke="#c87820" stroke-width="1.5"/>
+  </svg>`,
   // 9단계: 드래곤
-  {name:'드래곤',pixels:`0000000000000000
-0004400000044000
-0044440000444400
-0444449994444400
-0444499994444400
-4444992299444400
-0444A99994444000
-0044A999A444000
-0004444444400000
-0004444444400000
-0004444444400000
-0000444444000000
-0000044440000000
-0000004400000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
-
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10,30 Q20,10 30,20 Q20,30 10,30Z" fill="#2ecc40"/>
+    <path d="M70,30 Q60,10 50,20 Q60,30 70,30Z" fill="#2ecc40"/>
+    <circle cx="40" cy="46" r="22" fill="#27ae60"/>
+    <circle cx="40" cy="28" r="15" fill="#27ae60"/>
+    <path d="M30,16 Q40,8 50,16 Q46,10 40,8 Q34,10 30,16Z" fill="#2ecc40"/>
+    <circle cx="34" cy="26" r="4" fill="#f1c40f"/>
+    <circle cx="46" cy="26" r="4" fill="#f1c40f"/>
+    <circle cx="35" cy="26" r="2.5" fill="#1a1a1a"/>
+    <circle cx="47" cy="26" r="2.5" fill="#1a1a1a"/>
+    <circle cx="35.8" cy="25.2" r="1" fill="white"/>
+    <circle cx="47.8" cy="25.2" r="1" fill="white"/>
+    <path d="M34,32 L32,36 L36,34 L34,38" fill="none" stroke="#f39c12" stroke-width="2" stroke-linecap="round"/>
+    <path d="M46,32 L44,36 L48,34 L46,38" fill="none" stroke="#f39c12" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="40" cy="34" rx="5" ry="3" fill="#1a5c30"/>
+    <path d="M36,37 Q40,42 44,37" fill="none" stroke="#1a5c30" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="26" cy="52" rx="9" ry="15" fill="#27ae60" transform="rotate(-15,26,52)"/>
+    <ellipse cx="54" cy="52" rx="9" ry="15" fill="#27ae60" transform="rotate(15,54,52)"/>
+    <path d="M60,70 Q70,55 72,45" fill="none" stroke="#27ae60" stroke-width="5" stroke-linecap="round"/>
+    <polygon points="72,44 75,50 68,50" fill="#27ae60"/>
+  </svg>`,
   // 10단계: 유니콘
-  {name:'유니콘',pixels:`0000000000000000
-0000009000000000
-0000099000000000
-0009999000000000
-0099999990000000
-0999999A99000000
-0A99A999A9900000
-0AA9AA99AA90000
-0099999999900000
-0009999999000000
-0009929299000000
-0000992299000000
-0000099990000000
-0000009900000000
-0000000000000000
-0000000000000000`.replace(/\n/g,'')},
+  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="ugrd" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#f8b4d4"/>
+        <stop offset="50%" style="stop-color:#c8f135"/>
+        <stop offset="100%" style="stop-color:#35c8f1"/>
+      </linearGradient>
+      <linearGradient id="hgrd" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#f1c835"/>
+        <stop offset="100%" style="stop-color:#f8b4d4"/>
+      </linearGradient>
+    </defs>
+    <circle cx="40" cy="46" r="22" fill="url(#ugrd)"/>
+    <circle cx="40" cy="28" r="15" fill="url(#ugrd)"/>
+    <path d="M40,6 L36,22 L44,22Z" fill="url(#hgrd)"/>
+    <path d="M26,16 Q20,8 24,4 Q28,10 30,18Z" fill="#f8b4d4" opacity="0.8"/>
+    <path d="M54,16 Q60,8 56,4 Q52,10 50,18Z" fill="#c8f135" opacity="0.8"/>
+    <circle cx="34" cy="26" r="3.5" fill="#1a1a1a"/>
+    <circle cx="46" cy="26" r="3.5" fill="#1a1a1a"/>
+    <circle cx="34.8" cy="25.2" r="1.4" fill="white"/>
+    <circle cx="46.8" cy="25.2" r="1.4" fill="white"/>
+    <ellipse cx="40" cy="32" rx="4" ry="2.5" fill="#f8d4e8"/>
+    <path d="M35,35 Q40,40 45,35" fill="none" stroke="#d4849a" stroke-width="1.5" stroke-linecap="round"/>
+    <ellipse cx="25" cy="52" rx="8" ry="14" fill="url(#ugrd)" opacity="0.7"/>
+    <ellipse cx="55" cy="52" rx="8" ry="14" fill="url(#ugrd)" opacity="0.7"/>
+    <path d="M16,60 Q8,52 6,44" fill="none" stroke="url(#hgrd)" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="34" cy="56" r="2" fill="#f1c835" opacity="0.8"/>
+    <circle cx="46" cy="56" r="2" fill="#35c8f1" opacity="0.8"/>
+    <circle cx="40" cy="59" r="1.5" fill="#f8b4d4" opacity="0.8"/>
+  </svg>`
 ];
+
+const STAGE_NAMES = ['알','병아리','고양이','강아지','여우','판다','토끼','사자','드래곤','유니콘'];
 
 // ===== 상태 =====
 let currentUser = null;
 let localDash = null;
 let activeGoalIdx = null;
-let viewMonth = null; // {year, month}
+let viewMonth = null;
+let selectedUnit = {};
 
-// ===== 화면 전환 =====
+// ===== 화면 =====
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
 }
 
-// ===== 로그인 =====
-async function initAdmin() {
-  const snap = await get(ref(db, 'users/admin'));
-  if (!snap.exists()) await set(ref(db, 'users/admin'), { name:'관리자', password:'admin1234', role:'admin' });
+// ===== INIT =====
+async function init() {
+  const snap = await get(ref(db,'users/admin'));
+  if (!snap.exists()) await set(ref(db,'users/admin'),{name:'관리자',password:'admin1234',role:'admin'});
   showScreen('loginScreen');
 }
-initAdmin();
+init();
 
+// ===== LOGIN =====
 window.doLogin = async function() {
   const id = document.getElementById('loginId').value.trim();
   const pw = document.getElementById('loginPw').value;
   const btn = document.getElementById('loginBtn');
-  if (!id || !pw) return;
-  btn.disabled = true; btn.textContent = '확인 중...';
+  if (!id||!pw) return;
+  btn.disabled=true; btn.textContent='확인 중...';
   try {
-    const snap = await get(ref(db, `users/${id}`));
-    if (!snap.exists() || snap.val().password !== pw) {
-      document.getElementById('loginError').style.display = 'block';
+    const snap = await get(ref(db,`users/${id}`));
+    if (!snap.exists()||snap.val().password!==pw) {
+      document.getElementById('loginError').style.display='block';
     } else {
-      document.getElementById('loginError').style.display = 'none';
+      document.getElementById('loginError').style.display='none';
       const u = snap.val();
-      currentUser = { id, ...u };
-      if (u.role === 'admin') {
-        showScreen('adminScreen'); renderAdminUserList();
-      } else {
+      currentUser = {id,...u};
+      if (u.role==='admin') { showScreen('adminScreen'); renderAdminList(); }
+      else {
         document.getElementById('navUserName').textContent = u.name;
         await loadDash();
+        activeGoalIdx = null;
+        viewMonth = null;
         showScreen('dashboardScreen');
         renderDashboard();
       }
     }
-  } catch(e) { showToast('❌ 연결 오류'); }
-  btn.disabled = false; btn.textContent = '로그인';
+  } catch(e){ showToast('❌ 연결 오류'); }
+  btn.disabled=false; btn.textContent='로그인';
 };
-
-['loginId','loginPw'].forEach(id => {
-  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') window.doLogin(); });
+['loginId','loginPw'].forEach(id=>{
+  document.getElementById(id).addEventListener('keydown',e=>{ if(e.key==='Enter') window.doLogin(); });
 });
 
 window.doLogout = function() {
-  currentUser = null; localDash = null; activeGoalIdx = null;
-  document.getElementById('loginId').value = '';
-  document.getElementById('loginPw').value = '';
+  currentUser=null; localDash=null; activeGoalIdx=null;
+  document.getElementById('loginId').value='';
+  document.getElementById('loginPw').value='';
   showScreen('loginScreen');
 };
 
 // ===== DB =====
 async function loadDash() {
-  const snap = await get(ref(db, `dashboards/${currentUser.id}`));
+  const snap = await get(ref(db,`dashboards/${currentUser.id}`));
   localDash = snap.exists() ? snap.val() : {};
-  if (!localDash.goals) localDash.goals = [];
-  if (!localDash.completions) localDash.completions = {};
+  if (!localDash.goals) localDash.goals=[];
+  if (!localDash.completions) localDash.completions={};
 }
-
-async function saveDash() {
-  await set(ref(db, `dashboards/${currentUser.id}`), localDash);
-}
+async function saveDash() { await set(ref(db,`dashboards/${currentUser.id}`),localDash); }
 
 // ===== ADMIN =====
-async function renderAdminUserList() {
-  const snap = await get(ref(db, 'users'));
+async function renderAdminList() {
+  const snap = await get(ref(db,'users'));
   const chips = document.getElementById('adminUserChips');
-  if (!snap.exists()) { chips.innerHTML = '<div style="color:var(--text-dim);padding:20px 0;text-align:center;width:100%">등록된 유저 없음</div>'; return; }
-  const users = Object.entries(snap.val()).filter(([,u]) => u.role !== 'admin');
-  chips.innerHTML = users.length === 0
-    ? '<div style="color:var(--text-dim);padding:20px 0;text-align:center;width:100%">등록된 유저 없음</div>'
-    : users.map(([id,u]) => `<div class="user-chip"><span class="user-chip-name">${esc(u.name)}</span><span class="user-chip-id">@${esc(id)}</span></div>`).join('');
+  if (!snap.exists()) { chips.innerHTML='<div style="color:var(--text-dim)">등록된 유저 없음</div>'; return; }
+  const users = Object.entries(snap.val()).filter(([,u])=>u.role!=='admin');
+  chips.innerHTML = users.length===0
+    ? '<div style="color:var(--text-dim)">등록된 유저 없음</div>'
+    : users.map(([id,u])=>`<div class="user-chip"><span class="user-chip-name">${esc(u.name)}</span><span class="user-chip-id">@${esc(id)}</span></div>`).join('');
 }
-
 window.createUser = async function() {
-  const name = document.getElementById('newUserName').value.trim();
-  const id = document.getElementById('newUserId').value.trim();
-  const pw = document.getElementById('newUserPw').value.trim();
-  if (!name || !id || !pw) { showToast('❌ 모든 항목을 입력하세요'); return; }
-  const snap = await get(ref(db, `users/${id}`));
-  if (snap.exists()) { showToast('❌ 이미 존재하는 아이디'); return; }
-  await set(ref(db, `users/${id}`), { name, password: pw, role: 'user' });
-  document.getElementById('newUserName').value = '';
-  document.getElementById('newUserId').value = '';
-  document.getElementById('newUserPw').value = '';
+  const name=document.getElementById('newUserName').value.trim();
+  const id=document.getElementById('newUserId').value.trim();
+  const pw=document.getElementById('newUserPw').value.trim();
+  if(!name||!id||!pw){showToast('❌ 모든 항목을 입력하세요');return;}
+  const snap=await get(ref(db,`users/${id}`));
+  if(snap.exists()){showToast('❌ 이미 존재하는 아이디');return;}
+  await set(ref(db,`users/${id}`),{name,password:pw,role:'user'});
+  document.getElementById('newUserName').value='';
+  document.getElementById('newUserId').value='';
+  document.getElementById('newUserPw').value='';
   showToast(`✅ ${name} 계정 생성 완료!`);
-  renderAdminUserList();
+  renderAdminList();
 };
 
-// ===== 진척률 계산 =====
-function getMonthInfo(year, month) {
-  // 해당 월 일수
-  const daysInMonth = new Date(year, month, 0).getDate();
-  // 해당 월 주 수 계산 (월요일 기준)
-  let weeks = 0;
-  let d = new Date(year, month - 1, 1);
-  while (d.getMonth() === month - 1) {
-    // 주의 시작(월)을 기준으로
-    if (d.getDay() === 1 || d.getDate() === 1) weeks++;
-    d.setDate(d.getDate() + 7);
+// ===== 진척 계산 =====
+function getMonthDays(y,m){ return new Date(y,m,0).getDate(); }
+function getMonthWeeks(y,m){ return Math.ceil(getMonthDays(y,m)/7); }
+
+function goalModulus(g,gi,y,m){
+  if(!g||!g.unit||g.unit==='once') return 1;
+  if(g.unit==='daily') return getMonthDays(y,m);
+  return UNIT_FREQ[g.unit]*getMonthWeeks(y,m);
+}
+function goalDone(g,gi,y,m){
+  if(!g||!g.unit) return 0;
+  if(g.unit==='once'){
+    return localDash.completions[`g${gi}_once`]===true?1:0;
   }
-  // 더 단순하게: ceil(daysInMonth / 7)
-  weeks = Math.ceil(daysInMonth / 7);
-  return { daysInMonth, weeks };
+  const pfx=`g${gi}_${y}_${m}_`;
+  return Object.entries(localDash.completions).filter(([k,v])=>k.startsWith(pfx)&&v===true).length;
 }
-
-function getGoalModulus(goal, year, month) {
-  const unit = goal.unit;
-  if (!unit || unit === 'once') return 1;
-  const { daysInMonth, weeks } = getMonthInfo(year, month);
-  if (unit === 'daily') return daysInMonth;
-  const freq = UNIT_FREQ[unit] || 1;
-  return freq * weeks;
+function goalPct(g,gi,y,m){
+  const mod=goalModulus(g,gi,y,m);
+  const done=goalDone(g,gi,y,m);
+  return {done,mod,pct:mod>0?Math.min(100,Math.round(done/mod*100)):0};
 }
-
-function getGoalCompleted(goal, goalIdx, year, month) {
-  if (!goal.unit || goal.unit === 'once') {
-    const key = `g${goalIdx}_once`;
-    return (localDash.completions[key] === true) ? 1 : 0;
-  }
-  const prefix = `g${goalIdx}_${year}_${month}_`;
-  let count = 0;
-  Object.entries(localDash.completions).forEach(([k, v]) => {
-    if (k.startsWith(prefix) && v === true) count++;
+function globalPct(){
+  const now=new Date(); const y=now.getFullYear(),m=now.getMonth()+1;
+  let td=0,tm=0;
+  getAllGoals().forEach((g,i)=>{
+    if(!g||!g.unit) return;
+    const {done,mod}=goalPct(g,i,y,m);
+    td+=done; tm+=mod;
   });
-  return count;
+  return tm>0?Math.round(td/tm*100):0;
+}
+function getAllGoals(){
+  const g=[{title:FIXED_TITLE,fixed:true,...(localDash.goals[0]||{})}];
+  for(let i=1;i<MAX_GOALS;i++) g.push(localDash.goals[i]||null);
+  return g;
 }
 
-function calcGoalPct(goal, goalIdx, year, month) {
-  const mod = getGoalModulus(goal, year, month);
-  const done = getGoalCompleted(goal, goalIdx, year, month);
-  return { done, mod, pct: mod > 0 ? Math.min(100, Math.round((done / mod) * 100)) : 0 };
-}
-
-function calcGlobalPct() {
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth() + 1;
-  const allGoals = getAllGoals();
-  let totalDone = 0, totalMod = 0;
-  allGoals.forEach((g, i) => {
-    if (!g || !g.unit) return;
-    const { done, mod } = calcGoalPct(g, i, y, m);
-    totalDone += done;
-    totalMod += mod;
-  });
-  return totalMod > 0 ? Math.round((totalDone / totalMod) * 100) : 0;
-}
-
-function getAllGoals() {
-  // 슬롯 0은 고정
-  const goals = [{ ...FIXED_GOAL, ...(localDash.goals[0] || {}) }];
-  for (let i = 1; i < 5; i++) goals.push(localDash.goals[i] || null);
-  return goals;
-}
-
-// ===== 대시보드 렌더 =====
-function renderDashboard() {
-  const now = new Date();
-  if (!viewMonth) viewMonth = { year: now.getFullYear(), month: now.getMonth() + 1 };
-
-  renderGlobalProgress();
-  renderGoalButtons();
+// ===== RENDER DASHBOARD =====
+function renderDashboard(){
+  const now=new Date();
+  if(!viewMonth) viewMonth={year:now.getFullYear(),month:now.getMonth()+1};
+  renderGlobal();
   renderAvatar();
-
-  // 첫 번째 목표(고정) 자동 선택
-  if (activeGoalIdx === null) {
-    activeGoalIdx = 0;
-    renderDetailPanel(0);
-  }
+  renderGoalGrid();
+  if(activeGoalIdx!==null) renderDetail(activeGoalIdx);
 }
 
-function renderGlobalProgress() {
-  const pct = calcGlobalPct();
-  document.getElementById('gpFill').style.width = pct + '%';
-  document.getElementById('gpPct').textContent = pct + '%';
+function renderGlobal(){
+  const p=globalPct();
+  document.getElementById('gbFill').style.width=p+'%';
+  document.getElementById('gbPct').textContent=p+'%';
 }
 
-function renderGoalButtons() {
-  const goals = getAllGoals();
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth() + 1;
-  let html = '';
-  for (let i = 0; i < 5; i++) {
-    const g = goals[i];
-    if (i === 0 && (!g || !g.unit)) {
-      // 고정 목표이지만 단위 미설정
-      html += `<button class="goal-btn ${activeGoalIdx===0?'active':''}" onclick="selectGoal(0)">
-        <div class="goal-btn-title">12시에 눕기</div>
-        <div class="goal-btn-pct" style="color:var(--text-dim);font-size:12px;">단위 설정 필요</div>
-      </button>`;
-    } else if (!g) {
-      html += `<button class="goal-btn disabled"><div class="goal-btn-title">+ 목표 추가</div></button>`;
-    } else if (!g.unit) {
-      html += `<button class="goal-btn ${activeGoalIdx===i?'active':''}" onclick="selectGoal(${i})">
-        <div class="goal-btn-title">${esc(g.title||'목표'+(i+1))}</div>
-        <div class="goal-btn-pct" style="color:var(--text-dim);font-size:12px;">단위 설정 필요</div>
+function renderAvatar(){
+  const p=globalPct();
+  const stage=Math.min(9,Math.floor(p/10));
+  document.getElementById('avatarArt').innerHTML=AVATARS[stage];
+  document.getElementById('avatarStage').textContent=`${stage+1}단계 · ${STAGE_NAMES[stage]}`;
+  document.getElementById('apFill').style.width=p+'%';
+  document.getElementById('apPct').textContent=p+'%';
+  const now=new Date();
+  const doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
+  document.getElementById('avatarMsg').textContent=CHEERS[doy%CHEERS.length];
+}
+
+function renderGoalGrid(){
+  const goals=getAllGoals();
+  const now=new Date(); const y=now.getFullYear(),m=now.getMonth()+1;
+  let html='';
+  for(let i=0;i<MAX_GOALS;i++){
+    const g=goals[i];
+    const isActive=activeGoalIdx===i;
+    if(!g){
+      html+=`<button class="goal-btn disabled" onclick="selectGoal(${i})"><div class="goal-btn-title">+ 목표 추가</div></button>`;
+    } else if(!g.unit){
+      html+=`<button class="goal-btn ${isActive?'active':''}" onclick="selectGoal(${i})">
+        <div class="goal-btn-title">${esc(g.title||(i===0?FIXED_TITLE:'목표'+(i+1)))}</div>
+        <div class="goal-btn-need">단위 설정 필요</div>
       </button>`;
     } else {
-      const { pct } = calcGoalPct(g, i, y, m);
-      html += `<button class="goal-btn ${activeGoalIdx===i?'active':''}" onclick="selectGoal(${i})">
-        <div class="goal-btn-title">${esc(g.title||(i===0?'12시에 눕기':'목표'+(i+1)))}</div>
+      const {pct}=goalPct(g,i,y,m);
+      html+=`<button class="goal-btn ${isActive?'active':''}" onclick="selectGoal(${i})">
+        <div class="goal-btn-title">${esc(g.title||(i===0?FIXED_TITLE:'목표'+(i+1)))}</div>
         <div class="goal-btn-pct">${pct}%</div>
         <div class="goal-btn-bar"><div class="goal-btn-fill" style="width:${pct}%"></div></div>
       </button>`;
     }
   }
-  document.getElementById('goalBtnList').innerHTML = html;
+  document.getElementById('goalGrid').innerHTML=html;
 }
 
-window.selectGoal = function(idx) {
-  activeGoalIdx = idx;
-  renderGoalButtons();
-  renderDetailPanel(idx);
+window.selectGoal=function(idx){
+  activeGoalIdx=idx;
+  renderGoalGrid();
+  renderDetail(idx);
+  // 상세 패널로 스크롤
+  setTimeout(()=>{
+    document.getElementById('detailSection').scrollIntoView({behavior:'smooth',block:'start'});
+  },50);
 };
 
-function renderDetailPanel(idx) {
-  const goals = getAllGoals();
-  const g = goals[idx];
-  const panel = document.getElementById('detailPanel');
+// ===== DETAIL PANEL =====
+function renderDetail(idx){
+  const goals=getAllGoals();
+  const g=goals[idx];
+  const panel=document.getElementById('detailSection');
 
-  // 목표 없거나 비어있으면 추가 UI
-  if (!g) {
-    panel.innerHTML = `<div style="padding:32px">
-      <div class="unit-setup">
-        <div class="unit-setup-title">새 목표 추가</div>
-        <div class="unit-setup-sub">목표 이름을 입력하고 단위를 설정하세요</div>
-        <input type="text" id="newGoalTitle" placeholder="목표 이름" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:16px;">
-        <div class="unit-options" id="unitOpts${idx}"></div>
-        <button class="unit-confirm-btn" onclick="saveNewGoal(${idx})">목표 등록</button>
-      </div>
+  if(!g){
+    // 새 목표 추가
+    panel.innerHTML=`<div class="add-goal-card">
+      <div class="unit-card-title" style="margin-bottom:6px;">새 목표 추가</div>
+      <div class="unit-card-sub" style="margin-bottom:16px;color:var(--text-dim);font-size:13px;">목표 이름을 입력하고 단위를 설정하세요</div>
+      <input class="add-goal-input" id="newGoalTitle" type="text" placeholder="목표 이름 입력">
+      <div class="unit-opts" id="unitOpts${idx}"></div>
+      <button class="unit-confirm-btn" onclick="saveNewGoal(${idx})">목표 등록</button>
     </div>`;
-    renderUnitOptions(`unitOpts${idx}`, null, idx, true);
+    renderUnitOpts(`unitOpts${idx}`,null,idx);
     return;
   }
 
-  // 단위 미설정
-  if (!g.unit) {
-    panel.innerHTML = `<div style="padding:32px">
-      <div class="unit-setup">
-        <div class="unit-setup-title">${esc(g.title||(idx===0?'12시에 눕기':'목표'))}</div>
-        <div class="unit-setup-sub">이 목표의 달성 단위를 설정하세요</div>
-        <div class="unit-options" id="unitOpts${idx}"></div>
-        <button class="unit-confirm-btn" onclick="confirmUnit(${idx})">단위 설정 완료</button>
-      </div>
+  if(!g.unit){
+    panel.innerHTML=`<div class="unit-card">
+      <div class="unit-card-title">${esc(g.title)}</div>
+      <div class="unit-card-sub">이 목표의 달성 단위를 선택하세요</div>
+      <div class="unit-opts" id="unitOpts${idx}"></div>
+      <button class="unit-confirm-btn" onclick="confirmUnit(${idx})">설정 완료</button>
     </div>`;
-    renderUnitOptions(`unitOpts${idx}`, null, idx, false);
+    renderUnitOpts(`unitOpts${idx}`,null,idx);
     return;
   }
 
-  // 단위 설정됨 → 달력 또는 한번 UI
-  if (g.unit === 'once') {
-    renderOncePanel(panel, g, idx);
-  } else {
-    renderCalendarPanel(panel, g, idx);
-  }
+  if(g.unit==='once') renderOnce(panel,g,idx);
+  else renderCalendar(panel,g,idx);
 }
 
-let selectedUnit = {};
-
-function renderUnitOptions(containerId, currentUnit, idx, isNew) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  if (!selectedUnit[idx]) selectedUnit[idx] = currentUnit || null;
-  const units = ['once','daily','w1','w2','w4','w6'];
-  container.innerHTML = units.map(u =>
-    `<div class="unit-opt ${selectedUnit[idx]===u?'selected':''}" onclick="selectUnit('${u}',${idx},'${containerId}')">${UNIT_LABELS[u]}</div>`
+function renderUnitOpts(cid,cur,idx){
+  const c=document.getElementById(cid);
+  if(!c) return;
+  if(!selectedUnit[idx]) selectedUnit[idx]=cur||null;
+  c.innerHTML=Object.entries(UNIT_LABELS).map(([u,l])=>
+    `<div class="unit-opt ${selectedUnit[idx]===u?'selected':''}" onclick="pickUnit('${u}',${idx},'${cid}')">${l}</div>`
   ).join('');
 }
+window.pickUnit=function(u,idx,cid){ selectedUnit[idx]=u; renderUnitOpts(cid,u,idx); };
 
-window.selectUnit = function(u, idx, containerId) {
-  selectedUnit[idx] = u;
-  renderUnitOptions(containerId, u, idx, false);
-};
-
-window.confirmUnit = async function(idx) {
-  const u = selectedUnit[idx];
-  if (!u) { showToast('단위를 선택해주세요'); return; }
-  if (!localDash.goals[idx]) localDash.goals[idx] = {};
-  localDash.goals[idx].unit = u;
-  if (idx === 0 && !localDash.goals[0].title) localDash.goals[0].title = '12시에 눕기';
+window.confirmUnit=async function(idx){
+  const u=selectedUnit[idx];
+  if(!u){showToast('단위를 선택해주세요');return;}
+  if(!localDash.goals[idx]) localDash.goals[idx]={};
+  localDash.goals[idx].unit=u;
+  if(idx===0&&!localDash.goals[0].title) localDash.goals[0].title=FIXED_TITLE;
   await saveDash();
   showToast('✅ 단위 설정 완료!');
-  renderGoalButtons();
-  renderDetailPanel(idx);
-  renderGlobalProgress();
+  renderGoalGrid(); renderDetail(idx); renderGlobal(); renderAvatar();
 };
 
-window.saveNewGoal = async function(idx) {
-  const titleEl = document.getElementById('newGoalTitle');
-  const title = titleEl ? titleEl.value.trim() : '';
-  const u = selectedUnit[idx];
-  if (!title) { showToast('목표 이름을 입력하세요'); return; }
-  if (!u) { showToast('단위를 선택하세요'); return; }
-  if (!localDash.goals[idx]) localDash.goals[idx] = {};
-  localDash.goals[idx].title = title;
-  localDash.goals[idx].unit = u;
+window.saveNewGoal=async function(idx){
+  const title=(document.getElementById('newGoalTitle')||{}).value?.trim();
+  const u=selectedUnit[idx];
+  if(!title){showToast('목표 이름을 입력하세요');return;}
+  if(!u){showToast('단위를 선택하세요');return;}
+  if(!localDash.goals[idx]) localDash.goals[idx]={};
+  localDash.goals[idx].title=title;
+  localDash.goals[idx].unit=u;
   await saveDash();
-  showToast('🎯 목표 등록 완료!');
-  renderGoalButtons();
-  renderDetailPanel(idx);
-  renderGlobalProgress();
+  showToast('🎯 목표 등록!');
+  renderGoalGrid(); renderDetail(idx); renderGlobal(); renderAvatar();
 };
 
-window.enterEditUnit = function(idx) {
-  const goals = getAllGoals();
-  const g = goals[idx];
-  const panel = document.getElementById('detailPanel');
-  panel.innerHTML = `<div style="padding:32px">
-    <div class="unit-setup">
-      <div class="unit-setup-title">${esc(g.title||'목표')}</div>
-      <div class="unit-setup-sub">단위를 수정하세요</div>
-      <div class="unit-options" id="unitOpts${idx}"></div>
-      <div style="display:flex;gap:10px;margin-top:4px;">
-        <button class="unit-confirm-btn" onclick="confirmUnit(${idx})">수정 완료</button>
-        <button onclick="renderDetailPanel(${idx})" style="background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:8px;padding:13px 20px;font-size:14px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">취소</button>
-      </div>
+window.enterEditUnit=function(idx){
+  const goals=getAllGoals(); const g=goals[idx];
+  const panel=document.getElementById('detailSection');
+  panel.innerHTML=`<div class="unit-card">
+    <div class="unit-card-title">${esc(g.title)}</div>
+    <div class="unit-card-sub">단위를 수정하세요</div>
+    <div class="unit-opts" id="unitOpts${idx}"></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="unit-confirm-btn" style="flex:1" onclick="confirmUnit(${idx})">수정 완료</button>
+      <button onclick="renderDetail(${idx})" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:8px;padding:13px;font-size:14px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">취소</button>
     </div>
   </div>`;
-  selectedUnit[idx] = g.unit;
-  renderUnitOptions(`unitOpts${idx}`, g.unit, idx, false);
+  selectedUnit[idx]=g.unit;
+  renderUnitOpts(`unitOpts${idx}`,g.unit,idx);
 };
 
-// ===== 한번 완료 패널 =====
-function renderOncePanel(panel, g, idx) {
-  const key = `g${idx}_once`;
-  const done = localDash.completions[key] === true;
-  panel.innerHTML = `<div style="padding:32px">
-    <div class="calendar-header">
-      <div class="cal-goal-title">${esc(g.title||(idx===0?'12시에 눕기':'목표'))}</div>
+function renderOnce(panel,g,idx){
+  const done=localDash.completions[`g${idx}_once`]===true;
+  panel.innerHTML=`<div class="once-card">
+    <div class="cal-header">
+      <div class="cal-goal-name">${esc(g.title)}</div>
       <div class="cal-meta">
         <div class="cal-unit-badge">${UNIT_LABELS[g.unit]}</div>
-        <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">단위 수정</button>
+        <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">수정</button>
       </div>
     </div>
-    <div class="once-panel">
-      <div class="once-title">이 목표는 단 한 번의 완료가 필요합니다</div>
-      <div class="once-sub">완료하면 100% 달성!</div>
-      <button class="once-btn ${done?'completed':''}" onclick="toggleOnce(${idx})">
-        ${done ? '✅' : '○'}
-      </button>
-      ${done ? '<div class="once-done-label">🎉 완료!</div>' : ''}
-    </div>
+    <div class="once-sub">완료하면 이 목표 100% 달성!</div>
+    <button class="once-btn ${done?'done':''}" onclick="toggleOnce(${idx})">${done?'✅':'○'}</button>
+    ${done?'<div class="once-done">🎉 완료!</div>':''}
   </div>`;
 }
 
-window.toggleOnce = async function(idx) {
-  const key = `g${idx}_once`;
-  const cur = localDash.completions[key] === true;
-  localDash.completions[key] = !cur;
+window.toggleOnce=async function(idx){
+  const k=`g${idx}_once`;
+  localDash.completions[k]=!(localDash.completions[k]===true);
   await saveDash();
-  showToast(!cur ? '🎉 완료!' : '↩️ 해제');
-  renderDetailPanel(idx);
-  renderGoalButtons();
-  renderGlobalProgress();
-  renderAvatar();
+  showToast(localDash.completions[k]?'🎉 완료!':'↩️ 해제');
+  renderDetail(idx); renderGoalGrid(); renderGlobal(); renderAvatar();
 };
 
-// ===== 달력 패널 =====
-function renderCalendarPanel(panel, g, idx) {
-  const now = new Date();
-  if (!viewMonth) viewMonth = { year: now.getFullYear(), month: now.getMonth() + 1 };
-  const { year, month } = viewMonth;
-  const { done, mod, pct } = calcGoalPct(g, idx, year, month);
-  const monthLabel = `${year}년 ${month}월`;
+function renderCalendar(panel,g,idx){
+  const now=new Date();
+  const {year,month}=viewMonth;
+  const {done,mod,pct}=goalPct(g,idx,year,month);
+  const freq=UNIT_FREQ[g.unit]||1;
+  const firstDay=new Date(year,month-1,1).getDay();
+  const dim=getMonthDays(year,month);
+  const DAY=['일','월','화','수','목','금','토'];
 
-  // 달력 생성
-  const firstDay = new Date(year, month - 1, 1).getDay(); // 0=일
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const DAY_LABELS = ['일','월','화','수','목','금','토'];
-  const freq = UNIT_FREQ[g.unit] || 1;
-
-  // 주별 완료 수 계산
-  function getWeekCompletions(weekDates) {
-    return weekDates.filter(d => {
-      const key = `g${idx}_${year}_${month}_${d}`;
-      return localDash.completions[key] === true;
-    }).length;
-  }
-
-  // 날짜별 주 배열 생성
-  let weeks = [];
-  let week = [];
-  for (let i = 0; i < firstDay; i++) week.push(0);
-  for (let d = 1; d <= daysInMonth; d++) {
+  // 주 배열
+  let weeks=[]; let week=[];
+  for(let i=0;i<firstDay;i++) week.push(0);
+  for(let d=1;d<=dim;d++){
     week.push(d);
-    if (week.length === 7) { weeks.push(week); week = []; }
+    if(week.length===7){weeks.push(week);week=[];}
   }
-  if (week.length > 0) { while (week.length < 7) week.push(0); weeks.push(week); }
+  if(week.length>0){while(week.length<7)week.push(0);weeks.push(week);}
 
-  let calHtml = `<div class="cal-grid-header">${DAY_LABELS.map(l=>`<div class="cal-day-label">${l}</div>`).join('')}</div><div class="cal-grid">`;
-
-  weeks.forEach(w => {
-    const validDates = w.filter(d => d > 0);
-    const weekDone = getWeekCompletions(validDates);
-    const weekComplete = weekDone >= freq;
-
-    w.forEach(d => {
-      if (d === 0) { calHtml += `<div class="cal-cell empty"></div>`; return; }
-      const cellDate = new Date(year, month - 1, d);
-      const isToday = cellDate.toDateString() === now.toDateString();
-      const isFuture = cellDate > now;
-      const key = `g${idx}_${year}_${month}_${d}`;
-      const isDone = localDash.completions[key] === true;
-      const cls = ['cal-cell',
-        isDone?'done':'',
-        isFuture?'future':'',
-        isToday?'cal-today':'',
-        (!isDone && weekComplete && !isFuture)?'week-complete':''
-      ].filter(Boolean).join(' ');
-      calHtml += `<div class="${cls}" onclick="${isFuture?'':(`toggleDay(${idx},${d})`)}">
-        <div class="cal-date">${d}</div>
-        <div class="cal-check">✓</div>
+  let calHtml=`<div class="cal-day-row">${DAY.map(d=>`<div class="cal-day-lbl">${d}</div>`).join('')}</div><div class="cal-grid">`;
+  weeks.forEach(w=>{
+    const valid=w.filter(d=>d>0);
+    const wdone=valid.filter(d=>localDash.completions[`g${idx}_${year}_${month}_${d}`]===true).length;
+    const wok=wdone>=freq;
+    w.forEach(d=>{
+      if(d===0){calHtml+=`<div class="cal-cell empty"></div>`;return;}
+      const dt=new Date(year,month-1,d);
+      const isToday=dt.toDateString()===now.toDateString();
+      const isFut=dt>now;
+      const isDone=localDash.completions[`g${idx}_${year}_${month}_${d}`]===true;
+      const cls=['cal-cell',isDone?'done':'',isFut?'future':'',isToday?'cal-today':'',(!isDone&&wok&&!isFut)?'week-ok':''].filter(Boolean).join(' ');
+      calHtml+=`<div class="${cls}" onclick="${isFut?'':(`toggleDay(${idx},${d})`)}">
+        <div class="cal-dn">${d}</div><div class="cal-chk">✓</div>
       </div>`;
     });
   });
-  calHtml += '</div>';
+  calHtml+='</div>';
 
-  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
-
-  panel.innerHTML = `<div style="padding:24px">
-    <div class="calendar-header">
-      <div class="cal-goal-title">${esc(g.title||(idx===0?'12시에 눕기':'목표'))}</div>
+  const isCur=year===now.getFullYear()&&month===now.getMonth()+1;
+  panel.innerHTML=`
+    <div class="cal-header">
+      <div class="cal-goal-name">${esc(g.title)}</div>
       <div class="cal-meta">
         <div class="cal-unit-badge">${UNIT_LABELS[g.unit]}</div>
-        <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">단위 수정</button>
+        <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">수정</button>
       </div>
     </div>
     <div class="month-nav">
       <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
-      <div class="month-label">${monthLabel}</div>
-      <button class="month-nav-btn" onclick="changeMonth(1)" ${isCurrentMonth?'disabled style="opacity:.4;cursor:default"':''}>›</button>
+      <div class="month-label">${year}년 ${month}월</div>
+      <button class="month-nav-btn" onclick="changeMonth(1)" ${isCur?'disabled':''}>›</button>
     </div>
     ${calHtml}
-    <div class="month-progress">
-      <div class="mp-label">이번 달 진척</div>
-      <div class="mp-track"><div class="mp-fill" style="width:${pct}%"></div></div>
-      <div class="mp-nums">${done}/${mod} · ${pct}%</div>
-    </div>
-  </div>`;
+    <div class="month-stat">
+      <div class="ms-label">이달 진척</div>
+      <div class="ms-track"><div class="ms-fill" style="width:${pct}%"></div></div>
+      <div class="ms-nums">${done}/${mod} · ${pct}%</div>
+    </div>`;
 }
 
-window.changeMonth = function(dir) {
-  let { year, month } = viewMonth;
-  month += dir;
-  if (month < 1) { month = 12; year--; }
-  if (month > 12) { month = 1; year++; }
-  const now = new Date();
-  if (year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth() + 1)) return;
-  viewMonth = { year, month };
-  renderDetailPanel(activeGoalIdx);
+window.changeMonth=function(dir){
+  let {year,month}=viewMonth;
+  month+=dir;
+  if(month<1){month=12;year--;}
+  if(month>12){month=1;year++;}
+  const now=new Date();
+  if(year>now.getFullYear()||(year===now.getFullYear()&&month>now.getMonth()+1)) return;
+  viewMonth={year,month};
+  renderDetail(activeGoalIdx);
 };
 
-window.toggleDay = async function(idx, day) {
-  const { year, month } = viewMonth;
-  const key = `g${idx}_${year}_${month}_${day}`;
-  const cur = localDash.completions[key] === true;
-  localDash.completions[key] = !cur;
+window.toggleDay=async function(idx,day){
+  const {year,month}=viewMonth;
+  const k=`g${idx}_${year}_${month}_${day}`;
+  localDash.completions[k]=!(localDash.completions[k]===true);
   await saveDash();
-  showToast(!cur ? '✅ 완료!' : '↩️ 해제');
-  renderDetailPanel(idx);
-  renderGoalButtons();
-  renderGlobalProgress();
-  renderAvatar();
+  showToast(localDash.completions[k]?'✅ 완료!':'↩️ 해제');
+  renderDetail(idx); renderGoalGrid(); renderGlobal(); renderAvatar();
 };
 
-// ===== 아바타 =====
-function renderAvatar() {
-  const pct = calcGlobalPct();
-  const stage = Math.min(9, Math.floor(pct / 10)); // 0~9
-  const stageData = AVATAR_STAGES[stage];
-
-  // 캔버스 그리기
-  const canvas = document.getElementById('avatarCanvas');
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 16, 16);
-  const px = stageData.pixels;
-  for (let y = 0; y < 16; y++) {
-    for (let x = 0; x < 16; x++) {
-      const c = px[y * 16 + x];
-      if (c !== '0') {
-        ctx.fillStyle = PAL[c] || '#fff';
-        ctx.fillRect(x, y, 1, 1);
-      }
-    }
-  }
-
-  document.getElementById('avatarStageName').textContent = `${stage + 1}단계 · ${stageData.name}`;
-
-  // 오늘 날짜 기반 랜덤 멘트 (매일 고정)
-  const today = new Date();
-  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-  const msgIdx = dayOfYear % CHEERS.length;
-  document.getElementById('avatarMsg').textContent = CHEERS[msgIdx];
+// ===== UTILS =====
+window.renderDetail=renderDetail;
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
-
-// ===== 유틸 =====
-function esc(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
-}
-window.showToast = showToast;
-window.renderDetailPanel = renderDetailPanel;
+window.showToast=showToast;
 </script>
 </body>
 </html>

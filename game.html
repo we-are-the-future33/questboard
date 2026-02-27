@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QUEST BOARD</title>
+<title>동물 키우기 - 목표 달성 게임</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 :root {
@@ -91,7 +91,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .pencil-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:border-color .2s,color .2s;flex-shrink:0;}
 .pencil-btn:hover{border-color:var(--accent);color:var(--accent);}
 .nickname-edit-row{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;}
-.nickname-input{flex:1;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px;font-family:'Black Han Sans',sans-serif;outline:none;letter-spacing:1px;text-align:center;}
+.nickname-input{flex:1;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;letter-spacing:0;text-align:center;}
 .nickname-save-btn{background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;}
 .avatar-msg{font-size:13px;color:var(--text-dim);line-height:1.6;text-align:center;max-width:260px;}
 .avatar-progress-row{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;}
@@ -867,11 +867,12 @@ function renderAvatar(){
 }
 
 window.startEditMsg=function(){
+  // 닉네임 편집 중이면 먼저 원래대로 복원
+  cancelEditNickname();
   const cur=localDash.msg||'좋은 습관 만드는 중';
   const container=document.getElementById('avatarMsg').parentElement;
   container.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;max-width:280px;">
-    <input id="msgInput" type="text" value="${escAttr(cur)}" maxlength="20" placeholder="한 줄 문구"
-      style="flex:1;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:7px 11px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;text-align:center;">
+    <input id="msgInput" type="text" value="${escAttr(cur)}" maxlength="20" placeholder="한 줄 문구" class="nickname-input" style="font-size:14px;font-family:'Noto Sans KR',sans-serif;font-weight:400;letter-spacing:0;">
     <button onclick="saveMsg()" class="nickname-save-btn">저장</button>
   </div>`;
   document.getElementById('msgInput').focus();
@@ -912,6 +913,8 @@ function renderGoalGrid(){
   document.getElementById('goalGrid').innerHTML=html;
 }
 window.selectGoal=function(idx){
+  cancelEditNickname();
+  cancelEditMsg();
   activeGoalIdx=idx;
   renderGoalGrid();
   renderDetail(idx);
@@ -1267,7 +1270,30 @@ window.toggleDay=async function(idx,day){
 };
 
 // ===== 닉네임 편집 =====
+// 편집 모드 강제 해제 헬퍼
+function cancelEditNickname(){
+  const row=document.getElementById('avatarNicknameRow');
+  if(row && row.querySelector('#nicknameInput')){
+    const nick=localDash.nickname||currentUser.name||'나의 캐릭터';
+    row.innerHTML=`<div class="avatar-nickname" id="avatarNickname">${esc(nick)}</div>
+      <button class="pencil-btn" onclick="startEditNickname()">✏️</button>`;
+  }
+}
+function cancelEditMsg(){
+  const msgEl=document.getElementById('avatarMsg');
+  if(!msgEl && document.getElementById('msgInput')){
+    const container=document.getElementById('msgInput').closest('div').parentElement;
+    const msg=localDash.msg||'좋은 습관 만드는 중';
+    container.innerHTML=`<div class="avatar-msg" id="avatarMsg">${esc(msg)}</div>
+      <button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>`;
+  }
+}
+window.cancelEditNickname=cancelEditNickname;
+window.cancelEditMsg=cancelEditMsg;
+
 window.startEditNickname=function(){
+  // 문구 편집 중이면 먼저 원래대로 복원
+  cancelEditMsg();
   const row=document.getElementById('avatarNicknameRow');
   const cur=localDash.nickname||currentUser.name||'나의 캐릭터';
   row.innerHTML=`<div class="nickname-edit-row">

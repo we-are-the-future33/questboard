@@ -103,17 +103,17 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .goals-section{padding:20px 20px 0;}
 .goals-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .goals-section-title{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:2px;color:var(--text-dim);}
-.goal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.goal-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;cursor:pointer;text-align:left;transition:border-color .2s,background .2s;font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden;}
+.goal-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.goal-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 10px;cursor:pointer;text-align:left;transition:border-color .2s,background .2s;font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden;height:88px;display:flex;flex-direction:column;justify-content:center;}
 .goal-btn:hover:not(.disabled){border-color:var(--accent);}
 .goal-btn.active{border-color:var(--accent);background:rgba(200,241,53,.07);}
-.goal-btn.disabled{border-style:dashed;opacity:.4;cursor:default;}
-.goal-btn-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.goal-btn.disabled{border-style:dashed;cursor:default;}
+.goal-btn-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .goal-btn.disabled .goal-btn-title{color:var(--text-dim);}
-.goal-btn-pct{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);}
-.goal-btn-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;}
+.goal-btn-pct{font-family:'Black Han Sans',sans-serif;font-size:17px;color:var(--accent);}
+.goal-btn-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px;}
 .goal-btn-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
-.goal-btn-need{font-size:11px;color:var(--text-dim);margin-top:4px;}
+.goal-btn-need{font-size:10px;color:var(--text-dim);margin-top:4px;}
 
 /* 상세 패널 */
 .detail-section{padding:20px;}
@@ -241,7 +241,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .stats-bar-col{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:160px;position:relative;}
 .stats-bar{width:100%;border-radius:4px 4px 0 0;background:var(--surface2);transition:height .5s ease;min-height:2px;position:relative;}
 .stats-bar.current-month{background:var(--accent);}
-.stats-bar.past{background:var(--surface2);}
+.stats-bar.past{background:#444;}
 .stats-bar-pct{font-size:9px;color:var(--text-dim);position:absolute;top:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;}
 .stats-bar.current-month .stats-bar-pct{color:var(--accent);}
 .stats-bar-lbl{font-size:9px;color:var(--text-dim);margin-top:4px;white-space:nowrap;}
@@ -426,10 +426,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="avatar-nickname" id="avatarNickname">나의 캐릭터</div>
         <button class="pencil-btn" onclick="startEditNickname()">✏️</button>
       </div>
-      <div class="avatar-msg" id="avatarMsg">오늘도 파이팅!</div>
-      <div class="avatar-progress-row">
-        <div class="ap-track"><div class="ap-fill" id="apFill" style="width:0%"></div></div>
-        <div class="ap-pct" id="apPct">0%</div>
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+        <div class="avatar-msg" id="avatarMsg">좋은 습관 만드는 중</div>
+        <button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>
       </div>
     </div>
     <div class="goals-section">
@@ -467,7 +466,7 @@ const db = getDatabase(app);
 // ===== 상수 =====
 const UNIT_LABELS = { once:'한 번', daily:'매일', w1:'주 1회', w2:'주 2~3회', w4:'주 4~5회', w6:'주 6회' };
 const UNIT_FREQ   = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6 };
-const MAX_GOALS   = 6;
+const MAX_GOALS   = 9;
 const TUT_STEPS   = 5;
 
 const CHEERS = [
@@ -861,14 +860,32 @@ function renderAvatar(){
   const stage=Math.min(9,Math.floor(p/10));
   document.getElementById('avatarArt').innerHTML=AVATARS[stage];
   document.getElementById('avatarStage').textContent=`${stage+1}단계 · ${STAGE_NAMES[stage]}`;
-  document.getElementById('apFill').style.width=p+'%';
-  document.getElementById('apPct').textContent=p+'%';
   const nick=localDash.nickname||currentUser.name||'나의 캐릭터';
   document.getElementById('avatarNickname').textContent=nick;
-  const now=new Date();
-  const doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
-  document.getElementById('avatarMsg').textContent=CHEERS[doy%CHEERS.length];
+  const msg=localDash.msg||'좋은 습관 만드는 중';
+  document.getElementById('avatarMsg').textContent=msg;
 }
+
+window.startEditMsg=function(){
+  const cur=localDash.msg||'좋은 습관 만드는 중';
+  const container=document.getElementById('avatarMsg').parentElement;
+  container.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;max-width:280px;">
+    <input id="msgInput" type="text" value="${escAttr(cur)}" maxlength="20" placeholder="한 줄 문구"
+      style="flex:1;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:7px 11px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;text-align:center;">
+    <button onclick="saveMsg()" class="nickname-save-btn">저장</button>
+  </div>`;
+  document.getElementById('msgInput').focus();
+  document.getElementById('msgInput').addEventListener('keydown',e=>{ if(e.key==='Enter') window.saveMsg(); });
+};
+
+window.saveMsg=async function(){
+  const val=(document.getElementById('msgInput')||{}).value?.trim();
+  if(!val){showToast('❌ 문구를 입력하세요');return;}
+  localDash.msg=val;
+  await saveDash();
+  showToast('✅ 문구 저장 완료!');
+  renderAvatar();
+};
 function renderGoalGrid(){
   const goals=getAllGoals();
   const now=new Date(); const y=now.getFullYear(),m=now.getMonth()+1;
@@ -877,7 +894,7 @@ function renderGoalGrid(){
     const g=goals[i];
     const isActive=activeGoalIdx===i;
     if(!g){
-      html+=`<button class="goal-btn disabled" onclick="selectGoal(${i})"><div class="goal-btn-title">+ 목표 추가</div></button>`;
+      html+=`<button class="goal-btn disabled" onclick="selectGoal(${i})"><div class="goal-btn-title" style="color:var(--text-dim);text-align:center;width:100%;">＋</div></button>`;
     } else if(!g.unit){
       html+=`<button class="goal-btn ${isActive?'active':''}" onclick="selectGoal(${i})">
         <div class="goal-btn-title">${esc(g.title||'목표'+(i+1))}</div>

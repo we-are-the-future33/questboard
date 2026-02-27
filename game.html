@@ -228,6 +228,30 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .confetti-piece{position:absolute;width:10px;height:10px;border-radius:2px;animation:confetti-fall linear forwards;}
 @keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
 
+/* ===== STATS ===== */
+.stats-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--border);}
+.stats-title{font-family:'Black Han Sans',sans-serif;font-size:13px;letter-spacing:2px;color:var(--text-dim);margin-bottom:16px;}
+.stats-chart{display:flex;align-items:flex-end;gap:6px;height:100px;margin-bottom:8px;position:relative;}
+.stats-avg-line{position:absolute;left:0;right:0;border-top:1px dashed var(--accent2);pointer-events:none;}
+.stats-avg-label{position:absolute;right:0;font-size:9px;color:var(--accent2);transform:translateY(-12px);white-space:nowrap;}
+.stats-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+.stats-bar-col{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:80px;position:relative;}
+.stats-bar{width:100%;border-radius:4px 4px 0 0;background:var(--surface2);transition:height .5s ease;min-height:2px;position:relative;}
+.stats-bar.current-month{background:var(--accent);}
+.stats-bar.past{background:var(--surface2);}
+.stats-bar-pct{font-size:9px;color:var(--text-dim);position:absolute;top:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;}
+.stats-bar.current-month .stats-bar-pct{color:var(--accent);}
+.stats-bar-lbl{font-size:9px;color:var(--text-dim);margin-top:4px;white-space:nowrap;}
+.stats-bar-lbl.current{color:var(--accent);}
+.stats-insight{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:4px;}
+.stats-insight-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.stats-insight-row:last-child{margin-bottom:0;}
+.stats-insight-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.stats-insight-text{font-size:13px;color:var(--text);line-height:1.6;}
+.stats-insight-text strong{color:var(--accent);}
+.stats-cheer{background:linear-gradient(135deg,rgba(200,241,53,.08),rgba(241,200,53,.05));border:1px solid rgba(200,241,53,.2);border-radius:12px;padding:14px 16px;margin-top:10px;font-size:13px;color:var(--text);line-height:1.7;}
+.stats-cheer strong{color:var(--accent2);}
+
 /* TOAST */
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#0d0d0d;padding:11px 24px;border-radius:100px;font-weight:700;font-size:14px;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -1052,8 +1076,135 @@ function renderCalendar(panel,g,idx){
       <div class="ms-label">이달 진척</div>
       <div class="ms-track"><div class="ms-fill" style="width:${pct}%"></div></div>
       <div class="ms-nums">${done}/${mod} · ${pct}%</div>
-    </div>`;
+    </div>
+    ${renderStats(g,idx)}`;
 }
+// ===== STATS =====
+function renderStats(g, idx) {
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth()+1;
+
+  // 최근 6개월 데이터 수집
+  const months = [];
+  for(let i=5; i>=0; i--) {
+    let y=curY, m=curM-i;
+    if(m<=0){m+=12;y--;}
+    const {done,mod,pct} = goalPct(g,idx,y,m);
+    months.push({y,m,done,mod,pct,isCur:i===0});
+  }
+
+  const validMonths = months.filter(mo=>mo.mod>0);
+  if(validMonths.length===0) return '';
+
+  const avg = Math.round(validMonths.reduce((s,mo)=>s+mo.pct,0)/validMonths.length);
+  const maxMo = [...validMonths].sort((a,b)=>b.pct-a.pct)[0];
+  const minMo = [...validMonths].sort((a,b)=>a.pct-b.pct)[0];
+  const curMoData = months[5]; // 이번 달
+  const prevMoData = months[4]; // 전달
+
+  // 연속 달성(>= 50%) 계산 - 이번 달 포함 최근부터 역순
+  let streak = 0;
+  for(let i=validMonths.length-1; i>=0; i--) {
+    if(validMonths[i].pct >= 50) streak++;
+    else break;
+  }
+
+  // 바 그래프 HTML
+  const maxPct = Math.max(...validMonths.map(mo=>mo.pct), 1);
+  const avgLineBottom = (avg/maxPct)*80; // px (바 높이 80px)
+
+  const barsHtml = months.map(mo=>{
+    const barH = mo.mod>0 ? Math.max(2, Math.round((mo.pct/maxPct)*80)) : 2;
+    const lbl = `${mo.m}월`;
+    const isCur = mo.isCur;
+    return `<div class="stats-bar-wrap">
+      <div class="stats-bar-col">
+        <div class="stats-bar ${isCur?'current-month':'past'}" style="height:${barH}px;">
+          <div class="stats-bar-pct">${mo.mod>0?mo.pct+'%':'-'}</div>
+        </div>
+      </div>
+      <div class="stats-bar-lbl ${isCur?'current':''}">${lbl}</div>
+    </div>`;
+  }).join('');
+
+  // 평균선 위치 (바 최대높이 80px 기준)
+  const avgLinePx = Math.round((avg/maxPct)*80);
+  const avgLineHtml = `<div class="stats-avg-line" style="bottom:${avgLinePx+20}px;">
+    <span class="stats-avg-label">평균 ${avg}%</span>
+  </div>`;
+
+  // 인사이트 멘트 생성
+  const insights = buildInsights({months:validMonths, avg, maxMo, minMo, curMoData, prevMoData, streak, curY, curM});
+
+  return `<div class="stats-section">
+    <div class="stats-title">📊 6개월 통계</div>
+    <div class="stats-chart" style="position:relative;">
+      ${avgLineHtml}
+      ${barsHtml}
+    </div>
+    <div class="stats-insight">
+      ${insights.facts.map(f=>`<div class="stats-insight-row"><div class="stats-insight-icon">${f.icon}</div><div class="stats-insight-text">${f.text}</div></div>`).join('')}
+    </div>
+    <div class="stats-cheer">${insights.cheer}</div>
+  </div>`;
+}
+
+function buildInsights({months, avg, maxMo, minMo, curMoData, prevMoData, streak, curY, curM}) {
+  const facts = [];
+
+  // 1. 6개월 평균
+  facts.push({icon:'📈', text:`최근 6개월 평균 수행률은 <strong>${avg}%</strong>예요.`});
+
+  // 2. 전월 대비 변화
+  if(prevMoData && prevMoData.mod>0 && curMoData.mod>0) {
+    const diff = curMoData.pct - prevMoData.pct;
+    if(diff > 0) {
+      facts.push({icon:'🔼', text:`이번 달은 지난달보다 <strong>${diff}%p 올랐어요!</strong> 성장하고 있어요.`});
+    } else if(diff < 0) {
+      facts.push({icon:'🔽', text:`이번 달은 지난달보다 ${Math.abs(diff)}%p 내려갔어요. 다시 올려봐요!`});
+    } else {
+      facts.push({icon:'➡️', text:`지난달과 같은 수행률이에요. 꾸준히 유지하고 있네요!`});
+    }
+  }
+
+  // 3. 연속 달성 기록
+  if(streak >= 2) {
+    facts.push({icon:'🔥', text:`<strong>${streak}개월 연속</strong>으로 50% 이상 달성 중이에요!`});
+  }
+
+  // 4. 최고/최저 달
+  if(months.length >= 3) {
+    const maxLabel = `${maxMo.y===curY?'':maxMo.y+'년 '}${maxMo.m}월`;
+    const minLabel = `${minMo.y===curY?'':minMo.y+'년 '}${minMo.m}월`;
+    if(maxMo.m===curM && maxMo.y===curY) {
+      facts.push({icon:'🏆', text:`이번 달이 6개월 중 <strong>가장 높은 달</strong>이에요!`});
+    } else {
+      facts.push({icon:'🏆', text:`6개월 중 가장 잘한 달은 <strong>${maxLabel} (${maxMo.pct}%)</strong>이었어요.`});
+    }
+  }
+
+  // 응원 멘트 (친근하고 따뜻하게)
+  let cheer = '';
+  if(avg >= 80) {
+    cheer = `대단해요! <strong>꾸준히 잘 해내고 있어요 😊</strong><br>이 페이스라면 목표 달성은 시간문제예요. 계속 응원할게요!`;
+  } else if(avg >= 60) {
+    cheer = `잘 하고 있어요! <strong>평균 ${avg}%면 정말 훌륭해요.</strong><br>작은 습관이 쌓여서 큰 변화를 만들어가고 있어요 💪`;
+  } else if(avg >= 40) {
+    cheer = `조금씩 나아가고 있어요! <strong>꾸준히 하는 것 자체가 대단해요.</strong><br>포기하지 않는 게 가장 중요해요, 같이 해봐요 😊`;
+  } else if(avg >= 20) {
+    cheer = `시작이 반이에요! <strong>목표를 세우고 도전하는 것 자체가 멋진 일이에요.</strong><br>조금씩 더 늘려가 봐요, 응원하고 있을게요 🌱`;
+  } else {
+    cheer = `천천히 가도 괜찮아요! <strong>오늘 하루 하나씩 시작해봐요.</strong><br>작은 체크 하나가 큰 변화의 시작이에요 😌`;
+  }
+
+  // 이번 달이 최고면 추가 응원
+  if(curMoData.mod>0 && curMoData.pct===maxMo.pct && months.length>=2) {
+    cheer = `🎉 이번 달 최고 기록이에요! <strong>지금 이 흐름 그대로 유지해봐요.</strong><br>정말 잘 하고 있어요, 진심으로 응원해요!`;
+  }
+
+  return {facts, cheer};
+}
+
 window.changeMonth=function(dir){
   let {year,month}=viewMonth;
   month+=dir;

@@ -302,28 +302,23 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       <div class="tut-step active" id="tutStep1">
         <div class="tut-bubble">
           <div class="tut-bubble-tag">STEP 1 · 목표 설정</div>
-          <div class="tut-bubble-text">먼저 <strong>달성하고 싶은 목표</strong>를 정해볼게요.<br>오늘부터 시작할 목표를 입력해주세요!</div>
+          <div class="tut-bubble-text">먼저 <strong>달성하고 싶은 목표</strong>를 정해볼게요.<br>아래 목표를 탭해서 시작해보세요!</div>
         </div>
-        <div class="tut-preview">
-          <div class="tut-preview-title">나의 첫 번째 목표</div>
-          <input id="tutGoalInput" type="text" placeholder="목표 이름을 입력하세요" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-        </div>
-        <div class="tut-hint">또는 예시 목표를 써볼게요</div>
-        <button class="tut-confirm-btn" onclick="tutStep1Confirm()">✓ 확인 (예시: 12시 전에 자기)</button>
+        <button id="tutGoalBtn" onclick="tutStep1Confirm()" style="width:100%;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:18px 16px;color:var(--text);font-size:16px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;text-align:left;margin-bottom:20px;animation:pulse-border 1.2s ease-in-out infinite;transition:background .2s;">
+          12시 전에 자기
+        </button>
       </div>
 
       <!-- STEP 2: 단위 설정 -->
       <div class="tut-step" id="tutStep2">
         <div class="tut-bubble">
           <div class="tut-bubble-tag">STEP 2 · 단위 설정</div>
-          <div class="tut-bubble-text"><strong>얼마나 자주</strong> 이 목표를 수행할 건가요?<br>목표에 맞는 주기를 선택해주세요.</div>
+          <div class="tut-bubble-text"><strong>얼마나 자주</strong> 이 목표를 수행할 건가요?<br>주 4~5회를 탭해서 선택해보세요!</div>
         </div>
         <div class="tut-preview">
-          <div class="tut-preview-title">목표: <span id="tutGoalName2">-</span></div>
+          <div class="tut-preview-title" style="margin-bottom:12px;">목표: <span id="tutGoalName2">-</span></div>
           <div class="unit-opts" id="tutUnitOpts" style="margin-bottom:0;"></div>
         </div>
-        <div class="tut-hint">또는 예시를 써볼게요</div>
-        <button class="tut-confirm-btn" onclick="tutStep2Confirm()">✓ 확인 (예시: 주 4~5회)</button>
       </div>
 
       <!-- STEP 3: 체크 처리 -->
@@ -337,18 +332,16 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
           <div class="tut-cal-grid" id="tutCalDayRow"></div>
           <div class="tut-cal-grid" id="tutCalGrid"></div>
         </div>
-        <div id="tutStep3Status" style="text-align:center;font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--text-dim);margin-bottom:16px;">0 / 4 체크</div>
-        <button class="tut-confirm-btn" id="tutStep3Btn" onclick="tutStep3Confirm()" disabled style="opacity:.4;cursor:not-allowed;">4일을 체크하면 계속됩니다</button>
+        <div id="tutStep3Status" style="text-align:center;font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--text-dim);margin-bottom:8px;">0 / 4 체크</div>
       </div>
 
-      <!-- STEP 4: 목표 진척률 -->
+      <!-- STEP 4: 목표 진척률 + 전체 진척률 합침 -->
       <div class="tut-step" id="tutStep4">
         <div class="tut-bubble">
-          <div class="tut-bubble-tag">STEP 4 · 목표 진척률</div>
-          <div class="tut-bubble-text">체크한 날짜만큼 <strong>목표 수행률</strong>이 올라가요!<br>이번 달 기준으로 계산돼요.</div>
+          <div class="tut-bubble-tag">STEP 4 · 진척률</div>
+          <div class="tut-bubble-text">체크한 날짜만큼 <strong>해당 목표의 수행률이 올라가요!</strong><br>모든 목표의 수행률을 합산해서 전체 달성률도 함께 올라가요.</div>
         </div>
-        <div class="tut-preview highlight-box" id="tutGoalCard">
-          <div class="tut-preview-title">목표</div>
+        <div class="tut-preview highlight-box" id="tutGoalCard" style="margin-bottom:12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <div style="font-size:14px;font-weight:700;" id="tutGoalName4">-</div>
             <div class="tut-goal-pct" id="tutGoalPct4">0%</div>
@@ -356,27 +349,18 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
           <div class="tut-bar"><div class="tut-bar-fill" id="tutGoalBar4" style="width:0%"></div></div>
           <div style="font-size:12px;color:var(--text-dim);margin-top:8px;" id="tutGoalStat4">0/0</div>
         </div>
-        <button class="tut-confirm-btn" onclick="tutNextStep(5)">다음 →</button>
-      </div>
-
-      <!-- STEP 5: 전체 진척률 -->
-      <div class="tut-step" id="tutStep5">
-        <div class="tut-bubble">
-          <div class="tut-bubble-tag">STEP 5 · 전체 진척률</div>
-          <div class="tut-bubble-text">모든 목표의 수행일수를 합산해서<strong> 전체 달성률</strong>을 계산해요!</div>
-        </div>
         <div class="tut-global-bar highlight-box" id="tutGlobalBar">
           <div class="tut-gb-label">이번 달</div>
           <div class="tut-gb-track"><div class="tut-gb-fill" id="tutGbFill" style="width:0%"></div></div>
           <div class="tut-gb-pct" id="tutGbPct">0%</div>
         </div>
-        <button class="tut-confirm-btn" onclick="tutNextStep(6)">다음 →</button>
+        <button class="tut-confirm-btn" onclick="tutNextStep(5)">다음 →</button>
       </div>
 
-      <!-- STEP 6: 캐릭터 -->
-      <div class="tut-step" id="tutStep6">
+      <!-- STEP 5: 캐릭터 -->
+      <div class="tut-step" id="tutStep5">
         <div class="tut-bubble">
-          <div class="tut-bubble-tag">STEP 6 · 나의 캐릭터</div>
+          <div class="tut-bubble-tag">STEP 5 · 나의 캐릭터</div>
           <div class="tut-bubble-text">전체 달성률에 따라 <strong>캐릭터가 자라나요!</strong><br>열심히 달성할수록 더 멋진 캐릭터가 될 거예요 🌟</div>
         </div>
         <div class="tut-avatar-wrap highlight-box" id="tutAvatarWrap">
@@ -457,7 +441,7 @@ const db = getDatabase(app);
 const UNIT_LABELS = { once:'한 번', daily:'매일', w1:'주 1회', w2:'주 2~3회', w4:'주 4~5회', w6:'주 6회' };
 const UNIT_FREQ   = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6 };
 const MAX_GOALS   = 6;
-const TUT_STEPS   = 6;
+const TUT_STEPS   = 5;
 
 const CHEERS = [
   "오늘도 한 걸음!","작은 시작이 큰 변화를 만들어요","포기하지 마세요!","잘 하고 있어요!","오늘의 노력이 내일의 나를 만들어요",
@@ -631,11 +615,14 @@ function initTutorial() {
   const dots = document.getElementById('tutDots');
   dots.innerHTML = Array(TUT_STEPS).fill(0).map((_,i)=>`<div class="tut-dot ${i===0?'active':''}" id="tutDot${i+1}"></div>`).join('');
   updateTutProgress(1);
-  // 단위 선택지 렌더
+  // 단위 선택지 렌더 - 주4~5회(w4)만 클릭 가능, 나머지 딤드
   const uopts = document.getElementById('tutUnitOpts');
-  uopts.innerHTML = Object.entries(UNIT_LABELS).map(([u,l])=>
-    `<div class="unit-opt ${tutState.unit===u?'selected':''}" onclick="tutPickUnit('${u}')">${l}</div>`
-  ).join('');
+  uopts.innerHTML = Object.entries(UNIT_LABELS).map(([u,l])=>{
+    if(u === 'w4') {
+      return `<div class="unit-opt" onclick="tutPickUnit('w4')" style="animation:pulse-border 1.2s ease-in-out infinite;border-color:var(--accent);cursor:pointer;">${l}</div>`;
+    }
+    return `<div class="unit-opt" style="opacity:.25;pointer-events:none;cursor:not-allowed;">${l}</div>`;
+  }).join('');
   buildTutCal();
 }
 
@@ -656,24 +643,24 @@ window.tutNextStep = function(n) { updateTutProgress(n); };
 
 window.tutPickUnit = function(u) {
   tutState.unit = u;
-  document.querySelectorAll('#tutUnitOpts .unit-opt').forEach(el=>{
-    el.classList.toggle('selected', el.textContent===UNIT_LABELS[u]);
-  });
+  // 선택 표시 후 즉시 다음 스텝
+  const el = document.querySelector(`#tutUnitOpts .unit-opt[onclick*="${u}"]`);
+  if(el) { el.classList.add('selected'); el.style.animation='none'; }
+  tutStep2Confirm();
 };
 
 window.tutStep1Confirm = function() {
-  const inp = document.getElementById('tutGoalInput');
-  tutState.goalName = inp.value.trim() || '12시 전에 자기';
+  tutState.goalName = '12시 전에 자기';
   document.getElementById('tutGoalName2').textContent = tutState.goalName;
-  updateTutProgress(2);
+  showToast('✅ 목표 설정 완료!');
+  setTimeout(()=> updateTutProgress(2), 400);
 };
 
 window.tutStep2Confirm = function() {
-  // 선택 없으면 기본값 w4
-  const now = new Date();
   buildTutCal();
   document.getElementById('tutGoalName3').textContent = tutState.goalName;
-  updateTutProgress(3);
+  showToast('✅ 단위 설정 완료!');
+  setTimeout(()=> updateTutProgress(3), 400);
 };
 
 // 튜토리얼 달력 (이번 주 7일, 4일 클릭 유도)
@@ -714,23 +701,18 @@ window.tutToggleDay = function(day) {
   buildTutCal();
   const cnt = tutState.checkedDays.size;
   const status = document.getElementById('tutStep3Status');
-  const btn = document.getElementById('tutStep3Btn');
-  if(status) status.textContent = `${cnt} / 4 체크`;
-  if(status) status.style.color = cnt>=4?'var(--accent)':'var(--text-dim)';
-  if(btn) {
-    if(cnt>=4) {
-      btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
-      btn.textContent='계속하기 →';
-    } else {
-      btn.disabled=true; btn.style.opacity='.4'; btn.style.cursor='not-allowed';
-      btn.textContent=`${4-cnt}일 더 체크하면 계속됩니다`;
-    }
+  if(status) {
+    status.textContent = `${cnt} / 4 체크`;
+    status.style.color = cnt>=4?'var(--accent)':'var(--text-dim)';
+  }
+  if(cnt >= 4) {
+    showToast('✅ 체크 완료!');
+    setTimeout(()=> tutStep3Confirm(), 600);
   }
 };
 
 window.tutStep3Confirm = function() {
   if(tutState.checkedDays.size < 4) return;
-  // 진척률 계산
   const now = new Date();
   const y=now.getFullYear(), m=now.getMonth()+1;
   const dim = new Date(y,m,0).getDate();
@@ -746,7 +728,6 @@ window.tutStep3Confirm = function() {
   document.getElementById('tutGoalStat4').textContent = `${done}일 완료 / 이번 달 목표 ${mod}일`;
   document.getElementById('tutGbFill').style.width = pct+'%';
   document.getElementById('tutGbPct').textContent = pct+'%';
-  // 아바타 업데이트
   const stage = Math.min(9,Math.floor(pct/10));
   document.getElementById('tutAvatarArt').innerHTML = AVATARS[stage];
   document.getElementById('tutAvatarStage').textContent = `${stage+1}단계 · ${STAGE_NAMES[stage]}`;

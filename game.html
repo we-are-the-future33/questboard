@@ -58,10 +58,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* ADMIN */
 .page-pad{padding:24px 20px;}
 .section-title{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:18px;color:var(--accent);}
-.admin-hero{text-align:center;padding:32px 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px;}
-.admin-hero-title{font-family:'Black Han Sans',sans-serif;font-size:24px;letter-spacing:4px;color:var(--accent2);margin-bottom:6px;}
+.admin-hero{text-align:center;padding:28px 0 20px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+.admin-hero-title{font-family:'Black Han Sans',sans-serif;font-size:22px;letter-spacing:4px;color:var(--accent2);margin-bottom:6px;}
 .admin-hero-sub{color:var(--text-dim);font-size:13px;}
-.create-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+.create-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
 .form-row{margin-bottom:14px;}
 .form-row label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
 .form-row input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s;}
@@ -69,6 +69,37 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .btn-accent{background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:12px 22px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:opacity .2s;}
 .btn-accent:hover{opacity:.85;}
 .btn-accent.full{width:100%;margin-top:4px;}
+/* 유저 테이블 */
+.user-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.user-table th{font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.user-table td{padding:12px 10px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+.user-table tr.user-row{cursor:pointer;transition:background .15s;}
+.user-table tr.user-row:hover{background:rgba(200,241,53,.05);}
+.user-table tr.user-row.selected{background:rgba(200,241,53,.09);}
+.user-tbl-name{font-weight:700;}
+.user-tbl-id{font-size:11px;color:var(--text-dim);}
+.user-tbl-goals{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--accent);}
+.user-tbl-badge{font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);}
+/* 유저 상세 패널 */
+.admin-detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:16px;}
+.admin-detail-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.admin-detail-name{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:1px;}
+.admin-detail-id{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.admin-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.admin-meta-card{background:var(--surface2);border-radius:10px;padding:12px 14px;}
+.admin-meta-label{font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.admin-meta-val{font-size:12px;color:var(--text);font-weight:500;line-height:1.5;}
+.admin-goal-list{display:flex;flex-direction:column;gap:10px;}
+.admin-goal-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.admin-goal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.admin-goal-title{font-size:13px;font-weight:700;}
+.admin-goal-pct{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--accent);}
+.admin-goal-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:8px;}
+.admin-goal-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s;}
+.admin-goal-meta{display:flex;flex-wrap:wrap;gap:6px;}
+.admin-goal-tag{font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:2px 8px;color:var(--text-dim);}
+.admin-goal-tag.highlight{border-color:rgba(200,241,53,.4);color:var(--accent);}
+.admin-empty{text-align:center;color:var(--text-dim);font-size:13px;padding:20px 0;}
 .user-chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;}
 .user-chip{background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:7px 16px;display:flex;align-items:center;gap:8px;}
 .user-chip-name{font-weight:700;font-size:13px;}
@@ -260,6 +291,80 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* TOAST */
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#0d0d0d;padding:11px 24px;border-radius:100px;font-weight:700;font-size:14px;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ===== TABS ===== */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:52px;z-index:40;}
+.tab-btn{flex:1;padding:12px 0;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;background:transparent;border:none;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ===== FRIENDS ===== */
+.friends-section{padding:20px;}
+.friends-empty{text-align:center;color:var(--text-dim);font-size:13px;padding:60px 20px;line-height:2.2;}
+.friend-list{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
+.friend-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .2s,background .15s;}
+.friend-card:hover,.friend-card.active{border-color:var(--accent);background:rgba(200,241,53,.06);}
+.friend-avatar{width:44px;height:44px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+.friend-avatar svg{width:38px;height:38px;}
+.friend-info{flex:1;min-width:0;}
+.friend-name{font-weight:700;font-size:14px;margin-bottom:3px;}
+.friend-stage{font-size:11px;color:var(--text-dim);}
+.friend-pct{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);flex-shrink:0;}
+
+/* FRIEND DETAIL */
+.friend-detail{border:1px solid rgba(200,241,53,.3);border-radius:var(--radius);padding:16px;margin-top:8px;background:rgba(200,241,53,.03);}
+.friend-detail-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.friend-detail-name{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:1px;}
+.fgoal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.fgoal-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 10px;cursor:pointer;text-align:left;transition:border-color .15s;height:72px;display:flex;flex-direction:column;justify-content:center;}
+.fgoal-btn:hover,.fgoal-btn.fg-active{border-color:var(--accent);background:rgba(200,241,53,.06);}
+.fgoal-name{font-size:11px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fgoal-pct{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);}
+.fgoal-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px;}
+.fgoal-bar-fill{height:100%;background:var(--accent);border-radius:2px;}
+
+/* READ-ONLY CALENDAR */
+.rocal-wrap{background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px;}
+.rocal-label{font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+.rocal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
+.rocal-day{text-align:center;font-size:9px;color:var(--text-dim);padding:2px 0;}
+.rocal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.rocal-cell{aspect-ratio:1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);}
+.rocal-cell.done{background:var(--accent);border-color:var(--accent);color:#0d0d0d;font-weight:700;}
+.rocal-cell.empty{background:transparent;border-color:transparent;}
+.rocal-cell.today{border-color:var(--accent3);color:var(--accent3);}
+
+/* CHEER BOX */
+.cheer-box{border-top:1px solid var(--border);padding-top:14px;}
+.cheer-box-title{font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;}
+.cheer-list{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;max-height:160px;overflow-y:auto;}
+.cheer-item{background:var(--surface);border-radius:8px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start;}
+.cheer-emoji-big{font-size:18px;flex-shrink:0;}
+.cheer-body{flex:1;min-width:0;}
+.cheer-from{font-size:10px;color:var(--accent);font-weight:700;margin-bottom:2px;}
+.cheer-text{font-size:12px;color:var(--text);line-height:1.5;}
+.cheer-time{font-size:10px;color:var(--text-dim);margin-top:2px;}
+.cheer-input-row{display:flex;gap:6px;align-items:center;}
+.cheer-emoji-row{display:flex;gap:6px;margin-bottom:8px;}
+.cheer-emoji-btn{font-size:22px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 8px;cursor:pointer;transition:border-color .15s;line-height:1;}
+.cheer-emoji-btn:hover,.cheer-emoji-btn.selected{border-color:var(--accent);background:rgba(200,241,53,.1);}
+.cheer-text-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;}
+.cheer-text-input:focus{border-color:var(--accent);}
+.cheer-send-btn{background:var(--accent);color:#0d0d0d;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;}
+
+/* ADMIN GROUP */
+.group-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;}
+.group-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.group-card-name{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:1px;}
+.group-member-list{display:flex;flex-direction:column;gap:6px;}
+.group-member-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+.group-member-name{font-size:13px;font-weight:500;flex:1;}
+.group-member-id{font-size:11px;color:var(--text-dim);}
+.group-remove-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;}
+.group-remove-btn:hover{border-color:var(--danger);color:var(--danger);}
+.group-add-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:10px;}
+.group-add-select:focus{border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -296,7 +401,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div id="adminScreen" class="screen">
   <div class="mobile-wrap">
     <nav class="topnav">
-      <div class="nav-logo">QUEST <span class="nav-badge">ADMIN</span></div>
+      <div class="nav-logo">동물 키우기 <span class="nav-badge">ADMIN</span></div>
       <div class="nav-right"><button class="btn-sm" onclick="doLogout()">로그아웃</button></div>
     </nav>
     <div class="page-pad">
@@ -313,7 +418,19 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       </div>
       <div style="margin-top:32px;">
         <div class="section-title" style="font-size:15px;margin-bottom:12px;">등록된 유저</div>
-        <div class="user-chip-list" id="adminUserChips"></div>
+        <div id="adminUserTable"></div>
+        <div id="adminUserDetail"></div>
+      </div>
+      <div style="margin-top:32px;">
+        <div class="section-title" style="font-size:15px;margin-bottom:12px;">그룹 관리</div>
+        <div class="create-form" style="margin-bottom:16px;">
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">새 그룹 만들기</div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="newGroupName" placeholder="그룹 이름" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+            <button class="btn-accent" onclick="createGroup()" style="white-space:nowrap;">그룹 생성</button>
+          </div>
+        </div>
+        <div id="adminGroupList"></div>
       </div>
     </div>
   </div>
@@ -423,27 +540,39 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="gb-pct" id="gbPct">0%</div>
       </div>
     </div>
-    <div class="avatar-section">
-      <div class="avatar-art" id="avatarArt"></div>
-      <div class="avatar-stage" id="avatarStage">1단계 · 알</div>
-      <div class="avatar-nickname-row" id="avatarNicknameRow">
-        <div class="avatar-nickname" id="avatarNickname">나의 캐릭터</div>
-        <button class="pencil-btn" onclick="startEditNickname()">✏️</button>
+    <!-- 탭 바 (그룹 있을 때만 친구 탭 노출) -->
+    <div class="tab-bar" id="dashTabBar" style="display:none;">
+      <button class="tab-btn active" onclick="switchTab('my')" id="tabBtnMy">🎯 나의 목표</button>
+      <button class="tab-btn" onclick="switchTab('friends')" id="tabBtnFriends">👥 친구</button>
+    </div>
+    <!-- 나의 목표 탭 -->
+    <div class="tab-panel active" id="tabMy">
+      <div class="avatar-section">
+        <div class="avatar-art" id="avatarArt"></div>
+        <div class="avatar-stage" id="avatarStage">1단계 · 알</div>
+        <div class="avatar-nickname-row" id="avatarNicknameRow">
+          <div class="avatar-nickname" id="avatarNickname">나의 캐릭터</div>
+          <button class="pencil-btn" onclick="startEditNickname()">✏️</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+          <div class="avatar-msg" id="avatarMsg">좋은 습관 만드는 중</div>
+          <button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
-        <div class="avatar-msg" id="avatarMsg">좋은 습관 만드는 중</div>
-        <button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>
+      <div class="goals-section">
+        <div class="goals-section-header">
+          <div class="goals-section-title">🎯 목표</div>
+        </div>
+        <div class="goal-grid" id="goalGrid"></div>
+      </div>
+      <div class="detail-divider" style="margin-top:20px;"></div>
+      <div class="detail-section" id="detailSection">
+        <div class="detail-empty">목표를 선택하면<br>상세 내용이 펼쳐집니다</div>
       </div>
     </div>
-    <div class="goals-section">
-      <div class="goals-section-header">
-        <div class="goals-section-title">🎯 목표</div>
-      </div>
-      <div class="goal-grid" id="goalGrid"></div>
-    </div>
-    <div class="detail-divider" style="margin-top:20px;"></div>
-    <div class="detail-section" id="detailSection">
-      <div class="detail-empty">목표를 선택하면<br>상세 내용이 펼쳐집니다</div>
+    <!-- 친구 탭 -->
+    <div class="tab-panel" id="tabFriends">
+      <div class="friends-section" id="friendsSection"></div>
     </div>
   </div>
 </div>
@@ -571,6 +700,8 @@ window.doLogin = async function() {
       else localStorage.removeItem('qb_login');
       const u = snap.val();
       currentUser = {id,...u};
+      // lastLogin 기록
+      await set(ref(db,`users/${id}/lastLogin`), new Date().toISOString());
       if (u.role==='admin') { showScreen('adminScreen'); renderAdminList(); }
       else {
         document.getElementById('navUserName').textContent = u.name;
@@ -583,6 +714,14 @@ window.doLogin = async function() {
         } else {
           activeGoalIdx = null; viewMonth = null;
           showScreen('dashboardScreen');
+          // 그룹 확인 → 친구 탭 표시 여부
+          const grpSnap = await get(ref(db,'groups'));
+          let hasGroup = false;
+          if(grpSnap.exists()){
+            hasGroup = Object.values(grpSnap.val()).some(g=> g.members && Object.values(g.members).includes(id));
+          }
+          const tabBar = document.getElementById('dashTabBar');
+          if(tabBar) tabBar.style.display = hasGroup ? 'flex' : 'none';
           renderDashboard();
         }
       }
@@ -609,18 +748,160 @@ async function loadDash() {
   if (!localDash.goals) localDash.goals=[];
   if (!localDash.completions) localDash.completions={};
 }
-async function saveDash() { await set(ref(db,`dashboards/${currentUser.id}`),localDash); }
+async function saveDash() {
+  localDash.lastUpdate = new Date().toISOString();
+  await set(ref(db,`dashboards/${currentUser.id}`),localDash);
+}
 
 // ===== ADMIN =====
+let adminUsers = {};
+let adminSelectedId = null;
+
 async function renderAdminList() {
   const snap = await get(ref(db,'users'));
-  const chips = document.getElementById('adminUserChips');
-  if (!snap.exists()) { chips.innerHTML='<div style="color:var(--text-dim)">등록된 유저 없음</div>'; return; }
-  const users = Object.entries(snap.val()).filter(([,u])=>u.role!=='admin');
-  chips.innerHTML = users.length===0
-    ? '<div style="color:var(--text-dim)">등록된 유저 없음</div>'
-    : users.map(([id,u])=>`<div class="user-chip"><span class="user-chip-name">${esc(u.name)}</span><span class="user-chip-id">@${esc(id)}</span></div>`).join('');
+  const tableEl = document.getElementById('adminUserTable');
+  document.getElementById('adminUserDetail').innerHTML = '';
+  adminSelectedId = null;
+  if (!snap.exists()) { tableEl.innerHTML='<div style="color:var(--text-dim);font-size:13px;">등록된 유저 없음</div>'; return; }
+  adminUsers = snap.val();
+  const users = Object.entries(adminUsers).filter(([,u])=>u.role!=='admin');
+  if(users.length===0){ tableEl.innerHTML='<div style="color:var(--text-dim);font-size:13px;">등록된 유저 없음</div>'; return; }
+
+  // 대시보드 데이터도 미리 불러오기
+  const dashSnap = await get(ref(db,'dashboards'));
+  const allDash = dashSnap.exists() ? dashSnap.val() : {};
+
+  tableEl.innerHTML = `<table class="user-table">
+    <thead><tr>
+      <th>이름</th><th>아이디</th><th>목표</th><th>튜토리얼</th>
+    </tr></thead>
+    <tbody>
+    ${users.map(([id,u])=>{
+      const dash = allDash[id]||{};
+      const goals = (dash.goals||[]).filter(g=>g&&g.title);
+      const tutDone = dash.tutorialDone ? '<span style="color:var(--accent);font-size:11px;">완료</span>' : '<span style="color:var(--text-dim);font-size:11px;">미완료</span>';
+      return `<tr class="user-row" onclick="adminSelectUser('${id}')" data-id="${id}">
+        <td><div class="user-tbl-name">${esc(u.name)}</div></td>
+        <td><div class="user-tbl-id">@${esc(id)}</div></td>
+        <td><div class="user-tbl-goals">${goals.length}</div></td>
+        <td>${tutDone}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
+
+  // allDash 캐싱
+  tableEl._allDash = allDash;
+  renderAdminGroups();
 }
+
+window.adminSelectUser = async function(id) {
+  adminSelectedId = id;
+  // 선택 행 하이라이트
+  document.querySelectorAll('.user-row').forEach(r=>{
+    r.classList.toggle('selected', r.dataset.id===id);
+  });
+  const tableEl = document.getElementById('adminUserTable');
+  const allDash = tableEl._allDash || {};
+  const u = adminUsers[id];
+  const dash = allDash[id] || {};
+  const goals = dash.goals || [];
+  const completions = dash.completions || {};
+  const now = new Date();
+  const curY=now.getFullYear(), curM=now.getMonth()+1;
+
+  // 마지막 접속/업데이트
+  const lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleString('ko-KR') : '기록 없음';
+  const lastUpdate = dash.lastUpdate ? new Date(dash.lastUpdate).toLocaleString('ko-KR') : '기록 없음';
+
+  // 목표별 진척률 계산
+  function calcGoalPct(g, gi) {
+    if(!g||!g.unit) return null;
+    const freq = UNIT_FREQ[g.unit]||1;
+    if(g.unit==='once') {
+      const done = completions[`g${gi}_once`]===true ? 1 : 0;
+      return {done,mod:1,pct:done*100,streakMonths:0};
+    }
+    const dim = new Date(curY,curM,0).getDate();
+    const weeks = Math.ceil(dim/7);
+    const mod = freq*weeks;
+    const pfx=`g${gi}_${curY}_${curM}_`;
+    const done = Object.entries(completions).filter(([k,v])=>k.startsWith(pfx)&&v===true).length;
+    const pct = mod>0?Math.min(100,Math.round(done/mod*100)):0;
+    // 연속 달성 계산 (최근 3개월)
+    let streak=0;
+    for(let i=0;i<3;i++){
+      let y=curY,m=curM-i; if(m<=0){m+=12;y--;}
+      const dim2=new Date(y,m,0).getDate();
+      const w2=Math.ceil(dim2/7);
+      const mod2=freq*w2;
+      const pfx2=`g${gi}_${y}_${m}_`;
+      const done2=Object.entries(completions).filter(([k,v])=>k.startsWith(pfx2)&&v===true).length;
+      const pct2=mod2>0?Math.min(100,Math.round(done2/mod2*100)):0;
+      if(pct2>=50) streak++; else break;
+    }
+    return {done,mod,pct,streakMonths:streak};
+  }
+
+  const goalCards = goals.map((g,gi)=>{
+    if(!g||!g.title) return '';
+    const stat = calcGoalPct(g,gi);
+    if(!stat) return '';
+    const unitLabel = UNIT_LABELS[g.unit]||g.unit;
+    const streakTag = stat.streakMonths>=2 ? `<span class="admin-goal-tag highlight">🔥 ${stat.streakMonths}개월 연속</span>` : '';
+    const pctColor = stat.pct>=70?'var(--accent)':stat.pct>=40?'var(--accent2)':'var(--danger)';
+    return `<div class="admin-goal-card">
+      <div class="admin-goal-top">
+        <div class="admin-goal-title">${esc(g.title)}</div>
+        <div class="admin-goal-pct" style="color:${pctColor}">${stat.pct}%</div>
+      </div>
+      <div class="admin-goal-bar"><div class="admin-goal-bar-fill" style="width:${stat.pct}%;background:${pctColor};"></div></div>
+      <div class="admin-goal-meta">
+        <span class="admin-goal-tag">${unitLabel}</span>
+        <span class="admin-goal-tag">${stat.done}/${stat.mod}일 완료</span>
+        ${streakTag}
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  const totalGoals = goals.filter(g=>g&&g.title).length;
+  const totalDone = goals.reduce((s,g,gi)=>{ if(!g||!g.unit||g.unit==='once') return s; const pfx=`g${gi}_${curY}_${curM}_`; return s+Object.entries(completions).filter(([k,v])=>k.startsWith(pfx)&&v===true).length; },0);
+
+  document.getElementById('adminUserDetail').innerHTML = `
+    <div class="admin-detail">
+      <div class="admin-detail-header">
+        <div>
+          <div class="admin-detail-name">${esc(u.name)}</div>
+          <div class="admin-detail-id">@${esc(id)}</div>
+        </div>
+        <button onclick="document.getElementById('adminUserDetail').innerHTML='';document.querySelectorAll('.user-row').forEach(r=>r.classList.remove('selected'));"
+          style="background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+      <div class="admin-meta-grid">
+        <div class="admin-meta-card">
+          <div class="admin-meta-label">마지막 접속</div>
+          <div class="admin-meta-val">${lastLogin}</div>
+        </div>
+        <div class="admin-meta-card">
+          <div class="admin-meta-label">마지막 업데이트</div>
+          <div class="admin-meta-val">${lastUpdate}</div>
+        </div>
+        <div class="admin-meta-card">
+          <div class="admin-meta-label">등록 목표</div>
+          <div class="admin-meta-val" style="font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);">${totalGoals}개</div>
+        </div>
+        <div class="admin-meta-card">
+          <div class="admin-meta-label">이달 완료 체크</div>
+          <div class="admin-meta-val" style="font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent2);">${totalDone}회</div>
+        </div>
+      </div>
+      <div style="font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;">목표별 현황 (이번 달)</div>
+      <div class="admin-goal-list">
+        ${goalCards || '<div class="admin-empty">등록된 목표 없음</div>'}
+      </div>
+    </div>`;
+  document.getElementById('adminUserDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
+};
 window.createUser = async function() {
   const name=document.getElementById('newUserName').value.trim();
   const id=document.getElementById('newUserId').value.trim();
@@ -783,9 +1064,16 @@ window.tutFinish = async function() {
   await saveDash();
 
   showConfetti();
-  setTimeout(()=>{
+  setTimeout(async ()=>{
     activeGoalIdx = null; viewMonth = null;
     showScreen('dashboardScreen');
+    const grpSnap = await get(ref(db,'groups'));
+    let hasGroup = false;
+    if(grpSnap.exists()){
+      hasGroup = Object.values(grpSnap.val()).some(g=> g.members && Object.values(g.members).includes(currentUser.id));
+    }
+    const tabBar = document.getElementById('dashTabBar');
+    if(tabBar) tabBar.style.display = hasGroup ? 'flex' : 'none';
     renderDashboard();
   }, 2800);
 };
@@ -1327,7 +1615,303 @@ function showToast(msg){
 }
 window.showToast=showToast;
 
-// ===== LOGIN CANVAS =====
+// ===== TAB =====
+let currentTab = 'my';
+window.switchTab = function(tab) {
+  currentTab = tab;
+  document.getElementById('tabBtnMy').classList.toggle('active', tab==='my');
+  document.getElementById('tabBtnFriends').classList.toggle('active', tab==='friends');
+  document.getElementById('tabMy').classList.toggle('active', tab==='my');
+  document.getElementById('tabFriends').classList.toggle('active', tab==='friends');
+  if(tab==='friends') renderFriendsTab();
+};
+
+// ===== FRIENDS =====
+let myGroups = [];        // [{id,name,members:[userId,...]}]
+let friendsData = {};     // {userId: {user, dash}}
+let activeFriendId = null;
+let activeFriendGoalIdx = null;
+let selectedCheerEmoji = '💪';
+
+async function loadGroups() {
+  const snap = await get(ref(db,'groups'));
+  if(!snap.exists()){ myGroups=[]; return; }
+  myGroups = Object.entries(snap.val())
+    .filter(([,g])=> g.members && Object.values(g.members).includes(currentUser.id))
+    .map(([id,g])=>({id, name:g.name, members: Object.values(g.members||{})}));
+}
+
+async function renderFriendsTab() {
+  const sec = document.getElementById('friendsSection');
+  sec.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:40px 0;">불러오는 중...</div>';
+  await loadGroups();
+  if(myGroups.length===0){
+    sec.innerHTML = `<div class="friends-empty">👥<br>아직 속한 그룹이 없어요.<br>어드민에게 그룹 배정을 요청해보세요!</div>`;
+    return;
+  }
+  // 그룹원 목록 (나 제외, 중복 제거)
+  const memberIds = [...new Set(myGroups.flatMap(g=>g.members))].filter(id=>id!==currentUser.id);
+  if(memberIds.length===0){
+    sec.innerHTML = `<div class="friends-empty">👥<br>같은 그룹에 친구가 없어요.</div>`;
+    return;
+  }
+  // 친구 데이터 로드
+  const usersSnap = await get(ref(db,'users'));
+  const dashSnap = await get(ref(db,'dashboards'));
+  const allUsers = usersSnap.exists() ? usersSnap.val() : {};
+  const allDash = dashSnap.exists() ? dashSnap.val() : {};
+  friendsData = {};
+  memberIds.forEach(id=>{ friendsData[id]={user:allUsers[id]||{name:id}, dash:allDash[id]||{}}; });
+
+  const now = new Date();
+  const curY=now.getFullYear(), curM=now.getMonth()+1;
+
+  const cards = memberIds.map(id=>{
+    const {user,dash} = friendsData[id];
+    const completions = dash.completions||{};
+    const goals = (dash.goals||[]).filter(g=>g&&g.unit&&g.unit!=='once');
+    let td=0,tm=0;
+    goals.forEach((g,gi)=>{
+      const freq=UNIT_FREQ[g.unit]||1;
+      const dim=new Date(curY,curM,0).getDate();
+      const weeks=Math.ceil(dim/7);
+      const mod=freq*weeks;
+      const pfx=`g${gi}_${curY}_${curM}_`;
+      const done=Object.entries(completions).filter(([k,v])=>k.startsWith(pfx)&&v===true).length;
+      td+=done; tm+=mod;
+    });
+    const pct = tm>0?Math.min(100,Math.round(td/tm*100)):0;
+    const stage = Math.min(9,Math.floor(pct/10));
+    const isActive = activeFriendId===id;
+    return `<div class="friend-card ${isActive?'active':''}" onclick="toggleFriendDetail('${id}')">
+      <div class="friend-avatar">${AVATARS[stage]}</div>
+      <div class="friend-info">
+        <div class="friend-name">${esc(user.name||id)}</div>
+        <div class="friend-stage">${stage+1}단계 · ${STAGE_NAMES[stage]}</div>
+      </div>
+      <div class="friend-pct">${pct}%</div>
+    </div>
+    ${isActive ? buildFriendDetail(id) : ''}`;
+  }).join('');
+
+  sec.innerHTML = `<div class="friend-list">${cards}</div>`;
+}
+
+window.toggleFriendDetail = function(id) {
+  if(activeFriendId===id){ activeFriendId=null; activeFriendGoalIdx=null; }
+  else { activeFriendId=id; activeFriendGoalIdx=null; }
+  renderFriendsTab();
+};
+
+function buildFriendDetail(id) {
+  const {user,dash} = friendsData[id];
+  const goals = (dash.goals||[]);
+  const now = new Date();
+  const curY=now.getFullYear(), curM=now.getMonth()+1;
+  const completions = dash.completions||{};
+
+  const goalBtns = goals.map((g,gi)=>{
+    if(!g||!g.title||!g.unit||g.unit==='once') return '';
+    const freq=UNIT_FREQ[g.unit]||1;
+    const dim=new Date(curY,curM,0).getDate();
+    const weeks=Math.ceil(dim/7);
+    const mod=freq*weeks;
+    const pfx=`g${gi}_${curY}_${curM}_`;
+    const done=Object.entries(completions).filter(([k,v])=>k.startsWith(pfx)&&v===true).length;
+    const pct=mod>0?Math.min(100,Math.round(done/mod*100)):0;
+    const isActive=activeFriendGoalIdx===gi;
+    return `<div class="fgoal-btn ${isActive?'fg-active':''}" onclick="selectFriendGoal('${id}',${gi})">
+      <div class="fgoal-name">${esc(g.title)}</div>
+      <div class="fgoal-pct">${pct}%</div>
+      <div class="fgoal-bar"><div class="fgoal-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  let calAndCheer = '';
+  if(activeFriendGoalIdx!==null) {
+    const g = goals[activeFriendGoalIdx];
+    if(g&&g.unit&&g.unit!=='once') {
+      calAndCheer = buildROCal(id, activeFriendGoalIdx, g, completions, curY, curM)
+                  + buildCheerBox(id, activeFriendGoalIdx);
+    }
+  }
+
+  return `<div class="friend-detail">
+    <div class="friend-detail-hdr">
+      <div class="friend-detail-name">👀 ${esc(user.name||id)}의 목표</div>
+    </div>
+    <div class="fgoal-grid">${goalBtns||'<div style="color:var(--text-dim);font-size:12px;grid-column:1/-1;">등록된 목표 없음</div>'}</div>
+    ${calAndCheer}
+  </div>`;
+}
+
+function buildROCal(friendId, gi, g, completions, y, m) {
+  const now=new Date();
+  const firstDay=new Date(y,m-1,1).getDay();
+  const dim=new Date(y,m,0).getDate();
+  const DAY=['일','월','화','수','목','금','토'];
+  let cells='';
+  for(let i=0;i<firstDay;i++) cells+=`<div class="rocal-cell empty"></div>`;
+  for(let d=1;d<=dim;d++){
+    const dt=new Date(y,m-1,d);
+    const isToday=dt.toDateString()===now.toDateString();
+    const isDone=completions[`g${gi}_${y}_${m}_${d}`]===true;
+    cells+=`<div class="rocal-cell ${isDone?'done':''} ${isToday?'today':''}">${isDone?'✓':d}</div>`;
+  }
+  return `<div class="rocal-wrap">
+    <div class="rocal-label">${y}년 ${m}월 달력</div>
+    <div class="rocal-days">${DAY.map(d=>`<div class="rocal-day">${d}</div>`).join('')}</div>
+    <div class="rocal-grid">${cells}</div>
+  </div>`;
+}
+
+function buildCheerBox(targetId, gi) {
+  const cheers = window._cheerCache?.[`${targetId}_${gi}`] || [];
+  const cheerItems = cheers.length===0
+    ? '<div style="color:var(--text-dim);font-size:12px;text-align:center;padding:8px 0;">아직 응원이 없어요. 첫 응원을 보내보세요! 🎉</div>'
+    : cheers.slice().reverse().map(c=>{
+        const dt = c.at ? new Date(c.at).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+        return `<div class="cheer-item">
+          <div class="cheer-emoji-big">${esc(c.emoji||'💪')}</div>
+          <div class="cheer-body">
+            <div class="cheer-from">${esc(c.fromName||c.from)}</div>
+            <div class="cheer-text">${esc(c.text||'')}</div>
+            <div class="cheer-time">${dt}</div>
+          </div>
+        </div>`;
+      }).join('');
+  const EMOJIS=['💪','🔥','👏','🎉','😊','🌟'];
+  const emojiRow=EMOJIS.map(e=>`<button class="cheer-emoji-btn ${selectedCheerEmoji===e?'selected':''}" onclick="selectCheerEmoji('${e}')">${e}</button>`).join('');
+  return `<div class="cheer-box">
+    <div class="cheer-box-title">💬 응원 메시지</div>
+    <div class="cheer-list" id="cheerList_${targetId}_${gi}">${cheerItems}</div>
+    <div class="cheer-emoji-row">${emojiRow}</div>
+    <div class="cheer-input-row">
+      <input class="cheer-text-input" id="cheerInput_${targetId}_${gi}" placeholder="응원 한마디..." maxlength="40">
+      <button class="cheer-send-btn" onclick="sendCheer('${targetId}',${gi})">보내기</button>
+    </div>
+  </div>`;
+}
+
+window.selectFriendGoal = async function(friendId, gi) {
+  activeFriendGoalIdx = activeFriendGoalIdx===gi ? null : gi;
+  // 응원 데이터 미리 로드
+  if(activeFriendGoalIdx!==null) await loadCheers(friendId, gi);
+  renderFriendsTab();
+};
+
+window.selectCheerEmoji = function(e) {
+  selectedCheerEmoji=e;
+  // 이모지 버튼 선택 표시만 업데이트 (re-render 없이)
+  document.querySelectorAll('.cheer-emoji-btn').forEach(btn=>{
+    btn.classList.toggle('selected', btn.textContent===e);
+  });
+};
+
+async function loadCheers(targetId, gi) {
+  if(!window._cheerCache) window._cheerCache={};
+  const snap = await get(ref(db,`cheers/${targetId}/${gi}`));
+  window._cheerCache[`${targetId}_${gi}`] = snap.exists() ? Object.values(snap.val()) : [];
+}
+
+window.sendCheer = async function(targetId, gi) {
+  const inputEl = document.getElementById(`cheerInput_${targetId}_${gi}`);
+  const text = inputEl ? inputEl.value.trim() : '';
+  const emoji = selectedCheerEmoji || '💪';
+  if(!text){ showToast('❌ 응원 메시지를 입력해주세요'); return; }
+  const key = Date.now().toString();
+  const cheer = { from:currentUser.id, fromName:currentUser.name||currentUser.id, emoji, text, at:new Date().toISOString() };
+  await set(ref(db,`cheers/${targetId}/${gi}/${key}`), cheer);
+  await loadCheers(targetId, gi);
+  showToast('💌 응원을 보냈어요!');
+  // 리스트만 갱신
+  if(!window._cheerCache) window._cheerCache={};
+  const cheers = window._cheerCache[`${targetId}_${gi}`];
+  const listEl = document.getElementById(`cheerList_${targetId}_${gi}`);
+  if(listEl) {
+    listEl.innerHTML = cheers.slice().reverse().map(c=>{
+      const dt = c.at ? new Date(c.at).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div class="cheer-item">
+        <div class="cheer-emoji-big">${esc(c.emoji||'💪')}</div>
+        <div class="cheer-body">
+          <div class="cheer-from">${esc(c.fromName||c.from)}</div>
+          <div class="cheer-text">${esc(c.text||'')}</div>
+          <div class="cheer-time">${dt}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  if(inputEl) inputEl.value='';
+};
+
+// ===== ADMIN GROUP =====
+window.createGroup = async function() {
+  const name = document.getElementById('newGroupName').value.trim();
+  if(!name){ showToast('❌ 그룹 이름을 입력하세요'); return; }
+  const key = 'g'+Date.now();
+  await set(ref(db,`groups/${key}`),{name, members:{}});
+  document.getElementById('newGroupName').value='';
+  showToast(`✅ "${name}" 그룹 생성 완료!`);
+  renderAdminGroups();
+};
+
+async function renderAdminGroups() {
+  const el = document.getElementById('adminGroupList');
+  if(!el) return;
+  const [groupSnap, userSnap] = await Promise.all([get(ref(db,'groups')), get(ref(db,'users'))]);
+  const allUsers = userSnap.exists() ? Object.entries(userSnap.val()).filter(([,u])=>u.role!=='admin') : [];
+  if(!groupSnap.exists()){ el.innerHTML='<div style="color:var(--text-dim);font-size:13px;">생성된 그룹 없음</div>'; return; }
+  const groups = Object.entries(groupSnap.val());
+  el.innerHTML = groups.map(([gid,g])=>{
+    const members = g.members ? Object.entries(g.members) : [];
+    const memberRows = members.map(([mk,uid])=>{
+      const u = allUsers.find(([id])=>id===uid);
+      const name = u ? u[1].name : uid;
+      return `<div class="group-member-row">
+        <div class="group-member-name">${esc(name)}</div>
+        <div class="group-member-id">@${esc(uid)}</div>
+        <button class="group-remove-btn" onclick="removeGroupMember('${gid}','${mk}')">제거</button>
+      </div>`;
+    }).join('');
+    const addOptions = allUsers.filter(([uid])=>!members.some(([,m])=>m===uid))
+      .map(([uid,u])=>`<option value="${uid}">${esc(u.name)} (@${uid})</option>`).join('');
+    return `<div class="group-card">
+      <div class="group-card-hdr">
+        <div class="group-card-name">📁 ${esc(g.name)}</div>
+        <button class="group-remove-btn" onclick="deleteGroup('${gid}')">그룹 삭제</button>
+      </div>
+      <div class="group-member-list">
+        ${memberRows || '<div style="color:var(--text-dim);font-size:12px;">멤버 없음</div>'}
+      </div>
+      ${addOptions ? `<select class="group-add-select" id="groupAddSel_${gid}" onchange="addGroupMember('${gid}')">
+        <option value="">+ 멤버 추가...</option>${addOptions}
+      </select>` : ''}
+    </div>`;
+  }).join('');
+}
+
+window.addGroupMember = async function(gid) {
+  const sel = document.getElementById(`groupAddSel_${gid}`);
+  const uid = sel ? sel.value : '';
+  if(!uid) return;
+  const key = uid.replace(/[^a-zA-Z0-9_]/g,'_');
+  await set(ref(db,`groups/${gid}/members/${key}`), uid);
+  showToast('✅ 멤버 추가 완료!');
+  renderAdminGroups();
+};
+
+window.removeGroupMember = async function(gid, mk) {
+  await set(ref(db,`groups/${gid}/members/${mk}`), null);
+  showToast('✅ 멤버 제거 완료!');
+  renderAdminGroups();
+};
+
+window.deleteGroup = async function(gid) {
+  await set(ref(db,`groups/${gid}`), null);
+  showToast('🗑️ 그룹 삭제 완료!');
+  renderAdminGroups();
+};
+</script>
 (function(){
   const canvas = document.getElementById('loginCanvas');
   if(!canvas) return;

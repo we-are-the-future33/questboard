@@ -924,6 +924,22 @@ window.closeBottomSheet = function () {
   document.getElementById('bottomSheet').classList.remove('open');
 };
 
+// 헬퍼: 날짜가 속한 주의 일요일
+function getSunday(y, m, d) {
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() - dt.getDay());
+  return dt;
+}
+// 헬퍼: 특정 주(일요일 시작)의 완료 횟수
+function countWeekCompletions(idx, sunDt) {
+  let c = 0;
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(sunDt.getFullYear(), sunDt.getMonth(), sunDt.getDate() + i);
+    if (localDash.completions[`g${idx}_${dt.getFullYear()}_${dt.getMonth()+1}_${dt.getDate()}`]) c++;
+  }
+  return c;
+}
+
 function renderBSBody(idx) {
   const g = migrateGoal(localDash.goals[idx]), body = document.getElementById('bsBody');
   if (g.unit === 'once') { renderBSOnce(idx, body); return; }
@@ -932,24 +948,45 @@ function renderBSBody(idx) {
   const isPrevMonth = (y === now.getFullYear() && m === now.getMonth()) || (now.getMonth() === 0 && y === now.getFullYear() - 1 && m === 12);
   const canEdit = isCurrentMonth || isPrevMonth;
   const { done, mod, pct } = goalPct(g, idx, y, m);
+  const freq = getGoalFreq(g);
+  const unitLabel = getUnitLabel(g);
 
-  // 월 네비게이션 + 달력 + 통계
-  let html = `<div class="bs-cal-meta"><span class="bs-cal-unit">${getUnitLabel(g)}</span></div>`;
+  let html = '';
+
+  // 주간 달성 배너 (once 제외, freq > 0)
+  if (g.unit !== 'once' && freq > 0) {
+    const curSun = getSunday(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    const curDone = countWeekCompletions(idx, curSun);
+    if (curDone >= freq) {
+      html += `<div class="week-status-banner success">
+        <div>
+          <div class="wsb-title"><span class="wsb-badge" style="background:#10b981;">${unitLabel}</span> 목표 달성! 🎉</div>
+          <div class="wsb-desc">이번 주 할당량(${freq}회)을 모두 채웠어요.</div>
+        </div>
+        <div class="wsb-icon">🏆</div>
+      </div>`;
+    } else {
+      html += `<div class="week-status-banner">
+        <div>
+          <div class="wsb-title"><span class="wsb-badge" style="background:var(--accent);">${unitLabel}</span> 진행 중 🏃</div>
+          <div class="wsb-desc">현재 ${curDone}회 완료! (앞으로 ${freq - curDone}번 더)</div>
+        </div>
+        <div class="wsb-icon">🔥</div>
+      </div>`;
+    }
+  }
+
+  // 월 네비게이션
   html += `<div class="month-nav"><button class="month-nav-btn" onclick="bsMonthPrev()">‹</button><div class="month-label">${y}년 ${m}월</div>`;
   const isFutureBlocked = y > now.getFullYear() || (y === now.getFullYear() && m >= now.getMonth() + 1);
   html += `<button class="month-nav-btn" ${isFutureBlocked ? 'disabled' : ''} onclick="bsMonthNext()">›</button></div>`;
+
+  // 달력 (주간 하이라이트 포함)
   html += renderCalendar(idx, g, y, m, canEdit);
+
   // 월별 요약
   html += `<div style="margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:12px;"><span style="font-size:13px;color:var(--text-dim);font-weight:700;">이번 달</span><div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${Math.min(pct,100)}%;background:linear-gradient(90deg,#1952f5,#a78bfa);border-radius:4px;"></div></div><span style="font-family:'Black Han Sans';font-size:16px;color:var(--accent);">${pct}%</span></div>`;
-  // 주간 현황
-  if (isCurrentMonth && (g.unit === 'weekly' || g.unit === 'biweekly' || g.unit === 'health_workout')) {
-    const freq = getGoalFreq(g), dow = now.getDay();
-    const ws = new Date(now); ws.setDate(now.getDate() - dow);
-    let wd = 0;
-    for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (localDash.completions[`g${idx}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
-    const cleared = wd >= freq;
-    html += `<div class="week-info-card ${cleared ? 'week-info-clear' : ''}"><span class="week-info-icon">${cleared ? '🏆' : '📅'}</span><div class="week-info-body"><span class="week-info-main">${wd}/${freq} 완료</span><span class="week-info-cheer">${cleared ? '이번 주 달성 완료!' : `${freq - wd}회 더 해보세요`}</span></div></div>`;
-  }
+
   // 6개월 통계
   html += renderStats6Month(idx, g);
   // 삭제 버튼
@@ -960,16 +997,42 @@ function renderBSBody(idx) {
 function renderCalendar(idx, g, y, m, canEdit) {
   const now = new Date(), days = getMonthDays(y, m), fd = new Date(y, m - 1, 1).getDay();
   const isCurrentMonth = y === now.getFullYear() && m === now.getMonth() + 1;
+  const freq = getGoalFreq(g);
+  const hasWeekCycle = g.unit !== 'once' && freq > 0;
+  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // 주간 완료 횟수 캐시
+  const sunCache = {};
+  function isWeekCleared(yy, mm, dd) {
+    if (!hasWeekCycle) return false;
+    const sun = getSunday(yy, mm, dd);
+    const sk = `${sun.getFullYear()}-${sun.getMonth()+1}-${sun.getDate()}`;
+    if (sunCache[sk] === undefined) sunCache[sk] = countWeekCompletions(idx, sun);
+    return sunCache[sk] >= freq;
+  }
+
   let h = `<div class="cal-day-row">`;
   ['일', '월', '화', '수', '목', '금', '토'].forEach(d => h += `<div class="cal-day-lbl">${d}</div>`);
   h += `</div><div class="cal-grid">`;
-  for (let i = 0; i < fd; i++) h += `<div class="cal-cell empty"></div>`;
+
+  // 빈 셀 (이전 달)
+  for (let i = 0; i < fd; i++) {
+    const dt = new Date(y, m - 1, -fd + i + 1);
+    const wc = isWeekCleared(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
+    h += `<div class="cal-cell empty ${wc ? 'week-cleared' : ''}"></div>`;
+  }
+
+  // 날짜 셀
   for (let d = 1; d <= days; d++) {
     const k = `g${idx}_${y}_${m}_${d}`, isDone = localDash.completions[k] === true;
-    const isToday = isCurrentMonth && d === now.getDate();
-    const isFuture = isCurrentMonth && d > now.getDate();
+    const cellDate = new Date(y, m - 1, d);
+    const isToday = cellDate.getTime() === todayDate.getTime();
+    const isFuture = cellDate > todayDate;
     const locked = !canEdit || isFuture;
-    h += `<div class="cal-cell ${isDone ? 'done' : ''} ${isToday ? 'cal-today' : ''} ${locked ? 'locked' : ''}" onclick="${locked ? '' : `bsToggleDay(${idx},${y},${m},${d})`}"><span class="cal-dn">${d}</span><span class="cal-chk">${isDone ? '✓' : ''}</span></div>`;
+    const wc = isWeekCleared(y, m, d);
+    const onclick = locked ? '' : `onclick="bsToggleDay(${idx},${y},${m},${d})"`;
+
+    h += `<div class="cal-cell ${isDone ? 'done' : ''} ${isToday ? 'cal-today' : ''} ${wc ? 'week-cleared' : ''} ${locked ? 'locked' : ''}" ${onclick}><span class="cal-dn">${d}</span><span class="cal-chk">${isDone ? '✓' : ''}</span></div>`;
   }
   h += `</div>`;
   return h;

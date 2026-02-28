@@ -320,6 +320,16 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .stats-cheer strong{color:var(--accent2);}
 
 /* 주간 현황 */
+.week-status-banner{background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;transition:all 0.3s;}
+.week-status-banner.success{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0;box-shadow:0 4px 12px rgba(16,185,129,0.12);}
+.wsb-title{font-size:15px;font-weight:800;margin-bottom:4px;color:#334155;display:flex;align-items:center;}
+.wsb-badge{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:800;color:#fff;margin-right:8px;line-height:1;letter-spacing:0.5px;}
+.wsb-desc{font-size:12px;font-weight:700;color:#64748b;}
+.week-status-banner.success .wsb-title{color:#065f46;}
+.week-status-banner.success .wsb-desc{color:#059669;}
+.wsb-icon{font-size:32px;line-height:1;margin-left:12px;}
+.cal-cell.week-cleared:not(.done){background:#f0fdf4;border-color:#d1fae5;}
+.cal-cell.week-cleared:not(.done) .cal-dn{color:#10b981;}
 .week-info-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:7px 12px;margin-top:8px;display:flex;align-items:center;gap:8px;}
 .week-info-icon{font-size:15px;flex-shrink:0;}
 .week-info-body{flex:1;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}

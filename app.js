@@ -6,6 +6,13 @@ const _safetyTimer = setTimeout(() => {
   if (l && l.classList.contains('active')) { showScreen('loginScreen'); }
 }, 8000);
 
+// 3초 이상 걸리면 메시지 변경
+setTimeout(() => {
+  const msg = document.getElementById('loadingMsg');
+  const l = document.getElementById('loadingScreen');
+  if (msg && l && l.classList.contains('active')) { msg.textContent = '서버 연결 중...'; }
+}, 3000);
+
 const firebaseConfig = {
   apiKey: "AIzaSyAbEbLdJuWVai_NKTHuo1XtC8p76dmVPE0",
   authDomain: "grow-goal.firebaseapp.com",

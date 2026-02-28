@@ -179,23 +179,38 @@
             </div>
           </div>
         </div>
-        <div class="goals-section">
-          <div class="global-bar">
-            <div class="gb-top">
-              <div class="gb-label">이번 달 달성률</div>
-              <div class="gb-pct" id="gbPct">0%</div>
+        <!-- 습관/도전 서브탭 -->
+        <div class="sub-tab-bar" style="margin-top:16px;">
+          <button class="sub-tab-btn active" onclick="switchSubTab('habit')" id="subTabHabit">습관</button>
+          <button class="sub-tab-btn" onclick="switchSubTab('challenge')" id="subTabChallenge">도전</button>
+        </div>
+        <!-- 습관 패널 -->
+        <div class="sub-tab-panel active" id="panelHabit">
+          <div class="section-hdr">
+            <div class="section-hdr-left">
+              <div class="section-hdr-title">나의 습관</div>
+              <div class="section-hdr-count" id="habitCount">0</div>
             </div>
-            <div class="gb-track"><div class="gb-fill" id="gbFill" style="width:0%"></div></div>
+            <button class="filter-pill" id="habitFilterPill" onclick="toggleHabitFilter()">
+              모든 목표 <span class="filter-dot"></span>
+            </button>
           </div>
-          <div class="goals-section-header" style="margin-top:20px;">
-            <div class="goals-section-title">🎯 나의 목표</div>
-            <div class="goal-filter-toggle">
-              <button class="goal-filter-btn active" onclick="setGoalFilter('all')" id="filterAll">전체</button>
-              <button class="goal-filter-btn" onclick="setGoalFilter('active')" id="filterActive">진행 중</button>
+          <div class="card-grid" id="habitCardGrid"></div>
+          <div class="swipe-hint" id="habitSwipeHint">오른쪽으로 밀어서 완료 처리</div>
+        </div>
+        <!-- 도전 패널 -->
+        <div class="sub-tab-panel" id="panelChallenge">
+          <div class="section-hdr">
+            <div class="section-hdr-left">
+              <div class="section-hdr-title">나의 도전</div>
+              <div class="section-hdr-count" id="challengeCount">0</div>
             </div>
+            <button class="filter-pill" id="challengeFilterPill" onclick="toggleChallengeFilter()">
+              모든 목표 <span class="filter-dot"></span>
+            </button>
           </div>
-          <div class="goal-card-list" id="goalCardList"></div>
-          <div class="swipe-hint" id="swipeHint">오른쪽으로 밀어서 완료 처리</div>
+          <div class="card-grid" id="challengeCardGrid"></div>
+          <div class="swipe-hint" id="challengeSwipeHint">프로젝트는 탭, 버킷은 스와이프로 관리</div>
         </div>
         <div style="height:2px;background:var(--border);margin:20px 20px 0;"></div>
         <!-- 코멘트 영역 메인 하단 -->

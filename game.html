@@ -2168,6 +2168,7 @@ async function renderMyCheers(panel, gi) {
 }
 
 
+window.selectFriendGoal = async function(friendId, gi) {
   activeFriendGoalIdx = activeFriendGoalIdx===gi ? null : gi;
   // 응원 데이터 미리 로드
   if(activeFriendGoalIdx!==null) await loadCheers(friendId, gi);

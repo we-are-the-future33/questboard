@@ -624,6 +624,89 @@ function renderAvatar() {
   document.getElementById('avatarStage').textContent = `${stage + 1}단계`;
   const nick = localDash.nickname || currentUser.name || '나의 캐릭터';
   document.getElementById('avatarNicknameRow').innerHTML = `<div class="avatar-nickname">${esc(nick)}</div><button class="pencil-btn" onclick="startEditNickname()">✏️</button>`;
+  applyTimeBackground();
+}
+
+function applyTimeBackground() {
+  const section = document.querySelector('.avatar-section');
+  if (!section) return;
+  const h = new Date().getHours();
+  let bg, decoHTML, nickColor = '#111827', stageColor = 'var(--accent)', stageBg = 'var(--accent-light)';
+
+  // 기존 장식 제거
+  section.querySelectorAll('.sky-deco').forEach(e => e.remove());
+
+  if (h >= 0 && h < 5) {
+    // 🌌 새벽
+    bg = 'linear-gradient(180deg, #0f0c29 0%, #1a1a4e 50%, #302b63 100%)';
+    nickColor = '#e2e8f0'; stageColor = '#a5b4fc'; stageBg = 'rgba(165,180,252,.15)';
+    decoHTML = `
+      <div class="sky-deco star" style="top:12%;left:15%;font-size:8px;animation-delay:0s;">✦</div>
+      <div class="sky-deco star" style="top:8%;left:55%;font-size:6px;animation-delay:1.2s;">✦</div>
+      <div class="sky-deco star" style="top:22%;left:80%;font-size:10px;animation-delay:0.6s;">✦</div>
+      <div class="sky-deco star" style="top:5%;left:35%;font-size:5px;animation-delay:1.8s;">✦</div>
+      <div class="sky-deco star" style="top:18%;left:65%;font-size:7px;animation-delay:2.4s;">✦</div>
+      <div class="sky-deco moon" style="top:6%;right:12%;font-size:28px;">🌙</div>`;
+  } else if (h >= 5 && h < 9) {
+    // 🌅 아침
+    bg = 'linear-gradient(180deg, #ffecd2 0%, #fcb69f 40%, #ff9a9e 100%)';
+    decoHTML = `
+      <div class="sky-deco sun-rise" style="bottom:25%;left:50%;transform:translateX(-50%);font-size:36px;">☀️</div>
+      <div class="sky-deco cloud" style="top:12%;left:10%;font-size:20px;animation-delay:0s;">☁️</div>
+      <div class="sky-deco cloud" style="top:20%;right:15%;font-size:16px;animation-delay:2s;">☁️</div>`;
+  } else if (h >= 9 && h < 13) {
+    // ☀️ 점심
+    bg = 'linear-gradient(180deg, #89CFF0 0%, #a0d2f0 50%, #d4ecfc 100%)';
+    decoHTML = `
+      <div class="sky-deco" style="top:6%;right:18%;font-size:32px;">☀️</div>
+      <div class="sky-deco cloud" style="top:15%;left:8%;font-size:22px;animation-delay:0s;">☁️</div>
+      <div class="sky-deco cloud" style="top:10%;left:55%;font-size:16px;animation-delay:1.5s;">☁️</div>
+      <div class="sky-deco cloud" style="top:25%;right:10%;font-size:14px;animation-delay:3s;">☁️</div>`;
+  } else if (h >= 13 && h < 17) {
+    // 🌤 오후
+    bg = 'linear-gradient(180deg, #74b9ff 0%, #a0c4ff 50%, #d0e8ff 100%)';
+    decoHTML = `
+      <div class="sky-deco" style="top:8%;right:22%;font-size:28px;">⛅</div>
+      <div class="sky-deco cloud" style="top:18%;left:12%;font-size:18px;animation-delay:0.5s;">☁️</div>
+      <div class="sky-deco cloud" style="top:12%;left:60%;font-size:14px;animation-delay:2.5s;">☁️</div>`;
+  } else if (h >= 17 && h < 20) {
+    // 🌇 저녁
+    bg = 'linear-gradient(180deg, #2d1b69 0%, #c2185b 40%, #ff6f00 70%, #ffab40 100%)';
+    nickColor = '#fef3c7'; stageColor = '#fbbf24'; stageBg = 'rgba(251,191,36,.15)';
+    decoHTML = `
+      <div class="sky-deco cloud" style="top:10%;left:15%;font-size:18px;opacity:0.6;animation-delay:0s;">☁️</div>
+      <div class="sky-deco cloud" style="top:18%;right:20%;font-size:14px;opacity:0.5;animation-delay:1.5s;">☁️</div>
+      <div class="sky-deco star" style="top:5%;left:25%;font-size:5px;animation-delay:0.8s;">✦</div>
+      <div class="sky-deco star" style="top:8%;right:30%;font-size:4px;animation-delay:2s;">✦</div>`;
+  } else {
+    // 🌙 밤
+    bg = 'linear-gradient(180deg, #0d1b2a 0%, #1b2838 40%, #1e3a5f 100%)';
+    nickColor = '#e2e8f0'; stageColor = '#93c5fd'; stageBg = 'rgba(147,197,253,.15)';
+    decoHTML = `
+      <div class="sky-deco moon" style="top:8%;right:15%;font-size:30px;">🌙</div>
+      <div class="sky-deco star" style="top:10%;left:12%;font-size:8px;animation-delay:0s;">✦</div>
+      <div class="sky-deco star" style="top:6%;left:40%;font-size:6px;animation-delay:0.8s;">✦</div>
+      <div class="sky-deco star" style="top:20%;left:70%;font-size:10px;animation-delay:1.6s;">✦</div>
+      <div class="sky-deco star" style="top:15%;left:25%;font-size:5px;animation-delay:2.2s;">✦</div>
+      <div class="sky-deco star" style="top:25%;right:25%;font-size:7px;animation-delay:1.2s;">✦</div>
+      <div class="sky-deco star" style="top:4%;left:60%;font-size:4px;animation-delay:3s;">✦</div>`;
+  }
+
+  section.style.background = bg;
+  section.style.position = 'relative';
+  section.style.overflow = 'hidden';
+  section.insertAdjacentHTML('beforeend', decoHTML);
+
+  // 닉네임/단계 색상
+  const nickEl = document.querySelector('.avatar-nickname');
+  if (nickEl) nickEl.style.color = nickColor;
+  const stageEl = document.getElementById('avatarStage');
+  if (stageEl) { stageEl.style.color = stageColor; stageEl.style.background = stageBg; }
+  // 연필 버튼
+  const pencilBtn = document.querySelector('.pencil-btn');
+  if (pencilBtn && (h >= 17 || h < 5)) {
+    pencilBtn.style.color = '#cbd5e1'; pencilBtn.style.borderColor = 'rgba(255,255,255,.2)'; pencilBtn.style.background = 'rgba(255,255,255,.1)';
+  }
 }
 
 // ===== SUB TAB =====

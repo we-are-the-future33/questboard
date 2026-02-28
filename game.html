@@ -343,8 +343,36 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .week-clear-title{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);letter-spacing:1px;margin-bottom:4px;}
 .week-clear-sub{font-size:13px;color:var(--text-dim);}
 
-/* 주간 정보 카드 */
-.week-info-card{background:linear-gradient(135deg,var(--accent-light),#fff0f8);border:2px solid rgba(25,82,245,.18);border-radius:16px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;gap:14px;}
+/* 내 목표 댓글 스와이프 영역 */
+.my-cheers-section{margin-top:16px;}
+.my-cheers-title{font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:10px;}
+.my-cheers-slider{overflow:hidden;border-radius:14px;}
+.my-cheers-track{display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);}
+.my-cheer-page{min-width:100%;display:flex;flex-direction:column;gap:8px;}
+.my-cheer-card{background:#fff;border:2px solid var(--border);border-radius:14px;padding:13px 16px;box-shadow:var(--shadow-sm);}
+.my-cheer-goal{font-size:10px;letter-spacing:1px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+.my-cheer-from{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.my-cheer-text{font-size:14px;color:var(--text);line-height:1.5;}
+.my-cheer-time{font-size:11px;color:var(--text-dim);margin-top:4px;}
+.my-cheers-empty{text-align:center;padding:24px;color:var(--text-dim);font-size:13px;background:var(--surface);border-radius:14px;border:2px dashed var(--border);}
+.my-cheers-dots{display:flex;justify-content:center;gap:6px;margin-top:10px;}
+.my-cheers-dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:all .2s;cursor:pointer;}
+.my-cheers-dot.active{background:var(--accent);transform:scale(1.3);}
+
+/* 로그인 화면 개선 */
+#loginScreen .mobile-wrap{background:transparent;display:flex;flex-direction:column;justify-content:center;min-height:100vh;padding:0;}
+.login-top-bg{position:absolute;top:0;left:0;right:0;height:55%;background:linear-gradient(160deg,#1952f5 0%,#6b8fff 60%,#a78bfa 100%);border-radius:0 0 40px 40px;z-index:0;}
+.login-bottom-area{position:relative;z-index:1;padding:0 28px 40px;margin-top:auto;}
+.login-card{background:#fff;border-radius:28px;padding:32px 28px 28px;box-shadow:0 20px 60px rgba(25,82,245,.18);}
+.login-hero{display:flex;flex-direction:column;align-items:center;padding:60px 0 36px;position:relative;z-index:1;}
+.login-logo{font-size:72px;display:block;margin-bottom:0;animation:egg-bounce 1.6s ease-in-out infinite;}
+.login-title{font-family:'Black Han Sans',sans-serif;font-size:34px;letter-spacing:4px;color:#fff;text-align:center;margin-bottom:6px;text-shadow:0 2px 12px rgba(25,82,245,.3);}
+.login-sub{text-align:center;color:rgba(255,255,255,.75);font-size:13px;letter-spacing:3px;}
+.login-box{width:100%;}
+.input-group label{color:var(--text-dim);}
+.input-group input{background:var(--surface2);border:2px solid var(--border);}
+.save-login-row label{color:var(--text-dim);}
+.btn-primary{background:linear-gradient(135deg,#1952f5,#6b8fff);box-shadow:0 8px 24px rgba(25,82,245,.38);}background:linear-gradient(135deg,var(--accent-light),#fff0f8);border:2px solid rgba(25,82,245,.18);border-radius:16px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;gap:14px;}
 .week-info-icon{font-size:28px;flex-shrink:0;}
 .week-info-body{flex:1;}
 .week-info-main{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);margin-bottom:3px;}
@@ -449,19 +477,26 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 <!-- LOGIN -->
 <div id="loginScreen" class="screen">
   <canvas id="loginCanvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
-  <div class="mobile-wrap" style="position:relative;z-index:1;">
-    <div class="login-box">
+  <div class="mobile-wrap" style="position:relative;z-index:1;overflow:hidden;">
+    <div class="login-top-bg"></div>
+    <div class="login-hero">
       <div class="login-logo" id="loginLogoAnim">🐣</div>
       <div class="login-title">동물 키우기</div>
       <div class="login-sub">목표 달성 게임</div>
-      <div class="input-group"><label>아이디</label><input type="text" id="loginId" placeholder="아이디 입력" autocomplete="username"></div>
-      <div class="input-group"><label>비밀번호</label><input type="password" id="loginPw" placeholder="비밀번호 입력" autocomplete="current-password"></div>
-      <div class="save-login-row">
-        <input type="checkbox" id="saveLoginChk">
-        <label for="saveLoginChk">아이디/비밀번호 저장</label>
+    </div>
+    <div class="login-bottom-area">
+      <div class="login-card">
+        <div class="login-box">
+          <div class="input-group"><label>아이디</label><input type="text" id="loginId" placeholder="아이디 입력" autocomplete="username"></div>
+          <div class="input-group"><label>비밀번호</label><input type="password" id="loginPw" placeholder="비밀번호 입력" autocomplete="current-password"></div>
+          <div class="save-login-row">
+            <input type="checkbox" id="saveLoginChk">
+            <label for="saveLoginChk">아이디/비밀번호 저장</label>
+          </div>
+          <button class="btn-primary" id="loginBtn" onclick="doLogin()">로그인</button>
+          <div class="login-error" id="loginError">아이디 또는 비밀번호가 올바르지 않습니다.</div>
+        </div>
       </div>
-      <button class="btn-primary" id="loginBtn" onclick="doLogin()">로그인</button>
-      <div class="login-error" id="loginError">아이디 또는 비밀번호가 올바르지 않습니다.</div>
     </div>
   </div>
 </div>
@@ -609,8 +644,10 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
           <button class="pencil-btn" onclick="startEditNickname()">✏️</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+          <div id="avatarMsgWrap" style="display:flex;align-items:center;gap:8px;justify-content:center;">
           <div class="avatar-msg" id="avatarMsg">좋은 습관 만드는 중</div>
           <button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>
+          </div>
         </div>
       </div>
       <div class="goals-section">
@@ -734,8 +771,38 @@ function showScreen(id) {
 
 // ===== INIT =====
 async function init() {
-  // 저장된 로그인 정보 불러오기
   const saved = JSON.parse(localStorage.getItem('qb_login') || 'null');
+  if (saved && saved.id && saved.pw) {
+    // 자동 로그인 시도
+    showScreen('loadingScreen');
+    try {
+      const snap = await get(ref(db,`users/${saved.id}`));
+      if (snap.exists() && snap.val().password === saved.pw) {
+        const u = snap.val();
+        currentUser = {id:saved.id,...u};
+        document.getElementById('navUserName').textContent = u.name;
+        await loadDash();
+        if (!localDash.tutorialDone) {
+          tutState = { goalName:'', unit:'w4', checkedDays:new Set(), currentStep:1 };
+          initTutorial();
+          showScreen('tutorialScreen');
+        } else {
+          activeGoalIdx = null; viewMonth = null;
+          showScreen('dashboardScreen');
+          const grpSnap = await get(ref(db,'groups'));
+          let hasGroup = false;
+          if(grpSnap.exists()){
+            hasGroup = Object.values(grpSnap.val()).some(g=> g.members && Object.values(g.members).includes(saved.id));
+          }
+          const tabBar = document.getElementById('dashTabBar');
+          if(tabBar) tabBar.style.display = hasGroup ? 'flex' : 'none';
+          renderDashboard();
+        }
+        return;
+      }
+    } catch(e) { /* 자동 로그인 실패 시 로그인 화면으로 */ }
+  }
+  // 저장된 로그인 정보 폼에 채우기
   if (saved) {
     document.getElementById('loginId').value = saved.id || '';
     document.getElementById('loginPw').value = saved.pw || '';
@@ -1253,20 +1320,27 @@ function renderAvatar(){
   document.getElementById('avatarArt').innerHTML=AVATARS[stage];
   document.getElementById('avatarStage').textContent=`${stage+1}단계 · ${STAGE_NAMES[stage]}`;
   const nick=localDash.nickname||currentUser.name||'나의 캐릭터';
-  document.getElementById('avatarNickname').textContent=nick;
   const msg=localDash.msg||'좋은 습관 만드는 중';
-  document.getElementById('avatarMsg').textContent=msg;
+
+  // 닉네임 행 - 항상 보기 모드로 복원
+  const nicknameRow=document.getElementById('avatarNicknameRow');
+  nicknameRow.innerHTML=`<div class="avatar-nickname" id="avatarNickname">${esc(nick)}</div>
+    <button class="pencil-btn" onclick="startEditNickname()">✏️</button>`;
+
+  // 문구 행 - 항상 보기 모드로 복원
+  const msgWrap=document.getElementById('avatarMsgWrap');
+  if(msgWrap){
+    msgWrap.innerHTML=`<div class="avatar-msg" id="avatarMsg">${esc(msg)}</div>
+      <button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>`;
+  }
 }
 
 window.startEditMsg=function(){
-  // 닉네임 편집 중이면 먼저 원래대로 복원
   cancelEditNickname();
   const cur=localDash.msg||'좋은 습관 만드는 중';
-  const container=document.getElementById('avatarMsg').parentElement;
-  container.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;max-width:280px;">
-    <input id="msgInput" type="text" value="${escAttr(cur)}" maxlength="20" placeholder="한 줄 문구" class="nickname-input" style="font-size:14px;font-family:'LINESeedKR',sans-serif;font-weight:400;letter-spacing:0;">
-    <button onclick="saveMsg()" class="nickname-save-btn">저장</button>
-  </div>`;
+  const wrap=document.getElementById('avatarMsgWrap');
+  wrap.innerHTML=`<input id="msgInput" type="text" value="${escAttr(cur)}" maxlength="20" placeholder="한 줄 문구" class="nickname-input" style="font-size:14px;font-family:'LINESeedKR',sans-serif;font-weight:400;letter-spacing:0;">
+    <button onclick="saveMsg()" class="nickname-save-btn">저장</button>`;
   document.getElementById('msgInput').focus();
   document.getElementById('msgInput').addEventListener('keydown',e=>{ if(e.key==='Enter') window.saveMsg(); });
 };
@@ -1276,7 +1350,7 @@ window.saveMsg=async function(){
   if(!val){showToast('❌ 문구를 입력하세요');return;}
   localDash.msg=val;
   await saveDash();
-  showToast('✅ 문구 저장 완료!');
+  showToast('✅ 저장 완료!','done');
   renderAvatar();
 };
 function renderGoalGrid(){
@@ -1557,6 +1631,8 @@ function renderCalendar(panel,g,idx){
     ${calHtml}
     ${weekInfoHtml}
     ${renderStats(g,idx)}`;
+  // 댓글 영역 비동기 로드 및 삽입
+  renderMyCheers(panel, idx);
 }
 // ===== STATS =====
 function renderStats(g, idx) {
@@ -1611,9 +1687,7 @@ function renderStats(g, idx) {
 
   // 평균선 위치
   const avgLinePx = avgMonths.length>0 ? Math.round((avg/maxPct)*BAR_MAX_H) : 0;
-  const avgLineHtml = avgMonths.length>0 ? `<div class="stats-avg-line" style="bottom:${avgLinePx+20}px;">
-    <span class="stats-avg-label">평균 ${avg}%</span>
-  </div>` : '';
+  const avgLineHtml = avgMonths.length>0 ? `<div class="stats-avg-line" style="bottom:${avgLinePx+20}px;"></div>` : '';
 
   // 인사이트 멘트 생성
   const insights = buildInsights({months:validMonths, avg, maxMo, minMo, curMoData, prevMoData, streak, curY, curM});
@@ -1755,13 +1829,11 @@ function cancelEditNickname(){
   }
 }
 function cancelEditMsg(){
-  const msgEl=document.getElementById('avatarMsg');
-  if(!msgEl && document.getElementById('msgInput')){
-    const container=document.getElementById('msgInput').closest('div').parentElement;
-    const msg=localDash.msg||'좋은 습관 만드는 중';
-    container.innerHTML=`<div class="avatar-msg" id="avatarMsg">${esc(msg)}</div>
-      <button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>`;
-  }
+  if(!document.getElementById('msgInput')) return;
+  const msg=localDash.msg||'좋은 습관 만드는 중';
+  const wrap=document.getElementById('avatarMsgWrap');
+  if(wrap) wrap.innerHTML=`<div class="avatar-msg" id="avatarMsg">${esc(msg)}</div>
+    <button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>`;
 }
 window.cancelEditNickname=cancelEditNickname;
 window.cancelEditMsg=cancelEditMsg;
@@ -1783,7 +1855,7 @@ window.saveNickname=async function(){
   if(!val){showToast('❌ 애칭을 입력하세요');return;}
   localDash.nickname=val;
   await saveDash();
-  showToast('✅ 애칭 저장 완료!');
+  showToast('✅ 저장 완료!','done');
   renderAvatar();
 };
 
@@ -1992,7 +2064,94 @@ function buildCheerBox(targetId, gi) {
   </div>`;
 }
 
-window.selectFriendGoal = async function(friendId, gi) {
+// ===== 내 목표 댓글 스와이프 =====
+async function renderMyCheers(panel, gi) {
+  // 데이터 로드
+  await loadCheers(currentUser.id, gi);
+  const cheers = (window._cheerCache?.[`${currentUser.id}_${gi}`] || [])
+    .slice().sort((a,b)=> (b.at||'').localeCompare(a.at||''));
+
+  // 기존 영역 제거 후 재삽입
+  const existing = panel.querySelector('.my-cheers-section');
+  if(existing) existing.remove();
+
+  const section = document.createElement('div');
+  section.className = 'my-cheers-section';
+
+  if(cheers.length === 0) {
+    section.innerHTML = `<div class="my-cheers-title">💬 받은 응원</div>
+      <div class="my-cheers-empty">아직 받은 응원이 없어요<br>친구에게 목표를 공유해보세요!</div>`;
+    panel.appendChild(section);
+    return;
+  }
+
+  // 5개씩 페이지 분할
+  const PAGE_SIZE = 5;
+  const pages = [];
+  for(let i=0; i<cheers.length; i+=PAGE_SIZE) pages.push(cheers.slice(i, i+PAGE_SIZE));
+  let curPage = 0;
+
+  function buildPages() {
+    return pages.map((page, pi) => {
+      const items = page.map(c => {
+        const dt = c.at ? new Date(c.at).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+        return `<div class="my-cheer-card">
+          <div class="my-cheer-from">${esc(c.fromName||c.from)}</div>
+          <div class="my-cheer-text">${esc(c.text||'')}</div>
+          <div class="my-cheer-time">${dt}</div>
+        </div>`;
+      }).join('');
+      return `<div class="my-cheer-page">${items}</div>`;
+    }).join('');
+  }
+
+  function buildDots() {
+    return pages.map((_,i) =>
+      `<div class="my-cheers-dot ${i===curPage?'active':''}" onclick="window._cheerGoPage(${gi},${i})"></div>`
+    ).join('');
+  }
+
+  section.innerHTML = `<div class="my-cheers-title">💬 받은 응원 (${cheers.length}개)</div>
+    <div class="my-cheers-slider" id="cheerSlider_${gi}">
+      <div class="my-cheers-track" id="cheerTrack_${gi}">${buildPages()}</div>
+    </div>
+    <div class="my-cheers-dots" id="cheerDots_${gi}">${buildDots()}</div>`;
+
+  panel.appendChild(section);
+
+  // 스와이프 이벤트
+  const slider = section.querySelector(`#cheerSlider_${gi}`);
+  const track = section.querySelector(`#cheerTrack_${gi}`);
+  let startX = 0, isDragging = false;
+
+  function goPage(p) {
+    curPage = Math.max(0, Math.min(pages.length-1, p));
+    track.style.transform = `translateX(-${curPage*100}%)`;
+    section.querySelector(`#cheerDots_${gi}`).innerHTML = buildDots();
+  }
+  window._cheerGoPage = (gIdx, p) => { if(gIdx===gi) goPage(p); };
+
+  slider.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; isDragging=true; }, {passive:true});
+  slider.addEventListener('touchend', e=>{
+    if(!isDragging) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if(dx < -40) goPage(curPage+1);
+    else if(dx > 40) goPage(curPage-1);
+    isDragging=false;
+  }, {passive:true});
+
+  // 마우스 드래그도 지원
+  slider.addEventListener('mousedown', e=>{ startX=e.clientX; isDragging=true; });
+  slider.addEventListener('mouseup', e=>{
+    if(!isDragging) return;
+    const dx = e.clientX - startX;
+    if(dx < -40) goPage(curPage+1);
+    else if(dx > 40) goPage(curPage-1);
+    isDragging=false;
+  });
+}
+
+
   activeFriendGoalIdx = activeFriendGoalIdx===gi ? null : gi;
   // 응원 데이터 미리 로드
   if(activeFriendGoalIdx!==null) await loadCheers(friendId, gi);

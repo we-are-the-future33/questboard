@@ -374,11 +374,12 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .input-group label{color:var(--text-dim);}
 .input-group input{background:var(--surface2);border:2px solid var(--border);}
 .save-login-row label{color:var(--text-dim);}
-.btn-primary{background:linear-gradient(135deg,#1952f5,#6b8fff);box-shadow:0 8px 24px rgba(25,82,245,.38);}background:linear-gradient(135deg,var(--accent-light),#fff0f8);border:2px solid rgba(25,82,245,.18);border-radius:16px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;gap:14px;}
-.week-info-icon{font-size:28px;flex-shrink:0;}
-.week-info-body{flex:1;}
-.week-info-main{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);margin-bottom:3px;}
-.week-info-cheer{font-size:13px;color:var(--text-dim);line-height:1.5;}
+.btn-primary{background:linear-gradient(135deg,#1952f5,#6b8fff);box-shadow:0 8px 24px rgba(25,82,245,.38);}
+.week-info-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:7px 12px;margin-top:8px;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.week-info-icon{font-size:15px;flex-shrink:0;}
+.week-info-body{flex:1;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.week-info-main{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--accent);}
+.week-info-cheer{font-size:12px;color:var(--text-dim);}
 .week-info-clear{background:linear-gradient(135deg,#e8fff4,#e8eeff);border-color:rgba(0,185,107,.3);}
 .week-info-clear .week-info-main{background:linear-gradient(90deg,#00b96b,#1952f5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 
@@ -1613,10 +1614,10 @@ function renderCalendar(panel,g,idx){
         : CHEER_MSGS[Math.min(wRemain-1, CHEER_MSGS.length-1)];
     weekInfoHtml = `
       <div class="week-info-card ${isWeekClear?'week-info-clear':''}">
-        <div class="week-info-icon">${isWeekClear?'🏆':wRemain===0?'✅':wRemain===1?'🔥':'💪'}</div>
+        <div class="week-info-icon">${isWeekClear?'🏆':wRemain===1?'🔥':'💪'}</div>
         <div class="week-info-body">
           <div class="week-info-main">${isWeekClear?'이번 주 목표 달성!':`이번 주 ${wRemain}번 남았어요`}</div>
-          <div class="week-info-cheer">${cheer[0]} ${cheer[1]}</div>
+          <div class="week-info-cheer">· ${cheer[0]}</div>
         </div>
       </div>`;
   }
@@ -1633,11 +1634,7 @@ function renderCalendar(panel,g,idx){
         <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">수정</button>
       </div>
     </div>
-    <div class="month-stat month-stat-top">
-      <div class="ms-label">이달 진척</div>
-      <div class="ms-track"><div class="ms-fill" style="width:${pct}%"></div></div>
-      <div class="ms-nums">${done}/${mod} · ${pct}%</div>
-    </div>
+    ${weekInfoHtml}
     <div class="month-nav">
       <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
       <div class="month-label">${year}년 ${month}월</div>
@@ -1645,7 +1642,6 @@ function renderCalendar(panel,g,idx){
     </div>
     ${lockBanner}
     ${calHtml}
-    ${weekInfoHtml}
     ${renderStats(g,idx)}`;
   // 댓글 영역 비동기 로드 및 삽입
   renderMyCheers(panel, idx);

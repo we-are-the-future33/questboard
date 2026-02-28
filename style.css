@@ -472,8 +472,9 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .btn-accent{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(25,82,245,.28);}
 .admin-input{background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;box-sizing:border-box;}
 .admin-input:focus{border-color:var(--accent);}
-.admin-sec-tab{flex:1;padding:8px 0;border:none;background:none;font-size:13px;font-weight:700;color:var(--text-dim);cursor:pointer;border-radius:10px;transition:all .2s;font-family:'Noto Sans KR',sans-serif;}
-.admin-sec-tab.active{background:var(--accent-light);color:var(--accent);}
+.admin-sec-tab{flex:1;padding:12px 0;border:2px solid var(--border);background:#fff;font-size:14px;font-weight:800;color:var(--text-dim);cursor:pointer;border-radius:12px;transition:all .2s;font-family:'Noto Sans KR',sans-serif;}
+.admin-sec-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 12px rgba(25,82,245,.25);}
+.admin-sec-tab:not(.active):hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 .admin-section{display:none;}
 .admin-section.active{display:block;}
 /* 유저 카드 리스트 */

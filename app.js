@@ -2137,7 +2137,10 @@ window.switchAdminSection = function(sec) {
   ['user','group','notice'].forEach(s => {
     document.getElementById('aTab_'+s)?.classList.toggle('active', s===sec);
     const panel = document.getElementById('aSection_'+s);
-    if(panel) panel.style.display = s===sec ? 'block' : 'none';
+    if(panel) {
+      panel.classList.toggle('active', s===sec);
+      panel.style.display = ''; // 인라인 style 제거, CSS 클래스로 제어
+    }
   });
 };
 

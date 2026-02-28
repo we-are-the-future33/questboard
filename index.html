@@ -64,7 +64,7 @@
       </div>
     </nav>
     <!-- 어드민 섹션 탭 -->
-    <div style="display:flex;gap:4px;padding:8px 20px;background:#fff;position:sticky;top:0;z-index:30;border-bottom:1px solid #f1f5f9;">
+    <div style="display:flex;gap:6px;padding:12px 20px;background:#fff;position:sticky;top:0;z-index:30;border-bottom:2px solid #f1f5f9;">
       <button class="admin-sec-tab active" id="aTab_user" onclick="switchAdminSection('user')">👤 유저</button>
       <button class="admin-sec-tab" id="aTab_group" onclick="switchAdminSection('group')">📁 그룹</button>
       <button class="admin-sec-tab" id="aTab_notice" onclick="switchAdminSection('notice')">📢 공지</button>
@@ -89,7 +89,7 @@
         <div id="adminUserTable"></div>
       </div>
       <!-- 그룹 관리 -->
-      <div class="admin-section" id="aSection_group" style="display:none;">
+      <div class="admin-section" id="aSection_group">
         <div style="display:flex;gap:8px;margin-bottom:16px;">
           <input id="adminNewGroupName" placeholder="새 그룹 이름" class="admin-input" style="flex:1;">
           <button class="btn-sm" style="background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;" onclick="adminCreateGroup()">생성</button>
@@ -97,7 +97,7 @@
         <div id="adminGroupList"></div>
       </div>
       <!-- 공지사항 관리 -->
-      <div class="admin-section" id="aSection_notice" style="display:none;">
+      <div class="admin-section" id="aSection_notice">
         <div style="background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px;">
           <div class="admin-notice-form">
             <div class="admin-notice-row">

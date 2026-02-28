@@ -117,14 +117,16 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .avatar-section::before{content:'';position:absolute;top:0;left:0;right:0;height:40px;background:linear-gradient(180deg,rgba(255,255,255,0.25) 0%,transparent 100%);z-index:2;pointer-events:none;}
 .avatar-art{width:320px;height:320px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:3;margin-bottom:-40px;}
 .avatar-art canvas{width:320px!important;height:320px!important;}
-.avatar-stage{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:4px 10px;border-radius:8px;position:relative;z-index:3;}
-.avatar-nickname-row{display:flex;align-items:center;justify-content:center;gap:8px;position:relative;z-index:3;}
-.avatar-nickname{font-family:var(--font-heading);font-size:24px;color:#111827;letter-spacing:-0.02em;}
-.pencil-btn{background:var(--surface2);border:2px solid var(--border);color:var(--text-dim);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:all .2s;flex-shrink:0;}
+.avatar-stage{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:8px;position:relative;z-index:3;}
+.avatar-info-row{display:flex;align-items:center;justify-content:center;gap:8px;position:relative;z-index:3;padding-bottom:8px;}
+.avatar-nickname{font-family:var(--font-heading);font-size:22px;color:#111827;letter-spacing:-0.02em;}
+.pencil-btn{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);color:#cbd5e1;border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all .2s;flex-shrink:0;}
 .pencil-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
-.nickname-edit-row{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;}
-.nickname-input{flex:1;background:#fff;border:2px solid var(--accent);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-family:var(--font-main);outline:none;text-align:center;}
-.nickname-save-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;white-space:nowrap;box-shadow:0 3px 10px rgba(25,82,245,.25);}
+.avatar-section:not(.dark-bg) .pencil-btn{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.12);color:#6b7280;}
+.avatar-nickname-edit{display:none;align-items:center;gap:6px;position:relative;z-index:3;padding:0 16px 12px;width:100%;max-width:320px;}
+.nickname-input{flex:1;background:rgba(255,255,255,.95);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;color:var(--text);font-size:15px;font-family:var(--font-main);outline:none;text-align:center;}
+.nickname-save-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;white-space:nowrap;box-shadow:0 3px 10px rgba(25,82,245,.25);}
+.nickname-cancel-btn{background:rgba(255,255,255,.15);color:#e2e8f0;border:1.5px solid rgba(255,255,255,.3);border-radius:10px;padding:12px 12px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;white-space:nowrap;}
 .avatar-msg{font-size:14px;color:#6b7280;line-height:1.6;text-align:center;max-width:260px;}
 /* 시간대별 하늘 장식 */
 .sky-deco{position:absolute;pointer-events:none;z-index:1;}

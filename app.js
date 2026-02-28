@@ -627,7 +627,7 @@ function renderAvatar() {
   if (!artEl._hamsterInit) { artEl._hamsterInit = true; initHamsterAvatar(artEl); }
   document.getElementById('avatarStage').textContent = `${stage + 1}단계`;
   const nick = localDash.nickname || currentUser.name || '나의 캐릭터';
-  document.getElementById('avatarNicknameRow').innerHTML = `<div class="avatar-nickname">${esc(nick)}</div><button class="pencil-btn" onclick="startEditNickname()">✏️</button>`;
+  document.getElementById('avatarNickname').textContent = nick;
   applyTimeBackground();
 }
 
@@ -642,7 +642,7 @@ function applyTimeBackground() {
 
   if (h >= 0 && h < 5) {
     // 🌌 새벽
-    bg = 'linear-gradient(180deg, #252060 0%, #3f3a8e 50%, #5e58b4 100%)';
+    bg = 'linear-gradient(180deg, #1a1650 0%, #302a78 50%, #4a42a0 100%)';
     nickColor = '#e2e8f0'; stageColor = '#a5b4fc'; stageBg = 'rgba(165,180,252,.15)';
     decoHTML = `
       <div class="sky-deco star" style="top:12%;left:15%;font-size:8px;animation-delay:0s;">✦</div>
@@ -684,7 +684,7 @@ function applyTimeBackground() {
       <div class="sky-deco star" style="top:8%;right:30%;font-size:4px;animation-delay:2s;">✦</div>`;
   } else {
     // 🌙 밤
-    bg = 'linear-gradient(180deg, #1e3356 0%, #2c4a70 40%, #3a5d8a 100%)';
+    bg = 'linear-gradient(180deg, #111d3a 0%, #1a2d52 40%, #24396a 100%)';
     nickColor = '#e2e8f0'; stageColor = '#93c5fd'; stageBg = 'rgba(147,197,253,.15)';
     decoHTML = `
       <div class="sky-deco moon" style="top:3%;right:15%;font-size:28px;">🌙</div>
@@ -706,11 +706,9 @@ function applyTimeBackground() {
   if (nickEl) nickEl.style.color = nickColor;
   const stageEl = document.getElementById('avatarStage');
   if (stageEl) { stageEl.style.color = stageColor; stageEl.style.background = stageBg; }
-  // 연필 버튼
-  const pencilBtn = document.querySelector('.pencil-btn');
-  if (pencilBtn && (h >= 17 || h < 5)) {
-    pencilBtn.style.color = '#cbd5e1'; pencilBtn.style.borderColor = 'rgba(255,255,255,.2)'; pencilBtn.style.background = 'rgba(255,255,255,.1)';
-  }
+  // 어두운 배경 여부 토글
+  const isDark = (h >= 0 && h < 9) || h >= 17;
+  section.classList.toggle('dark-bg', isDark);
 }
 
 // ===== SUB TAB =====
@@ -1568,14 +1566,23 @@ window.openAddHabitSheet = function () {
 
 // ===== NICKNAME / MSG EDIT =====
 window.startEditNickname = function () {
-  const row = document.getElementById('avatarNicknameRow');
+  const editArea = document.getElementById('avatarNicknameEdit');
+  const infoRow = document.getElementById('avatarInfoRow');
   const cur = localDash.nickname || currentUser.name || '';
-  row.innerHTML = `<div class="nickname-edit-row"><input class="nickname-input" id="nickInput" value="${esc(cur)}" maxlength="10" placeholder="닉네임"><button class="nickname-save-btn" onclick="saveNickname()">저장</button></div>`;
+  infoRow.style.display = 'none';
+  editArea.style.display = 'flex';
+  editArea.innerHTML = `<input class="nickname-input" id="nickInput" value="${esc(cur)}" maxlength="10" placeholder="닉네임"><button class="nickname-save-btn" onclick="saveNickname()">저장</button><button class="nickname-cancel-btn" onclick="cancelNickname()">취소</button>`;
   document.getElementById('nickInput').focus();
+};
+window.cancelNickname = function () {
+  document.getElementById('avatarNicknameEdit').style.display = 'none';
+  document.getElementById('avatarInfoRow').style.display = '';
 };
 window.saveNickname = async function () {
   const v = document.getElementById('nickInput').value.trim();
   if (v) { localDash.nickname = v; await saveDash(); }
+  document.getElementById('avatarNicknameEdit').style.display = 'none';
+  document.getElementById('avatarInfoRow').style.display = '';
   renderAvatar();
 };
 window.startEditMsg = function () {

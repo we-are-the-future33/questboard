@@ -356,14 +356,16 @@ function initHabitSwipe(idx) {
     return;
   }
 
-  // Mobile: 터치 스와이프
+  // Mobile touch swipe
   let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
   const TH = 60;
+  const outer = document.getElementById(`hcOuter_${idx}`);
 
   function onS(e) {
     const t = e.touches[0];
     sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false;
     card.classList.remove('snapping');
+    if (outer) { outer.classList.remove('swiping-right', 'swiping-left'); }
   }
   function onM(e) {
     if (locked) return;
@@ -376,8 +378,13 @@ function initHabitSwipe(idx) {
     dx = dX;
     card.classList.add('swiping');
     card.style.transform = `translateX(${dx}px)`;
+    if (outer) {
+      outer.classList.toggle('swiping-right', dx > 10);
+      outer.classList.toggle('swiping-left', dx < -10);
+    }
   }
   function onE() {
+    if (outer) { outer.classList.remove('swiping-right', 'swiping-left'); }
     if (!swiping) {
       card.style.transform = '';
       card.classList.remove('swiping');
@@ -389,17 +396,16 @@ function initHabitSwipe(idx) {
     const isDone = card.dataset.done === '1';
 
     if (dx >= TH && !isDone) {
-      // 오른쪽 스와이프 → 완료 (미완료 상태일 때만)
       card.style.transform = `translateX(${window.innerWidth}px)`;
       setTimeout(() => habitMarkDone(idx), 250);
     } else if (dx <= -TH && isDone) {
-      // 왼쪽 스와이프 → 취소 (완료 상태일 때만)
       card.style.transform = `translateX(${-window.innerWidth}px)`;
       setTimeout(() => habitMarkUndo(idx), 250);
     } else {
       card.style.transform = 'translateX(0)';
     }
     dx = 0; swiping = false;
+  }
   }
 
   card.addEventListener('touchstart', onS, { passive: true });
@@ -426,7 +432,7 @@ async function habitMarkUndo(idx) {
   const k = isOnce ? `g${idx}_once` : `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
   localDash.completions[k] = false;
   await saveDash();
-  showToast('↩️ 해제', 'undo');
+  showToast('↩️ 취소', 'undo');
   renderHabitCards(); renderAvatar();
 }
 

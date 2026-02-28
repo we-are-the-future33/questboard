@@ -201,11 +201,18 @@
               <div class="section-hdr-title">나의 습관</div>
               <div class="section-hdr-count" id="habitCount">0</div>
             </div>
-            <button class="filter-pill" id="habitFilterPill" onclick="toggleHabitFilter()">
-              모든 목표 <span class="filter-dot"></span>
-            </button>
+            <div style="display:flex;align-items:center;">
+              <select id="habitViewModeSelect" class="view-mode-select" onchange="changeViewMode(this.value)">
+                <option value="all">기본 보기</option>
+                <option value="time">시간대별</option>
+                <option value="category">카테고리별</option>
+              </select>
+              <button class="filter-pill" id="habitFilterPill" onclick="toggleHabitFilter()">
+                모든 목표 <span class="filter-dot"></span>
+              </button>
+            </div>
           </div>
-          <div class="card-grid" id="habitCardGrid"></div>
+          <div id="habitListWrapper"></div>
           <div class="swipe-hint" id="habitSwipeHint">→ 밀어서 완료 · ← 밀어서 취소</div>
         </div>
         <!-- 도전 패널 -->

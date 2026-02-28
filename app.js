@@ -19,7 +19,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // ===== CONSTANTS =====
-const MAX_HABITS = 10;
+const MAX_HABITS = 50;
 const MAX_CHALLENGES = 10;
 const TUT_STEPS = 5;
 const LEGACY_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
@@ -44,6 +44,10 @@ let activeGoalIdx = null;
 let viewMonth = null;
 let habitFilter = 'all'; // 'all' | 'active'
 let challengeFilter = 'all';
+let habitViewMode = 'all'; // 'all' | 'time' | 'category'
+
+const TIME_LABELS = { any: '🕒 시간 무관', morning: '🌅 아침 루틴', afternoon: '☀️ 오후 루틴', evening: '🌙 저녁 루틴' };
+const CAT_LABELS = { health: '💪 건강 & 체력', diet: '🥗 식단 & 영양', study: '📚 학습 & 성장', work: '💼 업무 & 커리어', finance: '💰 재무 & 자산', life: '🌱 생활 & 루틴', home: '🧹 집안일 & 정리', hobby: '🎨 취미 & 창작', social: '🤝 관계 & 소셜', mental: '🧘 휴식 & 멘탈', etc: '📦 기타' };
 let currentSubTab = 'habit';
 
 // ===== UTILITIES =====
@@ -94,7 +98,18 @@ function globalPct() {
   getAllGoals().forEach((g, i) => { if (!g || !g.unit) return; const { done, mod } = goalPct(g, i, y, m); td += done; tm += mod; });
   return tm > 0 ? Math.round(td / tm * 100) : 0;
 }
-function getAllGoals() { const g = []; for (let i = 0; i < MAX_HABITS; i++) g.push(localDash.goals[i] || null); return g; }
+function getAllGoals() {
+  const src = localDash.goals || {};
+  // Firebase may return object instead of array - normalize
+  if (!Array.isArray(src)) {
+    const arr = [];
+    Object.keys(src).forEach(k => { arr[parseInt(k)] = src[k]; });
+    localDash.goals = arr;
+  }
+  const g = [];
+  for (let i = 0; i < MAX_HABITS; i++) g.push(localDash.goals[i] || null);
+  return g;
+}
 
 // ===== STREAK =====
 function calcStreak(g, gi) {
@@ -298,24 +313,65 @@ window.toggleChallengeFilter = function () {
   renderChallengeCards();
 };
 
-// ===== HABIT CARDS (2-col grid) =====
-function renderHabitCards() {
-  const goals = getAllGoals(), now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
-  const grid = document.getElementById('habitCardGrid');
-  let valid = [];
-  for (let i = 0; i < MAX_HABITS; i++) { if (goals[i] && goals[i].title && goals[i].unit) valid.push({ g: goals[i], idx: i }); }
-  let filtered = habitFilter === 'active' ? valid.filter(({ g, idx }) => isGoalActiveThisWeek(g, idx)) : valid;
-  document.getElementById('habitCount').textContent = valid.length;
+// ===== HABIT CARDS (2-col grid, grouped) =====
+window.changeViewMode = function(mode) {
+  habitViewMode = mode;
+  renderHabitCards();
+};
 
-  // 동적 정렬: 미완료 우선, 완료 후순
-  const now2 = new Date();
-  filtered = filtered.map(item => {
+window.toggleGroupAccordion = function(id) {
+  const grid = document.getElementById(id);
+  const icon = document.getElementById(id.replace('hg_', 'hgi_'));
+  if (!grid || !icon) return;
+  if (grid.classList.contains('hidden')) {
+    grid.classList.remove('hidden');
+    icon.classList.remove('closed');
+  } else {
+    grid.classList.add('hidden');
+    icon.classList.add('closed');
+  }
+};
+
+function generateHabitCardHtml(g, idx, y, m) {
+  const now = new Date();
+  const mg = migrateGoal(g), { pct } = goalPct(mg, idx, y, m);
+  const streak = calcStreak(mg, idx), streakLbl = getStreakLabel(mg, streak);
+  const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
+  const todayDone = localDash.completions[todayKey] === true;
+  const isOnce = mg.unit === 'once';
+  const isCompleted = pct >= 100;
+  const isOver = pct > 100;
+  const isDone = todayDone || (isOnce && localDash.completions[`g${idx}_once`]);
+  return `<div class="habit-card-outer" id="hcOuter_${idx}">
+    <div class="habit-card-swipe-bg-left todo"><div class="swipe-bg-text">✓ 완료</div></div>
+    <div class="habit-card-swipe-bg-right done"><div class="swipe-bg-text">↩ 취소</div></div>
+    <div class="habit-card ${isCompleted ? 'completed' : ''} ${isDone ? 'today-done' : ''}" id="hc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}" data-done="${isDone ? 1 : 0}">
+      ${isDone ? '<div class="habit-card-done-badge">✓</div>' : ''}
+      <div>
+        <div class="habit-card-title">${esc(g.title)}</div>
+        <div class="habit-card-mid">
+          <div class="habit-card-unit">${getUnitLabel(mg)}</div>
+          <div class="habit-card-streak ${streak > 0 ? '' : 'zero'}">
+            <span class="fire">🔥</span><span class="streak-num">${streakLbl}</span>
+          </div>
+        </div>
+      </div>
+      <div class="habit-card-bot">
+        <div class="habit-card-bar"><div class="habit-card-bar-fill ${isOver ? 'over100' : ''}" style="width:${Math.min(pct, 100)}%"></div></div>
+        <div class="habit-card-pct">${pct}%</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function sortHabitItems(items, y, m) {
+  const now = new Date();
+  return items.map(item => {
     const { g, idx } = item;
     const mg = migrateGoal(g);
     const isOnce = mg.unit === 'once';
     const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
     const isDone = localDash.completions[todayKey] === true || (isOnce && localDash.completions[`g${idx}_once`]);
-    // 최근 완료 타임스탬프 (completions에서 가장 최근 날짜)
     let lastDoneTs = 0;
     Object.keys(localDash.completions).forEach(k => {
       if (!k.startsWith(`g${idx}_`) || localDash.completions[k] !== true) return;
@@ -326,52 +382,79 @@ function renderHabitCards() {
       }
     });
     return { ...item, isDone, lastDoneTs, createdIdx: idx };
-  });
-  filtered.sort((a, b) => {
-    // 미완료 먼저
+  }).sort((a, b) => {
     if (a.isDone !== b.isDone) return a.isDone ? 1 : -1;
-    if (!a.isDone && !b.isDone) {
-      // 미완료끼리: 최근 완료한 순 (lastDoneTs 큰 게 위)
-      return b.lastDoneTs - a.lastDoneTs;
-    }
-    // 완료끼리: 최근 등록한 순 (idx 큰 게 위)
+    if (!a.isDone && !b.isDone) return b.lastDoneTs - a.lastDoneTs;
     return b.createdIdx - a.createdIdx;
   });
+}
+
+function renderHabitCards() {
+  const goalsObj = localDash.goals || {};
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  const wrapper = document.getElementById('habitListWrapper');
+
+  let valid = [];
+  // Object.keys로 안전 순회 (Firebase 객체/배열 모두 대응)
+  Object.keys(goalsObj).forEach(key => {
+    const idx = parseInt(key);
+    const g = goalsObj[key];
+    if (g && g.title && g.unit) valid.push({ g, idx });
+  });
+
+  let filtered = habitFilter === 'active' ? valid.filter(({ g, idx }) => isGoalActiveThisWeek(g, idx)) : valid;
+  document.getElementById('habitCount').textContent = valid.length;
+
+  // 정렬
+  filtered = sortHabitItems(filtered, y, m);
 
   let html = '';
-  filtered.forEach(({ g, idx }) => {
-    const mg = migrateGoal(g), { pct } = goalPct(mg, idx, y, m);
-    const streak = calcStreak(mg, idx), streakLbl = getStreakLabel(mg, streak);
-    const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
-    const todayDone = localDash.completions[todayKey] === true;
-    const isOnce = mg.unit === 'once';
-    const isCompleted = pct >= 100;
-    const isOver = pct > 100;
-    const isDone = todayDone || (isOnce && localDash.completions[`g${idx}_once`]);
-    html += `<div class="habit-card-outer" id="hcOuter_${idx}">
-      <div class="habit-card-swipe-bg-left todo"><div class="swipe-bg-text">✓ 완료</div></div>
-      <div class="habit-card-swipe-bg-right done"><div class="swipe-bg-text">↩ 취소</div></div>
-      <div class="habit-card ${isCompleted ? 'completed' : ''} ${isDone ? 'today-done' : ''}" id="hc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}" data-done="${isDone ? 1 : 0}">
-        ${isDone ? '<div class="habit-card-done-badge">✓</div>' : ''}
-        <div>
-          <div class="habit-card-title">${esc(g.title)}</div>
-          <div class="habit-card-mid">
-            <div class="habit-card-unit">${getUnitLabel(mg)}</div>
-            <div class="habit-card-streak ${streak > 0 ? '' : 'zero'}">
-              <span class="fire">🔥</span><span class="streak-num">${streakLbl}</span>
-            </div>
-          </div>
-        </div>
-        <div class="habit-card-bot">
-          <div class="habit-card-bar"><div class="habit-card-bar-fill ${isOver ? 'over100' : ''}" style="width:${Math.min(pct, 100)}%"></div></div>
-          <div class="habit-card-pct">${pct}%</div>
-        </div>
-      </div>
-    </div>`;
-  });
-  // 추가 버튼 (9개까지)
-  if (valid.length < MAX_HABITS) html += `<div class="grid-add-btn" onclick="openAddHabitSheet()"><div class="grid-add-btn-icon">＋</div><div class="grid-add-btn-text">습관 추가</div></div>`;
-  grid.innerHTML = html;
+
+  if (habitViewMode === 'time') {
+    const groups = { morning: [], afternoon: [], evening: [], any: [] };
+    filtered.forEach(v => { const t = v.g.time || 'any'; if (groups[t]) groups[t].push(v); else groups['any'].push(v); });
+    let gIdx = 0;
+    Object.keys(groups).forEach(key => {
+      if (groups[key].length === 0) return;
+      const label = TIME_LABELS[key] || key;
+      html += `<div class="group-header" onclick="toggleGroupAccordion('hg_${gIdx}')">
+        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-toggle-icon" id="hgi_${gIdx}">▼</div>
+      </div><div class="card-grid" id="hg_${gIdx}">`;
+      groups[key].forEach(({ g, idx }) => { html += generateHabitCardHtml(g, idx, y, m); });
+      html += `</div>`;
+      gIdx++;
+    });
+  } else if (habitViewMode === 'category') {
+    const groups = {};
+    Object.keys(CAT_LABELS).forEach(k => { groups[k] = []; });
+    filtered.forEach(v => { const c = v.g.category || 'etc'; if (groups[c]) groups[c].push(v); else groups['etc'].push(v); });
+    let gIdx = 0;
+    Object.keys(groups).forEach(key => {
+      if (groups[key].length === 0) return;
+      const label = CAT_LABELS[key] || key;
+      html += `<div class="group-header" onclick="toggleGroupAccordion('hg_${gIdx}')">
+        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-toggle-icon" id="hgi_${gIdx}">▼</div>
+      </div><div class="card-grid" id="hg_${gIdx}">`;
+      groups[key].forEach(({ g, idx }) => { html += generateHabitCardHtml(g, idx, y, m); });
+      html += `</div>`;
+      gIdx++;
+    });
+  } else {
+    // 기본 보기
+    html += `<div class="card-grid">`;
+    filtered.forEach(({ g, idx }) => { html += generateHabitCardHtml(g, idx, y, m); });
+    if (valid.length < MAX_HABITS) html += `<div class="grid-add-btn" onclick="openAddHabitSheet()"><div class="grid-add-btn-icon">＋</div><div class="grid-add-btn-text">습관 추가</div></div>`;
+    html += `</div>`;
+  }
+
+  // 그룹 모드일 때 추가 버튼
+  if (habitViewMode !== 'all' && valid.length < MAX_HABITS) {
+    html += `<div class="card-grid" style="margin-top:12px;"><div class="grid-add-btn" onclick="openAddHabitSheet()"><div class="grid-add-btn-icon">＋</div><div class="grid-add-btn-text">습관 추가</div></div></div>`;
+  }
+
+  wrapper.innerHTML = html;
   document.getElementById('habitSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
   filtered.forEach(({ idx }) => initHabitSwipe(idx));
 }
@@ -1125,8 +1208,30 @@ function renderCycleStep() {
   h += `</div>`;
   // depth 2 (only for w1~w4)
   h += `<div id="cycle2Area"></div>`;
-  // confirm button
+
+  // 시간대 선택
   const canConfirm = _habitCycle1 === 'daily' || _habitCycle1 === 'once' || (_habitCycle1 && _habitCycle2);
+  if (canConfirm) {
+    h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">시간대</div>`;
+    h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
+    const timeOpts = [['any','🕒 무관'],['morning','🌅 아침'],['afternoon','☀️ 오후'],['evening','🌙 저녁']];
+    timeOpts.forEach(([val, lbl], i) => {
+      h += `<label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#4b5563;cursor:pointer;">
+        <input type="radio" name="habitTime" value="${val}" ${i===0?'checked':''} style="margin:0;"> ${lbl}</label>`;
+    });
+    h += `</div>`;
+
+    // 카테고리 선택
+    h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">카테고리</div>`;
+    h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">`;
+    const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
+    catOpts.forEach(([val, lbl], i) => {
+      h += `<label style="display:flex;align-items:center;gap:4px;padding:6px 10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;font-weight:700;color:#4b5563;cursor:pointer;">
+        <input type="radio" name="habitCat" value="${val}" ${val==='etc'?'checked':''} style="margin:0;"> ${lbl}</label>`;
+    });
+    h += `</div>`;
+  }
+
   h += `<button class="unit-confirm-btn" id="cycleConfirmBtn" onclick="confirmHabitAdd()" ${canConfirm?'':'disabled'}>확인</button>`;
   document.getElementById('bsBody').innerHTML = h;
   if (_habitCycle1 && _habitCycle1 !== 'daily' && _habitCycle1 !== 'once') {
@@ -1193,9 +1298,9 @@ window.confirmHabitAdd = async function () {
   for (let i = 0; i < MAX_HABITS; i++) {
     if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; }
   }
-  if (slot === -1) { showToast('습관 최대 10개!', 'normal'); return; }
+  if (slot === -1) { showToast('습관 최대 50개!', 'normal'); return; }
 
-  let unit, freq;
+  let unit, freq, weeks;
   if (_habitCycle1 === 'daily') { unit = 'daily'; freq = 7; }
   else if (_habitCycle1 === 'once') { unit = 'once'; freq = 0; }
   else {
@@ -1204,15 +1309,15 @@ window.confirmHabitAdd = async function () {
     else if (weekNum === 2) { unit = 'biweekly'; }
     else { unit = 'multiweek'; }
     freq = _habitCycle2;
-    // store weekNum for multiweek
-    localDash.goals[slot] = { title: _habitAddName, unit, freq, weeks: weekNum };
-    await saveDash();
-    _habitAddName = ''; _habitCycle1 = null; _habitCycle2 = null;
-    closeBottomSheet(); renderHabitCards(); renderAvatar();
-    showToast('✅ 습관 등록 완료!', 'done');
-    return;
+    weeks = weekNum;
   }
-  localDash.goals[slot] = { title: _habitAddName, unit, freq };
+
+  const time = document.querySelector('input[name="habitTime"]:checked')?.value || 'any';
+  const category = document.querySelector('input[name="habitCat"]:checked')?.value || 'etc';
+
+  const goalData = { title: _habitAddName, unit, freq, time, category };
+  if (weeks) goalData.weeks = weeks;
+  localDash.goals[slot] = goalData;
   await saveDash();
   _habitAddName = ''; _habitCycle1 = null; _habitCycle2 = null;
   closeBottomSheet(); renderHabitCards(); renderAvatar();

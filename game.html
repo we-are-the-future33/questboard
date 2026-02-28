@@ -689,6 +689,15 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+// Firebase import 실패 대비 안전장치 - 8초 후에도 loading이면 강제 로그인 전환
+const _safetyTimer = setTimeout(() => {
+  const loading = document.getElementById('loadingScreen');
+  if (loading && loading.classList.contains('active')) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('loginScreen').classList.add('active');
+  }
+}, 8000);
+
 const firebaseConfig = {
   apiKey: "AIzaSyAbEbLdJuWVai_NKTHuo1XtC8p76dmVPE0",
   authDomain: "grow-goal.firebaseapp.com",
@@ -775,10 +784,11 @@ function showScreen(id) {
 async function init() {
   const saved = JSON.parse(localStorage.getItem('qb_login') || 'null');
   if (saved && saved.id && saved.pw) {
-    // 자동 로그인 시도
     showScreen('loadingScreen');
     try {
-      const snap = await get(ref(db,`users/${saved.id}`));
+      // 5초 타임아웃
+      const timeoutPromise = new Promise((_,reject) => setTimeout(()=>reject(new Error('timeout')), 5000));
+      const snap = await Promise.race([get(ref(db,`users/${saved.id}`)), timeoutPromise]);
       if (snap.exists() && snap.val().password === saved.pw) {
         const u = snap.val();
         currentUser = {id:saved.id,...u};
@@ -800,11 +810,15 @@ async function init() {
           if(tabBar) tabBar.style.display = hasGroup ? 'flex' : 'none';
           renderDashboard();
         }
+        clearTimeout(_safetyTimer);
         return;
       }
-    } catch(e) { /* 자동 로그인 실패 시 로그인 화면으로 */ }
+    } catch(e) {
+      // 자동 로그인 실패 (네트워크 오류 or 타임아웃) → 로그인 화면
+    }
   }
-  // 저장된 로그인 정보 폼에 채우기
+  clearTimeout(_safetyTimer);
+  // 폼 채우기
   if (saved) {
     document.getElementById('loginId').value = saved.id || '';
     document.getElementById('loginPw').value = saved.pw || '';

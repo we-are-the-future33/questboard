@@ -622,15 +622,16 @@ function initBucketSwipe(idx) {
   const card = document.getElementById(`cc_${idx}`);
   if (!card) return;
 
-  // PC: no action on click for bucket (just visual)
+  // PC: click opens bucket detail
   if (!isTouchDevice) {
-    card.style.cursor = 'default';
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => openBucketDetail(idx));
     return;
   }
 
-  let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
+  let sx = 0, sy = 0, dx = 0, swiping = false, locked = false, tapStart = 0;
   const TH = 60;
-  function onS(e) { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; card.classList.remove('snapping'); }
+  function onS(e) { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; tapStart = Date.now(); card.classList.remove('snapping'); }
   function onM(e) {
     if (locked) return; const t = e.touches[0];
     const dX = t.clientX - sx, dY = t.clientY - sy;
@@ -638,7 +639,6 @@ function initBucketSwipe(idx) {
     if (Math.abs(dX) > 8) swiping = true;
     if (!swiping) return; e.preventDefault();
     const isDone = localDash.challenges[idx]?.done === true;
-    // 완료 안됨 → 오른쪽만, 완료됨 → 왼쪽만
     if (!isDone) dx = Math.max(0, dX);
     else dx = Math.min(0, dX);
     card.classList.add('swiping'); card.style.transform = `translateX(${dx}px)`;
@@ -646,7 +646,11 @@ function initBucketSwipe(idx) {
   function onE() {
     card.classList.remove('swiping'); card.classList.add('snapping');
     if (Math.abs(dx) >= TH) { card.style.transform = `translateX(${dx > 0 ? window.innerWidth : -window.innerWidth}px)`; setTimeout(() => swipeBucket(idx), 250); }
-    else { card.style.transform = 'translateX(0)'; }
+    else {
+      card.style.transform = 'translateX(0)';
+      // 탭 감지 (짧은 터치 + 이동 없음)
+      if (!swiping && Date.now() - tapStart < 300) openBucketDetail(idx);
+    }
     dx = 0; swiping = false;
   }
   card.addEventListener('touchstart', onS, { passive: true });
@@ -663,6 +667,45 @@ async function swipeBucket(idx) {
   else { showToast('↩️ 취소', 'undo'); }
   renderChallengeCards();
 }
+
+// ===== BUCKET DETAIL (bottom sheet) =====
+window.openBucketDetail = function (idx) {
+  const c = localDash.challenges[idx];
+  if (!c) return;
+  document.getElementById('bsTitle').textContent = c.title;
+  const done = c.done === true;
+  let h = `<div style="text-align:center;padding:30px 0;">
+    <div style="font-size:48px;margin-bottom:12px;">${done ? '🏆' : '🎯'}</div>
+    <span class="challenge-card-type bucket" style="background:${done?'#ecfdf5':'#fff0f3'};color:${done?'#10b981':'var(--accent2)'};border:1px solid ${done?'#d1fae5':'rgba(255,94,125,.2)'};font-size:12px;">버킷리스트</span>
+    ${done ? '<div style="margin-top:12px;font-size:14px;font-weight:700;color:#10b981;">달성 완료! 🎉</div>' : '<div style="margin-top:12px;font-size:13px;color:var(--text-dim);">← 스와이프하여 완료 처리</div>'}
+  </div>`;
+  h += `<button class="proj-edit-btn" onclick="openBucketEdit(${idx})">✏️ 수정</button>`;
+  h += `<button class="proj-edit-btn" style="color:var(--danger);border-color:var(--danger);margin-top:8px;" onclick="deleteChallenge(${idx})">🗑 삭제</button>`;
+  document.getElementById('bsBody').innerHTML = h;
+  openBS();
+};
+
+window.openBucketEdit = function (idx) {
+  const c = localDash.challenges[idx];
+  if (!c) return;
+  document.getElementById('bsTitle').textContent = '버킷리스트 수정';
+  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">이름</div>`;
+  h += `<input class="proj-edit-input" id="editBucketName" value="${esc(c.title)}" maxlength="30">`;
+  h += `<div class="proj-save-row" style="margin-top:20px;"><button class="proj-save-btn cancel" onclick="openBucketDetail(${idx})">취소</button><button class="proj-save-btn save" onclick="saveBucketEdit(${idx})">저장</button></div>`;
+  document.getElementById('bsBody').innerHTML = h;
+  setTimeout(() => document.getElementById('editBucketName')?.focus(), 200);
+};
+
+window.saveBucketEdit = async function (idx) {
+  const name = document.getElementById('editBucketName')?.value.trim();
+  if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
+  localDash.challenges[idx].title = name;
+  await saveDash();
+  document.getElementById('bsTitle').textContent = name;
+  openBucketDetail(idx);
+  renderChallengeCards();
+  showToast('✅ 수정 완료', 'done');
+};
 
 // ===== ADD CHALLENGE BOTTOM SHEET =====
 window.openAddChallengeSheet = function () {
@@ -1072,8 +1115,9 @@ function renderBSBody(idx) {
 
   // 6개월 통계
   html += renderStats6Month(idx, g);
-  // 삭제 버튼
-  html += `<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);"><button style="width:100%;background:transparent;border:1.5px solid #e5e7eb;border-radius:12px;padding:13px;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;" onclick="deleteGoalFromBS(${idx})">삭제하기</button></div>`;
+  // 수정 / 삭제 버튼 (도전 카드와 통일)
+  html += `<button class="proj-edit-btn" onclick="openHabitEdit(${idx})">✏️ 수정</button>`;
+  html += `<button class="proj-edit-btn" style="color:var(--danger);border-color:var(--danger);margin-top:8px;" onclick="deleteGoalFromBS(${idx})">🗑 삭제</button>`;
   body.innerHTML = html;
 }
 
@@ -1139,7 +1183,8 @@ function renderBSOnce(idx, body) {
     <button style="background:#fff;border:3px solid ${done ? 'var(--accent)' : 'var(--border)'};border-radius:50%;width:80px;height:80px;font-size:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;" onclick="bsToggleOnce(${idx})">${done ? '✅' : '⭕'}</button>
     ${done ? '<div style="margin-top:12px;font-family:Black Han Sans;font-size:15px;color:var(--accent);">달성 완료!</div>' : ''}
   </div>${renderStats6Month(idx, migrateGoal(localDash.goals[idx]))}
-  <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);"><button style="width:100%;background:transparent;border:1.5px solid #e5e7eb;border-radius:12px;padding:13px;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;" onclick="deleteGoalFromBS(${idx})">삭제하기</button></div>`;
+  <button class="proj-edit-btn" onclick="openHabitEdit(${idx})">✏️ 수정</button>
+  <button class="proj-edit-btn" style="color:var(--danger);border-color:var(--danger);margin-top:8px;" onclick="deleteGoalFromBS(${idx})">🗑 삭제</button>`;
 }
 
 window.bsToggleOnce = async function (idx) {
@@ -1380,6 +1425,51 @@ window.deleteGoalFromBS = async function (idx) {
   await saveDash();
   closeBottomSheet(); renderHabitCards(); renderAvatar();
   showToast('🗑 삭제됨', 'normal');
+};
+
+// ===== HABIT EDIT =====
+window.openHabitEdit = function (idx) {
+  const g = localDash.goals[idx];
+  if (!g) return;
+  document.getElementById('bsTitle').textContent = '습관 수정';
+  const timeOpts = [['any','🕒 무관'],['morning','🌅 아침'],['afternoon','☀️ 오후'],['evening','🌙 저녁']];
+  const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
+  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">습관 이름</div>`;
+  h += `<input class="proj-edit-input" id="editGoalName" value="${esc(g.title)}" maxlength="20">`;
+  h += `<div style="font-size:12px;color:var(--text-dim);font-weight:700;margin:12px 0 4px;">주기: ${getUnitLabel(migrateGoal(g))}</div>`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">시간대</div>`;
+  h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
+  timeOpts.forEach(([val, lbl]) => {
+    const sel = (g.time || 'any') === val;
+    h += `<label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:${sel?'var(--accent-light)':'#f8fafc'};border:1.5px solid ${sel?'var(--accent)':'#e2e8f0'};border-radius:8px;font-size:12px;font-weight:700;color:${sel?'var(--accent)':'#4b5563'};cursor:pointer;">
+      <input type="radio" name="editTime" value="${val}" ${sel?'checked':''} style="margin:0;"> ${lbl}</label>`;
+  });
+  h += `</div>`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">카테고리</div>`;
+  h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">`;
+  catOpts.forEach(([val, lbl]) => {
+    const sel = (g.category || 'etc') === val;
+    h += `<label style="display:flex;align-items:center;gap:4px;padding:6px 10px;background:${sel?'var(--accent-light)':'#f8fafc'};border:1.5px solid ${sel?'var(--accent)':'#e2e8f0'};border-radius:8px;font-size:11px;font-weight:700;color:${sel?'var(--accent)':'#4b5563'};cursor:pointer;">
+      <input type="radio" name="editCat" value="${val}" ${sel?'checked':''} style="margin:0;"> ${lbl}</label>`;
+  });
+  h += `</div>`;
+  h += `<div class="proj-save-row"><button class="proj-save-btn cancel" onclick="renderBSBody(${idx});document.getElementById('bsTitle').textContent='${esc(g.title)}';">취소</button><button class="proj-save-btn save" onclick="saveHabitEdit(${idx})">저장</button></div>`;
+  document.getElementById('bsBody').innerHTML = h;
+};
+
+window.saveHabitEdit = async function (idx) {
+  const name = document.getElementById('editGoalName')?.value.trim();
+  if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
+  const time = document.querySelector('input[name="editTime"]:checked')?.value || 'any';
+  const cat = document.querySelector('input[name="editCat"]:checked')?.value || 'etc';
+  localDash.goals[idx].title = name;
+  localDash.goals[idx].time = time;
+  localDash.goals[idx].category = cat;
+  await saveDash();
+  document.getElementById('bsTitle').textContent = name;
+  renderBSBody(idx);
+  renderHabitCards();
+  showToast('✅ 수정 완료', 'done');
 };
 
 // ===== CHEERS (메인 하단) =====

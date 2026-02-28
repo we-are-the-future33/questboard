@@ -316,11 +316,11 @@ function renderHabitCards() {
     const isOnce = mg.unit === 'once';
     const isCompleted = pct >= 100;
     const isOver = pct > 100;
+    const isDone = todayDone || (isOnce && localDash.completions[`g${idx}_once`]);
     html += `<div class="habit-card-outer" id="hcOuter_${idx}">
-      <div class="habit-card-swipe-bg ${todayDone || (isOnce && localDash.completions[`g${idx}_once`]) ? 'done' : 'todo'}">
-        <div class="swipe-bg-text">${todayDone || (isOnce && localDash.completions[`g${idx}_once`]) ? '↩ 취소' : '✓ 완료'}</div>
-      </div>
-      <div class="habit-card ${isCompleted ? 'completed' : ''}" id="hc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}">
+      <div class="habit-card-swipe-bg-left todo"><div class="swipe-bg-text">✓ 완료</div></div>
+      <div class="habit-card-swipe-bg-right done"><div class="swipe-bg-text">↩ 취소</div></div>
+      <div class="habit-card ${isCompleted ? 'completed' : ''}" id="hc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}" data-done="${isDone ? 1 : 0}">
         <div>
           <div class="habit-card-title">${esc(g.title)}</div>
           <div class="habit-card-mid">
@@ -344,48 +344,91 @@ function renderHabitCards() {
   filtered.forEach(({ idx }) => initHabitSwipe(idx));
 }
 
-// ===== HABIT SWIPE =====
+// ===== HABIT SWIPE (touch only, bidirectional) =====
+const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
 function initHabitSwipe(idx) {
   const card = document.getElementById(`hc_${idx}`);
   if (!card) return;
+
+  // PC: 클릭만 (바텀시트 열기)
+  if (!isTouchDevice) {
+    card.addEventListener('click', () => openGoalBottomSheet(idx));
+    card.style.cursor = 'pointer';
+    return;
+  }
+
+  // Mobile: 터치 스와이프
   let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
   const TH = 60;
-  function onS(e) { const t = e.touches ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; card.classList.remove('snapping'); }
+
+  function onS(e) {
+    const t = e.touches[0];
+    sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false;
+    card.classList.remove('snapping');
+  }
   function onM(e) {
-    if (locked) return; const t = e.touches ? e.touches[0] : e;
+    if (locked) return;
+    const t = e.touches[0];
     const dX = t.clientX - sx, dY = t.clientY - sy;
     if (!swiping && Math.abs(dY) > Math.abs(dX)) { locked = true; return; }
     if (Math.abs(dX) > 8) swiping = true;
-    if (!swiping) return; e.preventDefault();
-    dx = Math.max(0, dX); card.classList.add('swiping'); card.style.transform = `translateX(${dx}px)`;
+    if (!swiping) return;
+    e.preventDefault();
+    dx = dX;
+    card.classList.add('swiping');
+    card.style.transform = `translateX(${dx}px)`;
   }
   function onE() {
-    if (!swiping) { card.style.transform = ''; card.classList.remove('swiping'); openGoalBottomSheet(idx); return; }
-    card.classList.remove('swiping'); card.classList.add('snapping');
-    if (dx >= TH) { card.style.transform = `translateX(${window.innerWidth}px)`; setTimeout(() => swipeCompleteHabit(idx), 250); }
-    else { card.style.transform = 'translateX(0)'; }
+    if (!swiping) {
+      card.style.transform = '';
+      card.classList.remove('swiping');
+      openGoalBottomSheet(idx);
+      return;
+    }
+    card.classList.remove('swiping');
+    card.classList.add('snapping');
+    const isDone = card.dataset.done === '1';
+
+    if (dx >= TH && !isDone) {
+      // 오른쪽 스와이프 → 완료 (미완료 상태일 때만)
+      card.style.transform = `translateX(${window.innerWidth}px)`;
+      setTimeout(() => habitMarkDone(idx), 250);
+    } else if (dx <= -TH && isDone) {
+      // 왼쪽 스와이프 → 취소 (완료 상태일 때만)
+      card.style.transform = `translateX(${-window.innerWidth}px)`;
+      setTimeout(() => habitMarkUndo(idx), 250);
+    } else {
+      card.style.transform = 'translateX(0)';
+    }
     dx = 0; swiping = false;
   }
+
   card.addEventListener('touchstart', onS, { passive: true });
   card.addEventListener('touchmove', onM, { passive: false });
   card.addEventListener('touchend', onE);
-  card.addEventListener('mousedown', onS);
-  card.addEventListener('mousemove', onM);
-  card.addEventListener('mouseup', onE);
-  card.addEventListener('mouseleave', () => { if (swiping) onE(); });
 }
 
-async function swipeCompleteHabit(idx) {
+async function habitMarkDone(idx) {
   const now = new Date();
   const g = migrateGoal(localDash.goals[idx]);
   const isOnce = g && g.unit === 'once';
-  let k, wasDone;
-  if (isOnce) { k = `g${idx}_once`; wasDone = localDash.completions[k] === true; }
-  else { k = `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`; wasDone = localDash.completions[k] === true; }
-  localDash.completions[k] = !wasDone;
+  const k = isOnce ? `g${idx}_once` : `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
+  localDash.completions[k] = true;
   await saveDash();
-  if (!wasDone) { showToast('🎉 완료!', 'done'); showConfettiSmall(); if (!isOnce) checkWeekClear(idx); }
-  else { showToast('↩️ 해제', 'undo'); }
+  showToast('🎉 완료!', 'done'); showConfettiSmall();
+  if (!isOnce) checkWeekClear(idx);
+  renderHabitCards(); renderAvatar();
+}
+
+async function habitMarkUndo(idx) {
+  const now = new Date();
+  const g = migrateGoal(localDash.goals[idx]);
+  const isOnce = g && g.unit === 'once';
+  const k = isOnce ? `g${idx}_once` : `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
+  localDash.completions[k] = false;
+  await saveDash();
+  showToast('↩️ 해제', 'undo');
   renderHabitCards(); renderAvatar();
 }
 
@@ -455,30 +498,37 @@ function getProjectProgress(c) {
 function initBucketSwipe(idx) {
   const card = document.getElementById(`cc_${idx}`);
   if (!card) return;
+
+  // PC: no action on click for bucket (just visual)
+  if (!isTouchDevice) {
+    card.style.cursor = 'default';
+    return;
+  }
+
   let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
   const TH = 60;
-  function onS(e) { const t = e.touches ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; card.classList.remove('snapping'); }
+  function onS(e) { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; card.classList.remove('snapping'); }
   function onM(e) {
-    if (locked) return; const t = e.touches ? e.touches[0] : e;
+    if (locked) return; const t = e.touches[0];
     const dX = t.clientX - sx, dY = t.clientY - sy;
     if (!swiping && Math.abs(dY) > Math.abs(dX)) { locked = true; return; }
     if (Math.abs(dX) > 8) swiping = true;
     if (!swiping) return; e.preventDefault();
-    dx = Math.max(0, dX); card.classList.add('swiping'); card.style.transform = `translateX(${dx}px)`;
+    const isDone = localDash.challenges[idx]?.done === true;
+    // 완료 안됨 → 오른쪽만, 완료됨 → 왼쪽만
+    if (!isDone) dx = Math.max(0, dX);
+    else dx = Math.min(0, dX);
+    card.classList.add('swiping'); card.style.transform = `translateX(${dx}px)`;
   }
   function onE() {
     card.classList.remove('swiping'); card.classList.add('snapping');
-    if (dx >= TH) { card.style.transform = `translateX(${window.innerWidth}px)`; setTimeout(() => swipeBucket(idx), 250); }
+    if (Math.abs(dx) >= TH) { card.style.transform = `translateX(${dx > 0 ? window.innerWidth : -window.innerWidth}px)`; setTimeout(() => swipeBucket(idx), 250); }
     else { card.style.transform = 'translateX(0)'; }
     dx = 0; swiping = false;
   }
   card.addEventListener('touchstart', onS, { passive: true });
   card.addEventListener('touchmove', onM, { passive: false });
   card.addEventListener('touchend', onE);
-  card.addEventListener('mousedown', onS);
-  card.addEventListener('mousemove', onM);
-  card.addEventListener('mouseup', onE);
-  card.addEventListener('mouseleave', () => { if (swiping) onE(); });
 }
 async function swipeBucket(idx) {
   const c = localDash.challenges[idx];

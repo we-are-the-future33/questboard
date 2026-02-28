@@ -1284,7 +1284,7 @@ function goalDone(g,gi,y,m){
 function goalPct(g,gi,y,m){
   const mod=goalModulus(g,gi,y,m);
   const done=goalDone(g,gi,y,m);
-  return {done,mod,pct:mod>0?Math.min(100,Math.round(done/mod*100)):0};
+  return {done,mod,pct:mod>0?Math.round(done/mod*100):0};
 }
 function globalPct(){
   const now=new Date(); const y=now.getFullYear(),m=now.getMonth()+1;

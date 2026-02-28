@@ -266,11 +266,9 @@ function renderAvatar() {
   const p = globalPct(), stage = Math.min(9, Math.floor(p / 10));
   const artEl = document.getElementById('avatarArt');
   if (!artEl._hamsterInit) { artEl._hamsterInit = true; initHamsterAvatar(artEl); }
-  document.getElementById('avatarStage').textContent = `${stage + 1}단계 · ${STAGE_NAMES[stage]}`;
+  document.getElementById('avatarStage').textContent = `${stage + 1}단계`;
   const nick = localDash.nickname || currentUser.name || '나의 캐릭터';
-  const msg = localDash.msg || '좋은 습관 만드는 중';
   document.getElementById('avatarNicknameRow').innerHTML = `<div class="avatar-nickname">${esc(nick)}</div><button class="pencil-btn" onclick="startEditNickname()">✏️</button>`;
-  document.getElementById('avatarMsgWrap').innerHTML = `<div class="avatar-msg">${esc(msg)}</div><button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>`;
 }
 
 // ===== SUB TAB =====
@@ -320,7 +318,7 @@ function renderHabitCards() {
     html += `<div class="habit-card-outer" id="hcOuter_${idx}">
       <div class="habit-card-swipe-bg-left todo"><div class="swipe-bg-text">✓ 완료</div></div>
       <div class="habit-card-swipe-bg-right done"><div class="swipe-bg-text">↩ 취소</div></div>
-      <div class="habit-card ${isCompleted ? 'completed' : ''}" id="hc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}" data-done="${isDone ? 1 : 0}">
+      <div class="habit-card ${isCompleted ? 'completed' : ''} ${isDone ? 'today-done' : ''}" id="hc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}" data-done="${isDone ? 1 : 0}">
         <div>
           <div class="habit-card-title">${esc(g.title)}</div>
           <div class="habit-card-mid">
@@ -546,7 +544,7 @@ window.openAddChallengeSheet = function () {
   document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:14px;">유형을 먼저 선택해 주세요</div>`;
   h += `<div class="challenge-type-grid">
-    <div class="challenge-type-card" id="ctBucket" onclick="selectChallengeType('bucket')">
+    <div class="challenge-type-card selected" id="ctBucket" onclick="selectChallengeType('bucket')">
       <span class="challenge-type-icon">⭐</span>
       <div class="challenge-type-name">버킷리스트</div>
       <div class="challenge-type-desc">한 번의 실천으로<br>완료되는 꿈</div>
@@ -557,8 +555,15 @@ window.openAddChallengeSheet = function () {
       <div class="challenge-type-desc">단계별 로드맵이<br>필요한 목표</div>
     </div>
   </div>`;
-  h += `<div id="challengeFormArea"></div>`;
+  h += `<div id="challengeFormArea">
+    <div style="margin-top:4px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>
+      <input class="proj-edit-input" id="bucketNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
+      <button class="unit-confirm-btn" style="margin-top:12px;" onclick="saveBucket()">도전 시작하기</button>
+    </div>
+  </div>`;
   document.getElementById('bsBody').innerHTML = h;
+  _challengeType = 'bucket';
   openBS();
 };
 
@@ -865,8 +870,31 @@ window.openGoalBottomSheet = function (idx) {
   openBS();
 };
 
-function openBS() { document.getElementById('bsOverlay').classList.add('open'); document.getElementById('bottomSheet').classList.add('open'); }
-window.closeBottomSheet = function () { document.getElementById('bsOverlay').classList.remove('open'); document.getElementById('bottomSheet').classList.remove('open'); };
+function openBS() {
+  document.getElementById('bsOverlay').classList.add('open');
+  document.getElementById('bottomSheet').classList.add('open');
+  // 모바일 키보드 대응: visualViewport 사용
+  if (window.visualViewport) {
+    const bs = document.getElementById('bottomSheet');
+    const onResize = () => {
+      const offsetY = window.innerHeight - visualViewport.height - visualViewport.offsetTop;
+      bs.style.bottom = offsetY + 'px';
+    };
+    visualViewport.addEventListener('resize', onResize);
+    visualViewport.addEventListener('scroll', onResize);
+    bs._vpCleanup = () => {
+      visualViewport.removeEventListener('resize', onResize);
+      visualViewport.removeEventListener('scroll', onResize);
+      bs.style.bottom = '0';
+    };
+  }
+}
+window.closeBottomSheet = function () {
+  const bs = document.getElementById('bottomSheet');
+  if (bs._vpCleanup) { bs._vpCleanup(); bs._vpCleanup = null; }
+  document.getElementById('bsOverlay').classList.remove('open');
+  bs.classList.remove('open');
+};
 
 function renderBSBody(idx) {
   const g = migrateGoal(localDash.goals[idx]), body = document.getElementById('bsBody');
@@ -1548,11 +1576,11 @@ function buildHamster(container) {
       const dy = -(40 + Math.random() * 80);
       const rot = (Math.random() - 0.5) * 60;
       requestAnimationFrame(() => {
-        em.style.transition = 'all 0.8s cubic-bezier(.15,.9,.3,1)';
+        em.style.transition = 'all 1.6s cubic-bezier(.15,.9,.3,1)';
         em.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
         em.style.opacity = '0';
       });
-      setTimeout(() => em.remove(), 900);
+      setTimeout(() => em.remove(), 1800);
     }
   }
 

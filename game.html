@@ -155,7 +155,7 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .goal-btn{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:12px 10px;cursor:pointer;text-align:left;transition:all .2s;font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden;height:88px;display:flex;flex-direction:column;justify-content:center;color:var(--text);-webkit-appearance:none;appearance:none;box-shadow:var(--shadow-sm);}
 .goal-btn:hover:not(.disabled){border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow);}
 .goal-btn.active{border-color:var(--accent);background:var(--accent-light);box-shadow:0 4px 14px rgba(25,82,245,.18);}
-.goal-btn.disabled{border-style:dashed;cursor:default;background:#fff;box-shadow:none;border-color:var(--border);}
+.goal-btn.disabled{border-style:dashed;cursor:default;background:#fafafa;box-shadow:none;border-color:#c4cae8;border-width:2px;}
 .goal-btn-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .goal-btn.disabled .goal-btn-title{color:var(--text-dim);}
 .goal-btn-pct{font-family:'Black Han Sans',sans-serif;font-size:17px;color:var(--accent);}
@@ -197,9 +197,9 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .cal-cell.locked{opacity:.4;cursor:not-allowed;}
 .cal-cell.locked.done{background:var(--surface2);border-color:var(--border);opacity:.5;}
 .cal-cell.locked.done .cal-dn{color:var(--text-dim);}
-.cal-cell.done{background:var(--accent);border-color:var(--accent);}
-.cal-cell.done .cal-dn{color:#fff;font-weight:700;}
-.cal-cell.done .cal-chk{opacity:1;color:#fff;}
+.cal-cell.done{background:#eff6ff;border-color:#bfdbfe;}
+.cal-cell.done .cal-dn{color:#93c5fd;font-weight:700;font-size:9px;}
+.cal-cell.done .cal-chk{opacity:1;color:#1952f5;font-size:16px;font-weight:900;line-height:1;}
 .cal-cell.week-ok{background:rgba(25,82,245,.07);border-color:rgba(25,82,245,.25);}
 .cal-today{border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(25,82,245,.18)!important;}
 .cal-today .cal-dn{color:var(--accent);}
@@ -220,9 +220,9 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .month-nav-btn{background:#fff;border:2px solid var(--border);color:var(--text);border-radius:10px;padding:7px 16px;font-size:16px;cursor:pointer;font-weight:700;transition:all .2s;}
 .cal-day-lbl{text-align:center;font-size:12px;color:var(--text-dim);padding:3px 0;font-weight:700;}
 .cal-dn{font-size:13px;font-weight:700;color:var(--text);}
-.cal-cell.done .cal-dn{color:#fff;}
-.goal-btn-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.goal-btn-pct{font-family:'Black Han Sans',sans-serif;font-size:19px;color:var(--accent);}
+.cal-cell.done .cal-dn{color:#1952f5;}
+.goal-btn-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.goal-btn-pct{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--accent);}
 .goal-btn-need{font-size:11px;color:var(--text-dim);margin-top:4px;}
 .avatar-nickname{font-family:'Black Han Sans',sans-serif;font-size:24px;color:var(--text);letter-spacing:1px;}
 .avatar-stage{font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--accent);letter-spacing:2px;text-align:center;}
@@ -316,11 +316,11 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .stats-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
 .stats-bar-col{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:160px;position:relative;}
 .stats-bar{width:100%;border-radius:6px 6px 0 0;background:var(--surface2);transition:height .5s ease;min-height:2px;position:relative;}
-.stats-bar.current-month{background:linear-gradient(180deg,#6b8fff,var(--accent));}
-.stats-bar.past{background:var(--surface2);}
+.stats-bar.current-month{background:linear-gradient(180deg,#a78bfa,#1952f5);box-shadow:0 0 12px 2px rgba(167,139,250,.45);}
+.stats-bar.past{background:#bfdbfe;}
 .stats-bar-pct{font-size:9px;color:var(--text-dim);position:absolute;top:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;font-weight:700;}
 .stats-bar.current-month .stats-bar-pct{color:var(--accent);}
-.stats-bar-lbl{font-size:9px;color:var(--text-dim);margin-top:4px;white-space:nowrap;font-weight:700;}
+.stats-bar-lbl{font-size:10px;color:#64748b;margin-top:4px;white-space:nowrap;font-weight:800;}
 .stats-bar-lbl.current{color:var(--accent);}
 .stats-insight{background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:4px;box-shadow:var(--shadow-sm);}
 .stats-insight-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
@@ -383,6 +383,18 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .week-info-cheer{font-size:12px;color:var(--text-dim);}
 .week-info-clear{background:linear-gradient(135deg,#e8fff4,#e8eeff);border-color:rgba(0,185,107,.3);}
 .week-info-clear .week-info-main{background:linear-gradient(90deg,#00b96b,#1952f5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* 플로팅 완료 버튼 */
+.float-fab{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:12px 20px 20px;background:linear-gradient(to top,#fff 70%,transparent);pointer-events:none;z-index:200;}
+.float-fab-inner{pointer-events:auto;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.float-week-hint{background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:700;color:var(--text);box-shadow:0 2px 8px rgba(25,82,245,.08);white-space:nowrap;}
+.float-complete-btn{width:100%;padding:16px;border:none;border-radius:16px;font-size:17px;font-weight:800;font-family:'Black Han Sans',sans-serif;cursor:pointer;transition:all .2s;letter-spacing:1px;box-shadow:0 8px 24px rgba(25,82,245,.32);}
+.float-complete-btn.state-todo{background:linear-gradient(135deg,#1952f5,#6b8fff);color:#fff;}
+.float-complete-btn.state-done{background:#1a1d30;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.2);}
+
+/* 플로팅 버튼 표시될 때 하단 여백 */
+.float-fab.visible ~ * {}
+#tabMy.has-float{padding-bottom:110px;}
 
 /* 화면 흔들기 */
 @keyframes screen-shake{
@@ -686,6 +698,14 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
   <div class="week-clear-sub">대단해요! 이번 주도 완벽했어요 🎉</div>
 </div>
 <div class="toast" id="toast"></div>
+
+<!-- 플로팅 완료 버튼 -->
+<div class="float-fab" id="floatFab" style="display:none;">
+  <div class="float-fab-inner">
+    <div class="float-week-hint" id="floatWeekHint"></div>
+    <button class="float-complete-btn" id="floatCompleteBtn" onclick="floatToggleToday()"></button>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -1329,7 +1349,15 @@ function renderDashboard(){
 }
 function renderGlobal(){
   const p=globalPct();
-  document.getElementById('gbFill').style.width=p+'%';
+  const fill=document.getElementById('gbFill');
+  fill.style.width=Math.min(p,100)+'%';
+  if(p>100){
+    fill.style.background='linear-gradient(90deg,#1952f5 0%,#6b8fff 40%,#a78bfa 70%,#c084fc 100%)';
+    fill.style.boxShadow='0 0 16px 4px rgba(167,139,250,.65), 0 0 6px 1px rgba(192,132,252,.4)';
+  } else {
+    fill.style.background='';
+    fill.style.boxShadow='';
+  }
   document.getElementById('gbPct').textContent=p+'%';
 }
 function renderAvatar(){
@@ -1413,11 +1441,13 @@ window.selectGoal=function(idx){
     activeGoalIdx=null;
     renderGoalGrid();
     document.getElementById('detailSection').innerHTML='';
+    updateFloatFab();
     return;
   }
   activeGoalIdx=idx;
   renderGoalGrid();
   renderDetail(idx);
+  updateFloatFab();
   markCheerRead(idx);
   setTimeout(()=>document.getElementById('detailSection').scrollIntoView({behavior:'smooth',block:'start'}),50);
 };
@@ -1640,7 +1670,6 @@ function renderCalendar(panel,g,idx){
         <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">수정</button>
       </div>
     </div>
-    ${weekInfoHtml}
     <div class="month-nav">
       <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
       <div class="month-label">${year}년 ${month}월</div>
@@ -2063,6 +2092,58 @@ async function initHamsterAvatar(container) {
   }
   loop();
 }
+
+// ===== FLOATING COMPLETE BUTTON =====
+function updateFloatFab(){
+  const fab = document.getElementById('floatFab');
+  const btn = document.getElementById('floatCompleteBtn');
+  const hint = document.getElementById('floatWeekHint');
+  if(!fab || activeGoalIdx === null) {
+    if(fab) { fab.style.display='none'; }
+    document.getElementById('tabMy')?.classList.remove('has-float');
+    return;
+  }
+  const g = getAllGoals()[activeGoalIdx];
+  if(!g || g.unit==='once') { fab.style.display='none'; return; }
+
+  const now = new Date();
+  const todayKey = `g${activeGoalIdx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
+  const isDone = localDash.completions[todayKey] === true;
+
+  // 이번 주 현황 계산
+  const dow = now.getDay();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate()-dow);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
+  const y=now.getFullYear(), m=now.getMonth()+1;
+  let weekDone=0;
+  for(let d=weekStart.getDate(); d<=Math.min(weekEnd.getDate(), new Date(y,m,0).getDate()); d++){
+    if(localDash.completions[`g${activeGoalIdx}_${y}_${m}_${d}`]===true) weekDone++;
+  }
+  const freq = (g.unit==='daily'?7:({w1:1,w2:2,w4:4,w6:6}[g.unit]||1));
+  const remain = Math.max(0, freq - weekDone);
+
+  hint.textContent = remain===0 ? '🏆 이번 주 목표 달성!' : `💪 이번 주 ${remain}번 남았어요`;
+  btn.textContent = isDone ? '↩ 오늘 완료 취소' : '✓ 오늘 목표 달성!';
+  btn.className = 'float-complete-btn ' + (isDone ? 'state-done' : 'state-todo');
+  fab.style.display = 'block';
+  document.getElementById('tabMy')?.classList.add('has-float');
+}
+
+window.floatToggleToday = async function(){
+  if(activeGoalIdx === null) return;
+  const g = getAllGoals()[activeGoalIdx];
+  if(!g) return;
+  const now = new Date();
+  const key = `g${activeGoalIdx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
+  const cur = localDash.completions[key]===true;
+  localDash.completions[key] = !cur;
+  await saveDash();
+  if(!cur){ showToast('🎉 완료!','done'); showConfettiSmall(); }
+  else { showToast('↩️ 해제','undo'); }
+  renderDetail(activeGoalIdx); renderGoalGrid(); renderGlobal();
+  updateFloatFab();
+  checkWeekClear(activeGoalIdx);
+};
 
 // ===== UTILS =====
 window.renderDetail=renderDetail;

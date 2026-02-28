@@ -1,0 +1,1044 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const _safetyTimer = setTimeout(() => {
+  const l = document.getElementById('loadingScreen');
+  if (l && l.classList.contains('active')) { showScreen('loginScreen'); }
+}, 8000);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAbEbLdJuWVai_NKTHuo1XtC8p76dmVPE0",
+  authDomain: "grow-goal.firebaseapp.com",
+  databaseURL: "https://grow-goal-default-rtdb.firebaseio.com",
+  projectId: "grow-goal",
+  storageBucket: "grow-goal.firebasestorage.app",
+  messagingSenderId: "587441793315",
+  appId: "1:587441793315:web:8ae5325a2af90953ce4496"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ===== CONSTANTS =====
+const MAX_GOALS = 9;
+const TUT_STEPS = 5;
+const LEGACY_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
+const STAGE_NAMES = ['알','병아리','고양이','강아지','여우','판다','토끼','사자','드래곤','유니콘'];
+const AVATARS = [
+  `<svg viewBox="0 0 80 80"><ellipse cx="40" cy="44" rx="22" ry="28" fill="#f0e8d0" stroke="#c8b89a" stroke-width="2"/><ellipse cx="33" cy="36" rx="4" ry="6" fill="rgba(255,255,255,0.3)"/></svg>`,
+  `<svg viewBox="0 0 80 80"><circle cx="40" cy="48" r="20" fill="#f5c518"/><circle cx="40" cy="28" r="14" fill="#f5c518"/><circle cx="35" cy="25" r="3" fill="#1a1a1a"/><circle cx="45" cy="25" r="3" fill="#1a1a1a"/><polygon points="40,30 37,34 43,34" fill="#f39c12"/></svg>`,
+  `<svg viewBox="0 0 80 80"><circle cx="40" cy="48" r="22" fill="#d4a574"/><circle cx="40" cy="30" r="16" fill="#d4a574"/><polygon points="24,20 20,8 32,18" fill="#d4a574"/><polygon points="56,20 60,8 48,18" fill="#d4a574"/><circle cx="34" cy="28" r="3.5" fill="#1a1a1a"/><circle cx="46" cy="28" r="3.5" fill="#1a1a1a"/></svg>`,
+  `<svg viewBox="0 0 80 80"><circle cx="40" cy="46" r="22" fill="#c8986a"/><circle cx="40" cy="28" r="16" fill="#c8986a"/><ellipse cx="24" cy="34" rx="9" ry="14" fill="#b8845a" transform="rotate(-10,24,34)"/><ellipse cx="56" cy="34" rx="9" ry="14" fill="#c8986a" transform="rotate(10,56,34)"/><circle cx="34" cy="26" r="3.5" fill="#1a1a1a"/><circle cx="46" cy="26" r="3.5" fill="#1a1a1a"/></svg>`,
+  `<svg viewBox="0 0 80 80"><circle cx="40" cy="46" r="20" fill="#e8783a"/><circle cx="40" cy="28" r="15" fill="#e8783a"/><polygon points="26,20 18,6 34,18" fill="#e8783a"/><polygon points="54,20 62,6 46,18" fill="#e8783a"/><circle cx="34" cy="26" r="3.5" fill="#1a1a1a"/><circle cx="46" cy="26" r="3.5" fill="#1a1a1a"/></svg>`,
+  `<svg viewBox="0 0 80 80"><circle cx="40" cy="46" r="22" fill="#f8f8f8"/><circle cx="40" cy="28" r="16" fill="#f8f8f8"/><ellipse cx="29" cy="25" rx="8" ry="7" fill="#2a2a2a"/><ellipse cx="51" cy="25" rx="8" ry="7" fill="#2a2a2a"/><circle cx="30" cy="24" r="2.5" fill="#1a1a1a"/><circle cx="52" cy="24" r="2.5" fill="#1a1a1a"/></svg>`,
+  `<svg viewBox="0 0 80 80"><ellipse cx="28" cy="18" rx="7" ry="18" fill="#f0f0f0"/><ellipse cx="52" cy="18" rx="7" ry="18" fill="#f0f0f0"/><circle cx="40" cy="46" r="22" fill="#f0f0f0"/><circle cx="40" cy="30" r="15" fill="#f0f0f0"/><circle cx="34" cy="28" r="3.5" fill="#e87eb0"/><circle cx="46" cy="28" r="3.5" fill="#e87eb0"/></svg>`,
+  `<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="28" fill="#e8a830" opacity=".4"/><circle cx="40" cy="36" r="16" fill="#f5d040"/><circle cx="34" cy="30" r="3.5" fill="#1a1a1a"/><circle cx="46" cy="30" r="3.5" fill="#1a1a1a"/></svg>`,
+  `<svg viewBox="0 0 80 80"><circle cx="40" cy="46" r="22" fill="#27ae60"/><circle cx="40" cy="28" r="15" fill="#27ae60"/><circle cx="34" cy="26" r="4" fill="#f1c40f"/><circle cx="46" cy="26" r="4" fill="#f1c40f"/><circle cx="35" cy="26" r="2.5" fill="#1a1a1a"/><circle cx="47" cy="26" r="2.5" fill="#1a1a1a"/></svg>`,
+  `<svg viewBox="0 0 80 80"><defs><linearGradient id="ugrd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f8b4d4"/><stop offset="50%" style="stop-color:#c8f135"/><stop offset="100%" style="stop-color:#35c8f1"/></linearGradient></defs><circle cx="40" cy="46" r="22" fill="url(#ugrd)"/><circle cx="40" cy="28" r="15" fill="url(#ugrd)"/><path d="M40,6 L36,22 L44,22Z" fill="#f1c835"/><circle cx="34" cy="26" r="3.5" fill="#1a1a1a"/><circle cx="46" cy="26" r="3.5" fill="#1a1a1a"/></svg>`
+];
+
+// ===== STATE =====
+let currentUser = null;
+let localDash = null;
+let activeGoalIdx = null;
+let viewMonth = null;
+let goalFilter = 'all';
+
+// ===== UTILITIES =====
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function migrateGoal(g) { if (!g) return g; if (LEGACY_MAP[g.unit]) return Object.assign({}, g, LEGACY_MAP[g.unit]); return g; }
+function getGoalFreq(g) {
+  if (!g) return 1; g = migrateGoal(g);
+  if (g.unit === 'once') return 0;
+  if (g.unit === 'daily' || g.unit === 'health_sleep') return 7;
+  if (g.unit === 'health_workout') return 2;
+  return g.freq || 1;
+}
+function getUnitLabel(g) {
+  if (!g) return ''; g = migrateGoal(g);
+  if (g.unit === 'once') return '한 번';
+  if (g.unit === 'daily') return '매일';
+  if (g.unit === 'health_sleep') return '🌙 수면';
+  if (g.unit === 'health_workout') return '💪 운동';
+  if (g.unit === 'weekly') return `주 ${g.freq}회`;
+  if (g.unit === 'biweekly') return `2주 ${g.freq}회`;
+  return g.unit;
+}
+function getMonthDays(y, m) { return new Date(y, m, 0).getDate(); }
+function getMonthWeeks(y, m) { return Math.ceil(getMonthDays(y, m) / 7); }
+function goalModulus(g, gi, y, m) {
+  if (!g || !g.unit || g.unit === 'once') return 1; g = migrateGoal(g);
+  if (g.unit === 'daily' || g.unit === 'health_sleep') return getMonthDays(y, m);
+  if (g.unit === 'health_workout') return 2 * getMonthWeeks(y, m);
+  if (g.unit === 'weekly') return (g.freq || 1) * getMonthWeeks(y, m);
+  if (g.unit === 'biweekly') return (g.freq || 1) * Math.ceil(getMonthDays(y, m) / 14);
+  return 1;
+}
+function goalDone(g, gi, y, m) {
+  if (!g || !g.unit) return 0;
+  if (g.unit === 'once') return localDash.completions[`g${gi}_once`] === true ? 1 : 0;
+  const pfx = `g${gi}_${y}_${m}_`;
+  return Object.entries(localDash.completions).filter(([k, v]) => k.startsWith(pfx) && v === true).length;
+}
+function goalPct(g, gi, y, m) {
+  const mod = goalModulus(g, gi, y, m), done = goalDone(g, gi, y, m);
+  return { done, mod, pct: mod > 0 ? Math.round(done / mod * 100) : 0 };
+}
+function globalPct() {
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth() + 1;
+  let td = 0, tm = 0;
+  getAllGoals().forEach((g, i) => { if (!g || !g.unit) return; const { done, mod } = goalPct(g, i, y, m); td += done; tm += mod; });
+  return tm > 0 ? Math.round(td / tm * 100) : 0;
+}
+function getAllGoals() { const g = []; for (let i = 0; i < MAX_GOALS; i++) g.push(localDash.goals[i] || null); return g; }
+
+// ===== STREAK =====
+function calcStreak(g, gi) {
+  if (!g || !g.unit || g.unit === 'once') return 0;
+  g = migrateGoal(g);
+  const now = new Date();
+  if (g.unit === 'daily' || g.unit === 'health_sleep') {
+    let streak = 0;
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      if (localDash.completions[`g${gi}_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`] === true) streak++;
+      else break;
+    }
+    return streak;
+  }
+  if (g.unit === 'weekly' || g.unit === 'health_workout') {
+    const freq = g.unit === 'health_workout' ? 2 : (g.freq || 1);
+    let streak = 0;
+    const dow = now.getDay();
+    const sun = new Date(now); sun.setDate(now.getDate() - dow);
+    for (let w = 1; w <= 52; w++) {
+      const ws = new Date(sun); ws.setDate(sun.getDate() - w * 7);
+      let wd = 0;
+      for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
+      if (wd >= freq) streak++; else break;
+    }
+    let tw = 0;
+    for (let d = 0; d < 7; d++) { const dd = new Date(sun); dd.setDate(sun.getDate() + d); if (dd > now) break; if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) tw++; }
+    if (tw >= freq) streak++;
+    return streak;
+  }
+  if (g.unit === 'biweekly') {
+    const freq = g.freq || 1; let streak = 0;
+    const dow = now.getDay();
+    const sun = new Date(now); sun.setDate(now.getDate() - dow);
+    for (let c = 1; c <= 26; c++) {
+      const cs = new Date(sun); cs.setDate(sun.getDate() - c * 14);
+      let cd = 0;
+      for (let d = 0; d < 14; d++) { const dd = new Date(cs); dd.setDate(cs.getDate() + d); if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) cd++; }
+      if (cd >= freq) streak++; else break;
+    }
+    return streak;
+  }
+  return 0;
+}
+function getStreakLabel(g, streak) {
+  if (!g) return ''; g = migrateGoal(g);
+  if (g.unit === 'daily' || g.unit === 'health_sleep') return `${streak}일째`;
+  if (g.unit === 'weekly' || g.unit === 'health_workout') return `${streak}주째`;
+  if (g.unit === 'biweekly') return `${streak}주기째`;
+  return `${streak}`;
+}
+function isGoalActiveThisWeek(g, gi) {
+  if (!g || !g.unit) return true; g = migrateGoal(g);
+  if (g.unit === 'once') return localDash.completions[`g${gi}_once`] !== true;
+  if (g.unit === 'daily' || g.unit === 'health_sleep' || g.unit === 'health_workout') return true;
+  const freq = g.freq || 1, now = new Date(), dow = now.getDay();
+  const ws = new Date(now); ws.setDate(now.getDate() - dow);
+  if (g.unit === 'weekly') {
+    let wd = 0;
+    for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
+    return wd < freq;
+  }
+  if (g.unit === 'biweekly') {
+    let cd = 0; const cs = new Date(ws); cs.setDate(ws.getDate() - 7);
+    for (let d = 0; d < 14; d++) { const dd = new Date(cs); dd.setDate(cs.getDate() + d); if (dd > now) break; if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) cd++; }
+    return cd < freq;
+  }
+  return true;
+}
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ===== DB =====
+async function loadDash() {
+  const snap = await get(ref(db, `dashboards/${currentUser.id}`));
+  localDash = snap.exists() ? snap.val() : {};
+  if (!localDash.goals) localDash.goals = [];
+  if (!localDash.completions) localDash.completions = {};
+}
+async function saveDash() { localDash.lastUpdate = new Date().toISOString(); await set(ref(db, `dashboards/${currentUser.id}`), localDash); }
+
+// ===== INIT =====
+async function init() {
+  const saved = JSON.parse(localStorage.getItem('qb_login') || 'null');
+  if (saved && saved.id && saved.pw) {
+    showScreen('loadingScreen');
+    try {
+      const snap = await Promise.race([get(ref(db, `users/${saved.id}`)), new Promise((_, r) => setTimeout(() => r('timeout'), 5000))]);
+      if (snap.exists() && snap.val().password === saved.pw) {
+        const u = snap.val(); currentUser = { id: saved.id, ...u };
+        document.getElementById('navUserName').textContent = u.name;
+        if (u.role === 'admin') { clearTimeout(_safetyTimer); showScreen('adminScreen'); renderAdminList(); return; }
+        await loadDash();
+        if (!localDash.tutorialDone) { initTutorial(); showScreen('tutorialScreen'); }
+        else { activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(saved.id); renderDashboard(); }
+        clearTimeout(_safetyTimer); return;
+      }
+    } catch (e) {}
+  }
+  clearTimeout(_safetyTimer);
+  if (saved) { document.getElementById('loginId').value = saved.id || ''; document.getElementById('loginPw').value = saved.pw || ''; document.getElementById('saveLoginChk').checked = true; }
+  showScreen('loginScreen');
+}
+init();
+
+async function setupDashTabs(uid) {
+  const snap = await get(ref(db, 'groups'));
+  let has = false;
+  if (snap.exists()) has = Object.values(snap.val()).some(g => g.members && Object.values(g.members).includes(uid));
+  document.getElementById('dashTabBar').style.display = has ? 'flex' : 'none';
+}
+
+// ===== LOGIN =====
+window.doLogin = async function () {
+  const id = document.getElementById('loginId').value.trim(), pw = document.getElementById('loginPw').value;
+  const btn = document.getElementById('loginBtn'), saveChk = document.getElementById('saveLoginChk').checked;
+  if (!id || !pw) return; btn.disabled = true; btn.textContent = '확인 중...';
+  try {
+    const snap = await get(ref(db, `users/${id}`));
+    if (!snap.exists() || snap.val().password !== pw) { document.getElementById('loginError').style.display = 'block'; }
+    else {
+      document.getElementById('loginError').style.display = 'none';
+      if (saveChk) localStorage.setItem('qb_login', JSON.stringify({ id, pw })); else localStorage.removeItem('qb_login');
+      const u = snap.val(); currentUser = { id, ...u };
+      await set(ref(db, `users/${id}/lastLogin`), new Date().toISOString());
+      if (u.role === 'admin') { showScreen('adminScreen'); renderAdminList(); }
+      else {
+        document.getElementById('navUserName').textContent = u.name;
+        await loadDash();
+        if (!localDash.tutorialDone) { initTutorial(); showScreen('tutorialScreen'); }
+        else { activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(id); renderDashboard(); }
+      }
+    }
+  } catch (e) { showToast('❌ 연결 오류'); }
+  btn.disabled = false; btn.textContent = '로그인';
+};
+['loginId', 'loginPw'].forEach(id => { document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') window.doLogin(); }); });
+
+window.doLogout = function () {
+  currentUser = null; localDash = null; activeGoalIdx = null;
+  document.getElementById('loginId').value = ''; document.getElementById('loginPw').value = '';
+  if (!document.getElementById('saveLoginChk').checked) localStorage.removeItem('qb_login');
+  showScreen('loginScreen');
+};
+
+// ===== TAB =====
+window.switchTab = function (tab) {
+  document.getElementById('tabBtnMy').classList.toggle('active', tab === 'my');
+  document.getElementById('tabBtnFriends').classList.toggle('active', tab === 'friends');
+  document.getElementById('tabMy').classList.toggle('active', tab === 'my');
+  document.getElementById('tabFriends').classList.toggle('active', tab === 'friends');
+  if (tab === 'friends') renderFriends();
+};
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const now = new Date();
+  if (!viewMonth) viewMonth = { year: now.getFullYear(), month: now.getMonth() + 1 };
+  renderGlobal(); renderAvatar(); renderGoalCards(); loadNoticeBanner(); renderMainCheers();
+}
+function renderGlobal() {
+  const p = globalPct(), fill = document.getElementById('gbFill');
+  fill.style.width = Math.min(p, 100) + '%';
+  if (p > 100) { fill.style.background = 'linear-gradient(90deg,#1952f5,#6b8fff,#a78bfa,#c084fc)'; fill.style.boxShadow = '0 0 16px 4px rgba(167,139,250,.65)'; }
+  else { fill.style.background = ''; fill.style.boxShadow = ''; }
+  document.getElementById('gbPct').textContent = p + '%';
+}
+function renderAvatar() {
+  const p = globalPct(), stage = Math.min(9, Math.floor(p / 10));
+  const artEl = document.getElementById('avatarArt');
+  if (!artEl._hamsterInit) { artEl._hamsterInit = true; initHamsterAvatar(artEl); }
+  document.getElementById('avatarStage').textContent = `${stage + 1}단계 · ${STAGE_NAMES[stage]}`;
+  const nick = localDash.nickname || currentUser.name || '나의 캐릭터';
+  const msg = localDash.msg || '좋은 습관 만드는 중';
+  document.getElementById('avatarNicknameRow').innerHTML = `<div class="avatar-nickname">${esc(nick)}</div><button class="pencil-btn" onclick="startEditNickname()">✏️</button>`;
+  document.getElementById('avatarMsgWrap').innerHTML = `<div class="avatar-msg">${esc(msg)}</div><button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>`;
+}
+
+// ===== NICKNAME / MSG EDIT =====
+window.startEditNickname = function () {
+  const row = document.getElementById('avatarNicknameRow');
+  const cur = localDash.nickname || currentUser.name || '';
+  row.innerHTML = `<div class="nickname-edit-row"><input class="nickname-input" id="nickInput" value="${esc(cur)}" maxlength="10" placeholder="닉네임"><button class="nickname-save-btn" onclick="saveNickname()">저장</button></div>`;
+  document.getElementById('nickInput').focus();
+};
+window.saveNickname = async function () {
+  const v = document.getElementById('nickInput').value.trim();
+  if (v) { localDash.nickname = v; await saveDash(); }
+  renderAvatar();
+};
+window.startEditMsg = function () {
+  const wrap = document.getElementById('avatarMsgWrap');
+  const cur = localDash.msg || '';
+  wrap.innerHTML = `<div class="nickname-edit-row"><input class="nickname-input" id="msgInput" value="${esc(cur)}" maxlength="30" placeholder="상태 메시지"><button class="nickname-save-btn" onclick="saveMsg()">저장</button></div>`;
+  document.getElementById('msgInput').focus();
+};
+window.saveMsg = async function () {
+  const v = document.getElementById('msgInput').value.trim();
+  if (v) { localDash.msg = v; await saveDash(); }
+  renderAvatar();
+};
+
+// ===== GOAL FILTER =====
+window.setGoalFilter = function (f) {
+  goalFilter = f;
+  document.getElementById('filterAll').classList.toggle('active', f === 'all');
+  document.getElementById('filterActive').classList.toggle('active', f === 'active');
+  renderGoalCards();
+};
+
+// ===== GOAL CARDS =====
+function renderGoalCards() {
+  const goals = getAllGoals(), now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  const list = document.getElementById('goalCardList');
+  let valid = [];
+  for (let i = 0; i < MAX_GOALS; i++) { if (goals[i] && goals[i].title && goals[i].unit) valid.push({ g: goals[i], idx: i }); }
+  const recent8 = valid.slice(-8);
+  let filtered = goalFilter === 'active' ? recent8.filter(({ g, idx }) => isGoalActiveThisWeek(g, idx)) : recent8;
+
+  if (filtered.length === 0 && valid.length === 0) {
+    list.innerHTML = `<div class="goal-add-btn" onclick="openAddGoalSheet()">＋ 첫 번째 목표 추가하기</div>`;
+    document.getElementById('swipeHint').style.display = 'none'; return;
+  }
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--text-dim);font-size:14px;line-height:2;">🎉 이번 주 모든 목표를 달성했어요!</div>`;
+    document.getElementById('swipeHint').style.display = 'none'; return;
+  }
+
+  let html = '';
+  filtered.forEach(({ g, idx }) => {
+    const mg = migrateGoal(g), { pct } = goalPct(mg, idx, y, m);
+    const streak = calcStreak(mg, idx), streakLbl = getStreakLabel(mg, streak);
+    const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
+    const todayDone = localDash.completions[todayKey] === true;
+    const isOnce = mg.unit === 'once';
+    const isOver = pct > 100;
+    html += `<div class="goal-card-outer" id="gcOuter_${idx}">
+      <div class="goal-card-swipe-bg ${todayDone || (isOnce && localDash.completions[`g${idx}_once`]) ? 'done' : 'todo'}">
+        <div class="swipe-bg-text">${todayDone || (isOnce && localDash.completions[`g${idx}_once`]) ? '↩ 취소' : '✓ 완료'}</div>
+      </div>
+      <div class="goal-card ${todayDone ? 'today-done' : ''}" id="gc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}">
+        <div class="goal-card-top">
+          <div class="goal-card-title">${esc(g.title)}</div>
+          <div class="goal-card-streak ${streak > 0 ? '' : 'zero'}">
+            <span class="fire">🔥</span><span class="streak-num">${streakLbl}</span>
+          </div>
+        </div>
+        <div class="goal-card-bottom">
+          <div class="goal-card-unit">${getUnitLabel(mg)}</div>
+          <div class="goal-card-bar-wrap">
+            <div class="goal-card-bar"><div class="goal-card-bar-fill ${isOver ? 'over100' : ''}" style="width:${Math.min(pct, 100)}%"></div></div>
+            <div class="goal-card-pct">${pct}%</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  if (valid.length < MAX_GOALS) html += `<div class="goal-add-btn" onclick="openAddGoalSheet()">＋ 목표 추가</div>`;
+  list.innerHTML = html;
+  document.getElementById('swipeHint').style.display = 'block';
+  filtered.forEach(({ idx }) => initSwipeCard(idx));
+}
+
+// ===== SWIPE =====
+function initSwipeCard(idx) {
+  const card = document.getElementById(`gc_${idx}`);
+  if (!card) return;
+  let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
+  const TH = 80;
+  function onS(e) { const t = e.touches ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; card.classList.remove('snapping'); }
+  function onM(e) {
+    if (locked) return; const t = e.touches ? e.touches[0] : e;
+    const dX = t.clientX - sx, dY = t.clientY - sy;
+    if (!swiping && Math.abs(dY) > Math.abs(dX)) { locked = true; return; }
+    if (Math.abs(dX) > 8) swiping = true;
+    if (!swiping) return; e.preventDefault();
+    dx = Math.max(0, dX); card.classList.add('swiping'); card.style.transform = `translateX(${dx}px)`;
+  }
+  function onE() {
+    if (!swiping) { card.style.transform = ''; card.classList.remove('swiping'); openGoalBottomSheet(idx); return; }
+    card.classList.remove('swiping'); card.classList.add('snapping');
+    if (dx >= TH) { card.style.transform = `translateX(${window.innerWidth}px)`; setTimeout(() => swipeComplete(idx), 250); }
+    else { card.style.transform = 'translateX(0)'; }
+    dx = 0; swiping = false;
+  }
+  card.addEventListener('touchstart', onS, { passive: true });
+  card.addEventListener('touchmove', onM, { passive: false });
+  card.addEventListener('touchend', onE);
+  card.addEventListener('mousedown', onS);
+  card.addEventListener('mousemove', onM);
+  card.addEventListener('mouseup', onE);
+  card.addEventListener('mouseleave', () => { if (swiping) onE(); });
+}
+
+async function swipeComplete(idx) {
+  const now = new Date();
+  const g = migrateGoal(localDash.goals[idx]);
+  const isOnce = g && g.unit === 'once';
+  let k, wasDone;
+  if (isOnce) { k = `g${idx}_once`; wasDone = localDash.completions[k] === true; }
+  else { k = `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`; wasDone = localDash.completions[k] === true; }
+  localDash.completions[k] = !wasDone;
+  await saveDash();
+  if (!wasDone) { showToast('🎉 완료!', 'done'); showConfettiSmall(); if (!isOnce) checkWeekClear(idx); }
+  else { showToast('↩️ 해제', 'undo'); }
+  renderGoalCards(); renderGlobal(); renderAvatar();
+}
+
+function checkWeekClear(idx) {
+  const g = migrateGoal(localDash.goals[idx]);
+  if (!g || !g.unit || g.unit === 'once') return;
+  const freq = getGoalFreq(g), now = new Date(), dow = now.getDay();
+  const ws = new Date(now); ws.setDate(now.getDate() - dow);
+  let wd = 0;
+  for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (localDash.completions[`g${idx}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
+  if (wd === freq) setTimeout(() => { showConfetti(); shakeScreen(); const p = document.getElementById('weekClearPopup'); p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 2800); }, 300);
+}
+
+// ===== BOTTOM SHEET =====
+window.openGoalBottomSheet = function (idx) {
+  const g = getAllGoals()[idx];
+  if (!g) { openAddGoalSheet(); return; }
+  if (!g.unit) { openUnitSetupSheet(idx); return; }
+  activeGoalIdx = idx;
+  viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
+  document.getElementById('bsTitle').textContent = g.title;
+  renderBSBody(idx);
+  openBS();
+};
+
+function openBS() { document.getElementById('bsOverlay').classList.add('open'); document.getElementById('bottomSheet').classList.add('open'); }
+window.closeBottomSheet = function () { document.getElementById('bsOverlay').classList.remove('open'); document.getElementById('bottomSheet').classList.remove('open'); };
+
+function renderBSBody(idx) {
+  const g = migrateGoal(localDash.goals[idx]), body = document.getElementById('bsBody');
+  if (g.unit === 'once') { renderBSOnce(idx, body); return; }
+  const y = viewMonth.year, m = viewMonth.month, now = new Date();
+  const isCurrentMonth = y === now.getFullYear() && m === now.getMonth() + 1;
+  const isPrevMonth = (y === now.getFullYear() && m === now.getMonth()) || (now.getMonth() === 0 && y === now.getFullYear() - 1 && m === 12);
+  const canEdit = isCurrentMonth || isPrevMonth;
+  const { done, mod, pct } = goalPct(g, idx, y, m);
+
+  // 월 네비게이션 + 달력 + 통계
+  let html = `<div class="bs-cal-meta"><span class="bs-cal-unit">${getUnitLabel(g)}</span></div>`;
+  html += `<div class="month-nav"><button class="month-nav-btn" onclick="bsMonthPrev()">‹</button><div class="month-label">${y}년 ${m}월</div>`;
+  const isFutureBlocked = y > now.getFullYear() || (y === now.getFullYear() && m >= now.getMonth() + 1);
+  html += `<button class="month-nav-btn" ${isFutureBlocked ? 'disabled' : ''} onclick="bsMonthNext()">›</button></div>`;
+  html += renderCalendar(idx, g, y, m, canEdit);
+  // 월별 요약
+  html += `<div style="margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:12px;"><span style="font-size:13px;color:var(--text-dim);font-weight:700;">이번 달</span><div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${Math.min(pct,100)}%;background:linear-gradient(90deg,#1952f5,#a78bfa);border-radius:4px;"></div></div><span style="font-family:'Black Han Sans';font-size:16px;color:var(--accent);">${pct}%</span></div>`;
+  // 주간 현황
+  if (isCurrentMonth && (g.unit === 'weekly' || g.unit === 'biweekly' || g.unit === 'health_workout')) {
+    const freq = getGoalFreq(g), dow = now.getDay();
+    const ws = new Date(now); ws.setDate(now.getDate() - dow);
+    let wd = 0;
+    for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (localDash.completions[`g${idx}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
+    const cleared = wd >= freq;
+    html += `<div class="week-info-card ${cleared ? 'week-info-clear' : ''}"><span class="week-info-icon">${cleared ? '🏆' : '📅'}</span><div class="week-info-body"><span class="week-info-main">${wd}/${freq} 완료</span><span class="week-info-cheer">${cleared ? '이번 주 달성 완료!' : `${freq - wd}회 더 해보세요`}</span></div></div>`;
+  }
+  // 6개월 통계
+  html += renderStats6Month(idx, g);
+  body.innerHTML = html;
+}
+
+function renderCalendar(idx, g, y, m, canEdit) {
+  const now = new Date(), days = getMonthDays(y, m), fd = new Date(y, m - 1, 1).getDay();
+  const isCurrentMonth = y === now.getFullYear() && m === now.getMonth() + 1;
+  let h = `<div class="cal-day-row">`;
+  ['일', '월', '화', '수', '목', '금', '토'].forEach(d => h += `<div class="cal-day-lbl">${d}</div>`);
+  h += `</div><div class="cal-grid">`;
+  for (let i = 0; i < fd; i++) h += `<div class="cal-cell empty"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const k = `g${idx}_${y}_${m}_${d}`, isDone = localDash.completions[k] === true;
+    const isToday = isCurrentMonth && d === now.getDate();
+    const isFuture = isCurrentMonth && d > now.getDate();
+    const locked = !canEdit || isFuture;
+    h += `<div class="cal-cell ${isDone ? 'done' : ''} ${isToday ? 'cal-today' : ''} ${locked ? 'locked' : ''}" onclick="${locked ? '' : `bsToggleDay(${idx},${y},${m},${d})`}"><span class="cal-dn">${d}</span><span class="cal-chk">${isDone ? '✓' : ''}</span></div>`;
+  }
+  h += `</div>`;
+  return h;
+}
+
+window.bsMonthPrev = function () { viewMonth.month--; if (viewMonth.month < 1) { viewMonth.month = 12; viewMonth.year--; } renderBSBody(activeGoalIdx); };
+window.bsMonthNext = function () { viewMonth.month++; if (viewMonth.month > 12) { viewMonth.month = 1; viewMonth.year++; } renderBSBody(activeGoalIdx); };
+
+window.bsToggleDay = async function (idx, y, m, d) {
+  const k = `g${idx}_${y}_${m}_${d}`;
+  localDash.completions[k] = localDash.completions[k] !== true;
+  await saveDash();
+  renderBSBody(idx); renderGoalCards(); renderGlobal(); renderAvatar();
+  if (localDash.completions[k]) { showToast('✓ 체크!', 'done'); checkWeekClear(idx); }
+};
+
+function renderBSOnce(idx, body) {
+  const done = localDash.completions[`g${idx}_once`] === true;
+  body.innerHTML = `<div style="text-align:center;padding:40px 0;">
+    <div style="font-size:14px;color:var(--text-dim);margin-bottom:24px;">한 번 달성 목표</div>
+    <button style="background:#fff;border:3px solid ${done ? 'var(--accent)' : 'var(--border)'};border-radius:50%;width:80px;height:80px;font-size:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;" onclick="bsToggleOnce(${idx})">${done ? '✅' : '⭕'}</button>
+    ${done ? '<div style="margin-top:12px;font-family:Black Han Sans;font-size:15px;color:var(--accent);">달성 완료!</div>' : ''}
+  </div>${renderStats6Month(idx, migrateGoal(localDash.goals[idx]))}`;
+}
+
+window.bsToggleOnce = async function (idx) {
+  const k = `g${idx}_once`; localDash.completions[k] = localDash.completions[k] !== true;
+  await saveDash(); renderBSBody(idx); renderGoalCards(); renderGlobal(); renderAvatar();
+};
+
+// ===== 6개월 통계 =====
+function renderStats6Month(idx, g) {
+  const now = new Date(); let months = [];
+  for (let i = 5; i >= 0; i--) { let mm = now.getMonth() + 1 - i, yy = now.getFullYear(); while (mm < 1) { mm += 12; yy--; } months.push({ y: yy, m: mm }); }
+  const pcts = months.map(({ y, m }) => goalPct(g, idx, y, m).pct);
+  const maxPct = Math.max(...pcts, 1);
+  const avg = Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length);
+
+  let h = `<div class="stats-section"><div class="stats-title">📊 6개월 추이</div><div class="stats-chart">`;
+  h += `<div class="stats-avg-line" style="bottom:${Math.min(avg / maxPct * 160, 160)}px;"></div>`;
+  months.forEach(({ y, m }, i) => {
+    const p = pcts[i], barH = maxPct > 0 ? Math.max(4, p / maxPct * 160) : 4;
+    const isCur = y === now.getFullYear() && m === now.getMonth() + 1;
+    h += `<div class="stats-bar-wrap"><div class="stats-bar-col"><div class="stats-bar ${isCur ? 'current-month' : 'past'}" style="height:${barH}px;"><span class="stats-bar-pct">${p}%</span></div></div><div class="stats-bar-lbl ${isCur ? 'current' : ''}">${m}월</div></div>`;
+  });
+  h += `</div>`;
+  // 인사이트
+  const curPct = pcts[5], prevPct = pcts[4], diff = curPct - prevPct;
+  h += `<div class="stats-insight">`;
+  h += `<div class="stats-insight-row"><span class="stats-insight-icon">📈</span><span class="stats-insight-text">6개월 평균 <strong>${avg}%</strong></span></div>`;
+  if (diff > 0) h += `<div class="stats-insight-row"><span class="stats-insight-icon">🔥</span><span class="stats-insight-text">지난달보다 <strong>+${diff}%p</strong> 상승!</span></div>`;
+  else if (diff < 0) h += `<div class="stats-insight-row"><span class="stats-insight-icon">💪</span><span class="stats-insight-text">지난달보다 <strong>${diff}%p</strong> — 다시 힘내요!</span></div>`;
+  h += `</div></div>`;
+  return h;
+}
+
+// ===== ADD GOAL =====
+window.openAddGoalSheet = function () {
+  document.getElementById('bsTitle').textContent = '목표 추가';
+  document.getElementById('bsBody').innerHTML = `<div><input class="add-goal-input" id="newGoalInput" placeholder="목표 이름 입력 (예: 매일 독서 20분)" maxlength="20"><button class="unit-confirm-btn" onclick="confirmAddGoal()">다음 →</button></div>`;
+  openBS();
+  setTimeout(() => document.getElementById('newGoalInput')?.focus(), 400);
+};
+window.confirmAddGoal = async function () {
+  const v = document.getElementById('newGoalInput').value.trim();
+  if (!v) return;
+  let slot = -1;
+  for (let i = 0; i < MAX_GOALS; i++) { if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; } }
+  if (slot === -1) { showToast('목표 최대 9개!', 'normal'); return; }
+  localDash.goals[slot] = { title: v };
+  await saveDash();
+  openUnitSetupSheet(slot);
+};
+
+function openUnitSetupSheet(idx) {
+  document.getElementById('bsTitle').textContent = '단위 설정';
+  const opts = [
+    { label: '매일', val: 'daily' }, { label: '한 번', val: 'once' },
+    { label: '주 1회', val: 'w1' }, { label: '주 2회', val: 'w2' },
+    { label: '주 3회', val: 'w3' }, { label: '주 4회', val: 'w4' },
+    { label: '주 5회', val: 'w5' }, { label: '주 6회', val: 'w6' },
+    { label: '2주 3회', val: 'bw3' }, { label: '2주 5회', val: 'bw5' },
+  ];
+  let h = `<div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--text);">${esc(localDash.goals[idx].title)}</div><div style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">얼마나 자주 수행할 건가요?</div><div class="unit-opts">`;
+  opts.forEach(o => h += `<div class="unit-opt" onclick="selectUnit(${idx},'${o.val}')" id="uopt_${o.val}">${o.label}</div>`);
+  h += `</div><button class="unit-confirm-btn" id="unitConfirmBtn" onclick="confirmUnit(${idx})" disabled>확인</button>`;
+  h += `<div style="margin-top:12px;"><button style="width:100%;background:transparent;border:2px solid var(--danger);border-radius:10px;padding:11px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="deleteGoal(${idx})">🗑 목표 삭제</button></div>`;
+  document.getElementById('bsBody').innerHTML = h;
+}
+let _selUnit = null;
+window.selectUnit = function (idx, val) {
+  _selUnit = val;
+  document.querySelectorAll('.unit-opt').forEach(e => e.classList.remove('selected'));
+  document.getElementById(`uopt_${val}`)?.classList.add('selected');
+  document.getElementById('unitConfirmBtn').disabled = false;
+};
+window.confirmUnit = async function (idx) {
+  if (!_selUnit) return;
+  let unit, freq;
+  if (_selUnit === 'daily') { unit = 'daily'; freq = 0; }
+  else if (_selUnit === 'once') { unit = 'once'; freq = 0; }
+  else if (_selUnit.startsWith('bw')) { unit = 'biweekly'; freq = parseInt(_selUnit.slice(2)); }
+  else { unit = 'weekly'; freq = parseInt(_selUnit.slice(1)); }
+  localDash.goals[idx] = { ...localDash.goals[idx], unit, freq };
+  await saveDash(); _selUnit = null;
+  closeBottomSheet(); renderGoalCards(); renderGlobal();
+  showToast('✅ 목표 설정 완료!', 'done');
+};
+window.deleteGoal = async function (idx) {
+  if (!confirm('이 목표를 삭제할까요?')) return;
+  localDash.goals[idx] = null; await saveDash();
+  closeBottomSheet(); renderGoalCards(); renderGlobal(); renderAvatar();
+  showToast('🗑 삭제됨', 'normal');
+};
+
+// ===== CHEERS (메인 하단) =====
+async function renderMainCheers() {
+  const el = document.getElementById('myCheersMain');
+  const snap = await get(ref(db, `cheers/${currentUser.id}`));
+  if (!snap.exists()) { el.innerHTML = `<div class="my-cheers-main-title">💬 받은 응원</div><div class="my-cheers-empty">아직 받은 응원이 없어요</div>`; return; }
+  const data = snap.val(); let all = [];
+  Object.entries(data).forEach(([gi, msgs]) => {
+    Object.entries(msgs).forEach(([ts, msg]) => {
+      const gIdx = parseInt(gi);
+      const goalTitle = localDash.goals[gIdx]?.title || `목표 ${gIdx + 1}`;
+      all.push({ ...msg, ts: parseInt(ts), goalTitle });
+    });
+  });
+  all.sort((a, b) => b.ts - a.ts);
+  const recent = all.slice(0, 10);
+  let h = `<div class="my-cheers-main-title">💬 받은 응원 <span style="font-size:12px;color:var(--text-dim);">(${all.length})</span></div>`;
+  if (recent.length === 0) { h += `<div class="my-cheers-empty">아직 받은 응원이 없어요</div>`; }
+  else {
+    recent.forEach(c => {
+      const d = new Date(c.ts);
+      h += `<div class="my-cheer-card"><div class="my-cheer-goal-tag">🎯 ${esc(c.goalTitle)}</div><div class="my-cheer-from">${esc(c.from)}</div><div class="my-cheer-text">${esc(c.text)}</div><div class="my-cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
+    });
+  }
+  el.innerHTML = h;
+}
+
+// ===== NOTICE =====
+async function loadNoticeBanner() {
+  try {
+    const snap = await get(ref(db, 'notices'));
+    if (!snap.exists()) { document.getElementById('noticeBanner').classList.remove('visible'); return; }
+    const notices = snap.val();
+    let latest = null;
+    Object.entries(notices).forEach(([id, n]) => {
+      if (n.target === 'all' || (n.target === 'user' && n.targetId === currentUser.id)) {
+        if (!latest || n.createdAt > latest.createdAt) latest = { id, ...n };
+      }
+    });
+    if (latest) {
+      const readKey = `qb_notice_read_${latest.id}`;
+      if (!localStorage.getItem(readKey)) {
+        document.getElementById('noticeBannerTitle').textContent = latest.title;
+        document.getElementById('noticeBanner').classList.add('visible');
+        document.getElementById('noticeBanner')._noticeData = latest;
+      } else { document.getElementById('noticeBanner').classList.remove('visible'); }
+    } else { document.getElementById('noticeBanner').classList.remove('visible'); }
+  } catch (e) {}
+}
+window.openNoticeModal = function () {
+  const n = document.getElementById('noticeBanner')._noticeData;
+  if (!n) return;
+  const body = document.getElementById('noticeModalBody');
+  let h = `<div class="notice-modal-title">${esc(n.title)}</div><div class="notice-modal-date">${new Date(n.createdAt).toLocaleDateString('ko')}</div>`;
+  if (n.img) h += `<img class="notice-modal-img" src="${n.img}" onerror="this.style.display='none'">`;
+  if (n.desc) h += `<div class="notice-modal-desc">${esc(n.desc)}</div>`;
+  body.innerHTML = h;
+  document.getElementById('noticeModalOverlay').classList.add('open');
+  localStorage.setItem(`qb_notice_read_${n.id}`, '1');
+  document.getElementById('noticeBanner').classList.remove('visible');
+};
+window.closeNoticeModal = function () { document.getElementById('noticeModalOverlay').classList.remove('open'); };
+
+// ===== FRIENDS =====
+async function renderFriends() {
+  const sec = document.getElementById('friendsSection');
+  sec.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">로딩 중...</div>';
+  const grpSnap = await get(ref(db, 'groups'));
+  if (!grpSnap.exists()) { sec.innerHTML = '<div class="friends-empty">그룹이 없어요</div>'; return; }
+  const groups = grpSnap.val();
+  let friendIds = new Set();
+  Object.values(groups).forEach(g => { if (g.members && Object.values(g.members).includes(currentUser.id)) Object.values(g.members).forEach(m => { if (m !== currentUser.id) friendIds.add(m); }); });
+  if (friendIds.size === 0) { sec.innerHTML = '<div class="friends-empty">아직 같은 그룹의 친구가 없어요</div>'; return; }
+  let h = '<div class="friend-list">';
+  for (const fid of friendIds) {
+    const uSnap = await get(ref(db, `users/${fid}`));
+    const dSnap = await get(ref(db, `dashboards/${fid}`));
+    if (!uSnap.exists()) continue;
+    const u = uSnap.val(), d = dSnap.exists() ? dSnap.val() : {};
+    const nick = d.nickname || u.name;
+    // calc friend global pct
+    const fGoals = d.goals || [], fComp = d.completions || {};
+    const now = new Date(), fy = now.getFullYear(), fm = now.getMonth() + 1;
+    let ftd = 0, ftm = 0;
+    for (let i = 0; i < MAX_GOALS; i++) {
+      const fg = fGoals[i]; if (!fg || !fg.unit) continue;
+      const mg = migrateGoal(fg);
+      const mod = goalModulus(mg, i, fy, fm);
+      let done = 0;
+      if (mg.unit === 'once') done = fComp[`g${i}_once`] === true ? 1 : 0;
+      else { const pfx = `g${i}_${fy}_${fm}_`; done = Object.entries(fComp).filter(([k, v]) => k.startsWith(pfx) && v === true).length; }
+      ftd += done; ftm += mod;
+    }
+    const fpct = ftm > 0 ? Math.round(ftd / ftm * 100) : 0;
+    const fstage = Math.min(9, Math.floor(fpct / 10));
+    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${AVATARS[fstage]}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계 · ${STAGE_NAMES[fstage]}</div></div><div class="friend-pct">${fpct}%</div></div>`;
+  }
+  h += '</div><div id="friendDetailArea"></div>';
+  sec.innerHTML = h;
+}
+
+window.openFriendDetail = async function (fid) {
+  const area = document.getElementById('friendDetailArea');
+  area.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);">로딩 중...</div>';
+  const dSnap = await get(ref(db, `dashboards/${fid}`));
+  const uSnap = await get(ref(db, `users/${fid}`));
+  const d = dSnap.exists() ? dSnap.val() : {}, u = uSnap.exists() ? uSnap.val() : {};
+  const nick = d.nickname || u.name || fid;
+  const goals = d.goals || [], comp = d.completions || {};
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  let h = `<div class="friend-detail"><div class="friend-detail-hdr"><div class="friend-detail-name">${esc(nick)}</div></div><div class="fgoal-grid">`;
+  for (let i = 0; i < MAX_GOALS; i++) {
+    const g = goals[i]; if (!g || !g.unit) continue;
+    const mg = migrateGoal(g);
+    const mod = goalModulus(mg, i, y, m);
+    let done = 0;
+    if (mg.unit === 'once') done = comp[`g${i}_once`] === true ? 1 : 0;
+    else { const pfx = `g${i}_${y}_${m}_`; done = Object.entries(comp).filter(([k, v]) => k.startsWith(pfx) && v === true).length; }
+    const pct = mod > 0 ? Math.round(done / mod * 100) : 0;
+    h += `<button class="fgoal-btn" onclick="showFriendGoalCal('${fid}',${i})"><div class="fgoal-name">${esc(g.title)}</div><div class="fgoal-pct">${pct}%</div><div class="fgoal-bar"><div class="fgoal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div></button>`;
+  }
+  h += `</div><div id="friendGoalCal"></div></div>`;
+  area.innerHTML = h;
+};
+
+window.showFriendGoalCal = async function (fid, gi) {
+  const area = document.getElementById('friendGoalCal');
+  const dSnap = await get(ref(db, `dashboards/${fid}`));
+  const d = dSnap.exists() ? dSnap.val() : {};
+  const comp = d.completions || {};
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  const days = getMonthDays(y, m), fd = new Date(y, m - 1, 1).getDay();
+  let h = `<div class="rocal-wrap"><div class="rocal-label">${y}년 ${m}월</div><div class="rocal-days">`;
+  ['일','월','화','수','목','금','토'].forEach(dd => h += `<div class="rocal-day">${dd}</div>`);
+  h += `</div><div class="rocal-grid">`;
+  for (let i = 0; i < fd; i++) h += `<div class="rocal-cell empty"></div>`;
+  for (let dd = 1; dd <= days; dd++) {
+    const k = `g${gi}_${y}_${m}_${dd}`, done = comp[k] === true;
+    const isToday = dd === now.getDate();
+    h += `<div class="rocal-cell ${done ? 'done' : ''} ${isToday ? 'today' : ''}">${dd}</div>`;
+  }
+  h += `</div></div>`;
+  // 응원 보내기
+  h += `<div class="cheer-box"><div class="cheer-box-title">💬 응원하기</div>`;
+  // 기존 응원 표시
+  const cheerSnap = await get(ref(db, `cheers/${fid}/${gi}`));
+  if (cheerSnap.exists()) {
+    const cheers = cheerSnap.val();
+    const sorted = Object.entries(cheers).sort((a, b) => parseInt(b[0]) - parseInt(a[0])).slice(0, 5);
+    h += `<div class="cheer-list">`;
+    sorted.forEach(([ts, c]) => {
+      const dt = new Date(parseInt(ts));
+      h += `<div class="cheer-item"><div class="cheer-from">${esc(c.from)}</div><div class="cheer-text">${esc(c.text)}</div><div class="cheer-time">${dt.getMonth()+1}/${dt.getDate()} ${dt.getHours()}:${String(dt.getMinutes()).padStart(2,'0')}</div></div>`;
+    });
+    h += `</div>`;
+  }
+  h += `<div class="cheer-input-row"><input class="cheer-text-input" id="cheerInput" placeholder="응원 메시지 보내기" maxlength="50"><button class="cheer-send-btn" onclick="sendCheer('${fid}',${gi})">보내기</button></div></div>`;
+  area.innerHTML = h;
+};
+
+window.sendCheer = async function (fid, gi) {
+  const input = document.getElementById('cheerInput');
+  const text = input.value.trim(); if (!text) return;
+  const ts = Date.now();
+  await set(ref(db, `cheers/${fid}/${gi}/${ts}`), { from: localDash.nickname || currentUser.name, text, ts });
+  showToast('💬 응원 전송!', 'done');
+  showFriendGoalCal(fid, gi);
+};
+
+// ===== ADMIN =====
+async function renderAdminList() {
+  const snap = await get(ref(db, 'users'));
+  if (!snap.exists()) return;
+  const users = snap.val();
+  let rows = Object.entries(users).filter(([id, u]) => u.role !== 'admin');
+  const tbl = document.getElementById('adminUserTable');
+  let h = `<table class="user-table"><thead><tr><th>이름</th><th>아이디</th><th>목표</th></tr></thead><tbody>`;
+  for (const [id, u] of rows) {
+    const dSnap = await get(ref(db, `dashboards/${id}`));
+    const d = dSnap.exists() ? dSnap.val() : {};
+    const gCount = (d.goals || []).filter(g => g && g.title).length;
+    h += `<tr class="user-row" onclick="showAdminUserDetail('${id}')"><td><span class="user-tbl-name">${esc(u.name)}</span></td><td><span class="user-tbl-id">${id}</span></td><td>${gCount}개</td></tr>`;
+  }
+  h += `</tbody></table>`;
+  tbl.innerHTML = h;
+  // 그룹
+  const grpSnap = await get(ref(db, 'groups'));
+  const gl = document.getElementById('adminGroupList');
+  if (!grpSnap.exists()) { gl.innerHTML = '<div class="admin-empty">그룹 없음</div>'; return; }
+  const groups = grpSnap.val();
+  let gh = '';
+  for (const [gid, g] of Object.entries(groups)) {
+    gh += `<div class="group-card"><div class="group-card-hdr"><div class="group-card-name">${esc(g.name)}</div></div><div class="group-member-list">`;
+    if (g.members) {
+      for (const [mk, mid] of Object.entries(g.members)) {
+        const muSnap = await get(ref(db, `users/${mid}`));
+        const mname = muSnap.exists() ? muSnap.val().name : mid;
+        gh += `<div class="group-member-row"><span class="group-member-name">${esc(mname)}</span><span class="group-member-id">${mid}</span></div>`;
+      }
+    }
+    gh += `</div></div>`;
+  }
+  gl.innerHTML = gh;
+  // 공지 목록
+  const nSnap = await get(ref(db, 'notices'));
+  const nl = document.getElementById('adminNoticeList');
+  if (!nSnap.exists()) { nl.innerHTML = ''; return; }
+  let nh = '';
+  Object.entries(nSnap.val()).sort((a, b) => (b[1].createdAt || '').localeCompare(a[1].createdAt || '')).forEach(([nid, n]) => {
+    nh += `<div class="notice-card"><div class="notice-card-info"><div class="notice-card-title">${esc(n.title)}</div><div class="notice-card-meta">${n.target} · ${new Date(n.createdAt).toLocaleDateString('ko')}</div></div><button class="notice-card-del" onclick="deleteNotice('${nid}')">삭제</button></div>`;
+  });
+  nl.innerHTML = nh;
+}
+
+window.showAdminUserDetail = async function (uid) {
+  const area = document.getElementById('adminUserDetail');
+  const uSnap = await get(ref(db, `users/${uid}`));
+  const dSnap = await get(ref(db, `dashboards/${uid}`));
+  if (!uSnap.exists()) return;
+  const u = uSnap.val(), d = dSnap.exists() ? dSnap.val() : {};
+  const goals = d.goals || [], comp = d.completions || {};
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  let h = `<div class="admin-detail"><div class="admin-detail-header"><div><div class="admin-detail-name">${esc(u.name)}</div><div class="admin-detail-id">${uid}</div></div></div>`;
+  h += `<div class="admin-meta-grid"><div class="admin-meta-card"><div class="admin-meta-label">마지막 로그인</div><div class="admin-meta-val">${u.lastLogin ? new Date(u.lastLogin).toLocaleString('ko') : '-'}</div></div><div class="admin-meta-card"><div class="admin-meta-label">마지막 업데이트</div><div class="admin-meta-val">${d.lastUpdate ? new Date(d.lastUpdate).toLocaleString('ko') : '-'}</div></div></div>`;
+  h += `<div class="admin-goal-list">`;
+  for (let i = 0; i < MAX_GOALS; i++) {
+    const g = goals[i]; if (!g || !g.unit) continue;
+    const mg = migrateGoal(g), mod = goalModulus(mg, i, y, m);
+    let done = 0;
+    if (mg.unit === 'once') done = comp[`g${i}_once`] === true ? 1 : 0;
+    else { const pfx = `g${i}_${y}_${m}_`; done = Object.entries(comp).filter(([k, v]) => k.startsWith(pfx) && v === true).length; }
+    const pct = mod > 0 ? Math.round(done / mod * 100) : 0;
+    h += `<div class="admin-goal-card"><div class="admin-goal-top"><div class="admin-goal-title">${esc(g.title)}</div><div class="admin-goal-pct">${pct}%</div></div><div class="admin-goal-bar"><div class="admin-goal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div><div class="admin-goal-meta"><span class="admin-goal-tag highlight">${getUnitLabel(mg)}</span><span class="admin-goal-tag">${done}/${mod}</span></div></div>`;
+  }
+  h += `</div></div>`;
+  area.innerHTML = h;
+};
+
+// ===== NOTICE ADMIN =====
+let _noticeTarget = 'all';
+window.setNoticeTarget = function (t) {
+  _noticeTarget = t;
+  ['All', 'Group', 'User'].forEach(s => document.getElementById(`noticeTarget${s}`).classList.toggle('active', t === s.toLowerCase()));
+  document.getElementById('noticeTargetDetail').style.display = t === 'all' ? 'none' : 'block';
+  if (t === 'user') document.getElementById('noticeTargetDetail').innerHTML = `<input class="admin-notice-input" id="noticeTargetId" placeholder="유저 아이디 입력">`;
+  else if (t === 'group') document.getElementById('noticeTargetDetail').innerHTML = `<input class="admin-notice-input" id="noticeTargetGroupId" placeholder="그룹 ID 입력">`;
+};
+window.submitNotice = async function () {
+  const title = document.getElementById('noticeTitle').value.trim();
+  if (!title) { showToast('제목을 입력하세요', 'normal'); return; }
+  const desc = document.getElementById('noticeDesc').value.trim();
+  const img = document.getElementById('noticeImg').value.trim();
+  const notice = { title, desc, img, target: _noticeTarget, createdAt: new Date().toISOString() };
+  if (_noticeTarget === 'user') notice.targetId = document.getElementById('noticeTargetId')?.value.trim();
+  if (_noticeTarget === 'group') notice.targetGroupId = document.getElementById('noticeTargetGroupId')?.value.trim();
+  await push(ref(db, 'notices'), notice);
+  showToast('📢 공지 추가!', 'done');
+  document.getElementById('noticeTitle').value = '';
+  document.getElementById('noticeDesc').value = '';
+  document.getElementById('noticeImg').value = '';
+  renderAdminList();
+};
+window.deleteNotice = async function (nid) {
+  if (!confirm('공지를 삭제할까요?')) return;
+  await remove(ref(db, `notices/${nid}`));
+  showToast('삭제됨', 'normal'); renderAdminList();
+};
+
+// ===== TUTORIAL =====
+let tutStep = 1, tutChecked = 0, tutGoalName = '12시 전에 자기';
+function initTutorial() {
+  tutStep = 1; tutChecked = 0;
+  const dots = document.getElementById('tutDots');
+  let dh = ''; for (let i = 1; i <= TUT_STEPS; i++) dh += `<div class="tut-dot ${i === 1 ? 'active' : ''}" id="tutDot${i}"></div>`;
+  dots.innerHTML = dh;
+  document.getElementById('tutFill').style.width = '0%';
+}
+function tutUpdateUI() {
+  for (let i = 1; i <= TUT_STEPS; i++) {
+    const d = document.getElementById(`tutDot${i}`);
+    d.className = 'tut-dot' + (i === tutStep ? ' active' : i < tutStep ? ' done' : '');
+  }
+  document.getElementById('tutFill').style.width = ((tutStep - 1) / (TUT_STEPS - 1) * 100) + '%';
+  for (let i = 1; i <= TUT_STEPS; i++) document.getElementById(`tutStep${i}`).classList.toggle('active', i === tutStep);
+}
+window.tutStep1Confirm = function () { document.getElementById('tutGoalBtn').style.background = 'var(--accent-light)'; document.getElementById('tutGoalBtn').style.borderColor = 'var(--accent)'; setTimeout(() => tutNextStep(2), 400); };
+window.tutNextStep = function (s) {
+  tutStep = s; tutUpdateUI();
+  if (s === 2) { document.getElementById('tutGoalName2').textContent = tutGoalName; renderTutUnitOpts(); }
+  if (s === 3) { document.getElementById('tutGoalName3').textContent = tutGoalName; renderTutCal(); }
+  if (s === 4) { const pct = Math.round(tutChecked / 28 * 100); document.getElementById('tutGoalName4').textContent = tutGoalName; document.getElementById('tutGoalPct4').textContent = pct + '%'; document.getElementById('tutGoalBar4').style.width = pct + '%'; document.getElementById('tutGoalStat4').textContent = `${tutChecked}/28`; document.getElementById('tutGbFill').style.width = pct + '%'; document.getElementById('tutGbPct').textContent = pct + '%'; }
+  if (s === 5) { document.getElementById('tutAvatarArt').innerHTML = AVATARS[0]; }
+};
+function renderTutUnitOpts() {
+  const opts = [{ l: '매일', v: 'daily' }, { l: '주 2~3회', v: 'w23' }, { l: '주 4~5회', v: 'w45', target: true }, { l: '한 번', v: 'once' }];
+  let h = '';
+  opts.forEach(o => h += `<div class="unit-opt ${o.target ? 'tut-cal-cell target' : ''}" onclick="tutSelectUnit('${o.v}')" id="tutUopt_${o.v}">${o.l}</div>`);
+  document.getElementById('tutUnitOpts').innerHTML = h;
+}
+window.tutSelectUnit = function (v) {
+  document.querySelectorAll('#tutUnitOpts .unit-opt').forEach(e => e.classList.remove('selected'));
+  document.getElementById(`tutUopt_${v}`)?.classList.add('selected');
+  setTimeout(() => tutNextStep(3), 500);
+};
+function renderTutCal() {
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  const days = getMonthDays(y, m), fd = new Date(y, m - 1, 1).getDay();
+  let dh = ''; ['일', '월', '화', '수', '목', '금', '토'].forEach(d => dh += `<div class="tut-cal-day">${d}</div>`);
+  document.getElementById('tutCalDayRow').innerHTML = dh;
+  let gh = '';
+  for (let i = 0; i < fd; i++) gh += `<div class="tut-cal-cell empty"></div>`;
+  for (let d = 1; d <= days; d++) gh += `<div class="tut-cal-cell" id="tutCal_${d}" onclick="tutToggleCal(${d})">${d}</div>`;
+  document.getElementById('tutCalGrid').innerHTML = gh;
+  tutChecked = 0; document.getElementById('tutStep3Status').textContent = '0 / 4 체크';
+}
+window.tutToggleCal = function (d) {
+  const el = document.getElementById(`tutCal_${d}`);
+  if (el.classList.contains('done')) { el.classList.remove('done'); tutChecked--; }
+  else { el.classList.add('done'); tutChecked++; showConfettiSmall(); }
+  document.getElementById('tutStep3Status').textContent = `${tutChecked} / 4 체크`;
+  if (tutChecked >= 4) setTimeout(() => tutNextStep(4), 600);
+};
+window.tutFinish = async function () {
+  localDash.tutorialDone = true; await saveDash();
+  showScreen('dashboardScreen'); await setupDashTabs(currentUser.id); renderDashboard();
+  showConfetti(); showToast('🎉 시작합니다!', 'done');
+};
+
+// ===== 3D HAMSTER (Three.js) =====
+function initHamsterAvatar(container) {
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  script.onload = () => buildHamster(container);
+  document.head.appendChild(script);
+}
+function buildHamster(container) {
+  if (typeof THREE === 'undefined') { container.innerHTML = AVATARS[0]; return; }
+  const scene = new THREE.Scene();
+  scene.background = null;
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0.5, 4);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(280, 280); renderer.setPixelRatio(window.devicePixelRatio);
+  container.innerHTML = ''; container.appendChild(renderer.domElement);
+  const hamster = new THREE.Group();
+  // Body
+  const bodyGeo = new THREE.SphereGeometry(1, 32, 32);
+  bodyGeo.scale(1, 0.85, 0.9);
+  const bodyMat = new THREE.MeshToonMaterial({ color: 0xf5d0a9 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  hamster.add(body);
+  // Head
+  const headGeo = new THREE.SphereGeometry(0.7, 32, 32);
+  const head = new THREE.Mesh(headGeo, bodyMat);
+  head.position.set(0, 0.9, 0.3);
+  hamster.add(head);
+  // Eyes
+  const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1a1a });
+  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeL.position.set(-0.25, 1.0, 0.85);
+  const eyeR = eyeL.clone();
+  eyeR.position.set(0.25, 1.0, 0.85);
+  hamster.add(eyeL, eyeR);
+  // Nose
+  const noseGeo = new THREE.SphereGeometry(0.06, 12, 12);
+  const noseMat = new THREE.MeshBasicMaterial({ color: 0xff8fa3 });
+  const nose = new THREE.Mesh(noseGeo, noseMat);
+  nose.position.set(0, 0.88, 0.98);
+  hamster.add(nose);
+  // Ears
+  const earGeo = new THREE.SphereGeometry(0.2, 16, 16);
+  earGeo.scale(1, 1.2, 0.5);
+  const earMat = new THREE.MeshToonMaterial({ color: 0xe8b090 });
+  const earL = new THREE.Mesh(earGeo, earMat);
+  earL.position.set(-0.5, 1.45, 0.1);
+  const earR = earL.clone();
+  earR.position.set(0.5, 1.45, 0.1);
+  hamster.add(earL, earR);
+  // Cheeks
+  const cheekGeo = new THREE.SphereGeometry(0.25, 16, 16);
+  const cheekMat = new THREE.MeshToonMaterial({ color: 0xffb3b3, transparent: true, opacity: 0.5 });
+  const cheekL = new THREE.Mesh(cheekGeo, cheekMat);
+  cheekL.position.set(-0.5, 0.8, 0.7);
+  const cheekR = cheekL.clone();
+  cheekR.position.set(0.5, 0.8, 0.7);
+  hamster.add(cheekL, cheekR);
+  // Belly
+  const bellyGeo = new THREE.SphereGeometry(0.6, 16, 16);
+  const bellyMat = new THREE.MeshToonMaterial({ color: 0xfff5e6 });
+  const belly = new THREE.Mesh(bellyGeo, bellyMat);
+  belly.position.set(0, -0.1, 0.5);
+  belly.scale.set(1, 0.9, 0.5);
+  hamster.add(belly);
+  hamster.position.y = -0.3;
+  scene.add(hamster);
+  // Light
+  const amb = new THREE.AmbientLight(0xffffff, 0.7);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(2, 3, 4);
+  scene.add(amb, dir);
+  // Animate
+  let mouseX = 0;
+  container.addEventListener('mousemove', e => { const r = container.getBoundingClientRect(); mouseX = ((e.clientX - r.left) / r.width - 0.5) * 2; });
+  let t = 0, blinkT = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.03;
+    hamster.position.y = -0.3 + Math.sin(t) * 0.05;
+    hamster.rotation.y += (mouseX * 0.3 - hamster.rotation.y) * 0.05;
+    blinkT++;
+    const blink = (blinkT % 180 < 6);
+    eyeL.scale.y = blink ? 0.1 : 1;
+    eyeR.scale.y = blink ? 0.1 : 1;
+    renderer.render(scene, camera);
+  }
+  animate();
+}
+
+// ===== EFFECTS =====
+function showToast(msg, type = 'normal') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast toast-${type} show`;
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function showConfetti() {
+  const c = document.getElementById('confettiContainer');
+  const colors = ['#1952f5', '#ff5e7d', '#f5c518', '#00b96b', '#a78bfa', '#ff9f43'];
+  for (let i = 0; i < 120; i++) {
+    const p = document.createElement('div'); p.className = 'confetti-piece';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.width = (6 + Math.random() * 8) + 'px'; p.style.height = (6 + Math.random() * 8) + 'px';
+    p.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    p.style.animationDelay = Math.random() * 0.5 + 's';
+    c.appendChild(p); setTimeout(() => p.remove(), 4000);
+  }
+}
+function showConfettiSmall() {
+  const c = document.getElementById('confettiContainer');
+  const colors = ['#1952f5', '#a78bfa', '#ff5e7d', '#f5c518'];
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div'); p.className = 'confetti-piece';
+    p.style.left = (30 + Math.random() * 40) + '%';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.width = (4 + Math.random() * 6) + 'px'; p.style.height = (4 + Math.random() * 6) + 'px';
+    p.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+    c.appendChild(p); setTimeout(() => p.remove(), 3000);
+  }
+}
+function shakeScreen() {
+  const el = document.querySelector('#dashboardScreen .mobile-wrap');
+  if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 800); }
+}

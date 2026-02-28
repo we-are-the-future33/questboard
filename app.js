@@ -321,6 +321,7 @@ function renderHabitCards() {
       <div class="habit-card-swipe-bg-left todo"><div class="swipe-bg-text">✓ 완료</div></div>
       <div class="habit-card-swipe-bg-right done"><div class="swipe-bg-text">↩ 취소</div></div>
       <div class="habit-card ${isCompleted ? 'completed' : ''} ${isDone ? 'today-done' : ''}" id="hc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}" data-done="${isDone ? 1 : 0}">
+        ${isDone ? '<div class="habit-card-done-badge">✓</div>' : ''}
         <div>
           <div class="habit-card-title">${esc(g.title)}</div>
           <div class="habit-card-mid">
@@ -407,7 +408,6 @@ function initHabitSwipe(idx) {
       card.style.transform = 'translateX(0)';
     }
     dx = 0; swiping = false;
-  }
   }
 
   card.addEventListener('touchstart', onS, { passive: true });
@@ -831,7 +831,6 @@ window.openAddHabitSheet = function () {
     <button class="unit-confirm-btn" style="margin-top:12px;" onclick="habitAddStep2()">다음 →</button>`;
   openBS();
   setTimeout(() => document.getElementById('newGoalInput')?.focus(), 400);
-};
 };
 
 // ===== NICKNAME / MSG EDIT =====

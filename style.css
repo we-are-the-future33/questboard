@@ -125,33 +125,41 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .habit-card-outer.swiping-right .habit-card-swipe-bg-left{display:flex;}
 .habit-card-outer.swiping-left .habit-card-swipe-bg-right{display:flex;}
 .swipe-bg-text{color:#fff;font-size:11px;font-weight:800;letter-spacing:1px;opacity:.9;}
-.habit-card{position:relative;z-index:2;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .2s,border-color .2s;touch-action:pan-y;user-select:none;box-shadow:0 4px 10px rgba(0,0,0,0.03);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;}
-.habit-card:active{box-shadow:0 8px 20px rgba(25,82,245,0.08);border-color:#c4d2fb;}
-.habit-card:active{box-shadow:var(--shadow);}
+/* 미완료 카드 - 파란 그라데이션 + 흰색 텍스트 */
+.habit-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:18px;padding:16px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);touch-action:pan-y;user-select:none;box-shadow:0 8px 20px rgba(25,82,245,0.3);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;}
+.habit-card:active{box-shadow:0 4px 10px rgba(25,82,245,0.4);transform:scale(0.96);}
 .habit-card.swiping{transition:none;}
 .habit-card.snapping{transition:transform .3s cubic-bezier(.4,0,.2,1);}
-.habit-card-title{font-size:14px;font-weight:800;color:#111827;margin-bottom:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.habit-card-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .habit-card-mid{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.habit-card-unit{font-size:11px;color:var(--text-dim);font-weight:700;}
-.habit-card-streak{display:flex;align-items:center;gap:2px;}
+.habit-card-unit{font-size:11px;color:#fff;font-weight:700;background:rgba(255,255,255,0.25);padding:4px 8px;border-radius:8px;}
+.habit-card-streak{display:flex;align-items:center;gap:4px;}
 .habit-card-streak .fire{font-size:14px;line-height:1;}
-.habit-card-streak .streak-num{font-family:'Black Han Sans',sans-serif;font-size:13px;background:linear-gradient(135deg,#ff6b35,#ff3366);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.habit-card-streak.zero .fire{opacity:.25;}
-.habit-card-streak.zero .streak-num{background:none;-webkit-text-fill-color:#c4cae8;color:#c4cae8;}
+.habit-card-streak .streak-num{font-size:13px;font-weight:800;color:#fff;}
+.habit-card-streak.zero .fire{opacity:.4;filter:grayscale(100%);}
+.habit-card-streak.zero .streak-num{color:rgba(255,255,255,0.6);}
 .habit-card-bot{display:flex;align-items:center;gap:6px;}
-.habit-card-bar{flex:1;height:6px;background:#f1f5f9;border-radius:100px;overflow:hidden;}
-.habit-card-bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#60a5fa,#6366f1);transition:width .6s cubic-bezier(.4,0,.2,1);}
-.habit-card-bar-fill.over100{background:linear-gradient(90deg,#6366f1,#a78bfa,#c084fc);box-shadow:0 0 8px rgba(167,139,250,.5);}
-.habit-card-pct{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--accent);min-width:36px;text-align:right;}
-.habit-card.completed{background:#f5f6f8;border-color:#eaedf0;}
-.habit-card.completed .habit-card-title{color:#b0b5be;}
-.habit-card.completed .habit-card-mid{opacity:.4;}
-.habit-card.completed .habit-card-bot{opacity:.4;}
-.habit-card.today-done{background:#f5f6f8;border-color:#eaedf0;}
-.habit-card.today-done .habit-card-title{color:#b0b5be;}
-.habit-card.today-done .habit-card-mid{opacity:.35;}
-.habit-card.today-done .habit-card-bot{opacity:.35;}
-.habit-card.today-done::after{content:'✅';position:absolute;top:12px;right:12px;font-size:18px;}
+.habit-card-bar{flex:1;height:8px;background:rgba(255,255,255,0.25);border-radius:100px;overflow:hidden;}
+.habit-card-bar-fill{height:100%;border-radius:100px;background:#fff;transition:width .6s cubic-bezier(.4,0,.2,1);}
+.habit-card-bar-fill.over100{background:#f5c518;box-shadow:0 0 8px rgba(245,197,24,0.5);}
+.habit-card-pct{font-size:14px;font-weight:900;color:#fff;min-width:36px;text-align:right;}
+/* 완료 카드 - 민트/화이트 톤 */
+.habit-card.today-done{background:#fdfdfd;border:1px solid #d1fae5;box-shadow:none;}
+.habit-card.today-done .habit-card-title{color:#94a3b8;}
+.habit-card.today-done .habit-card-unit{background:#ecfdf5;color:#10b981;}
+.habit-card.today-done .habit-card-pct{color:#34d399;}
+.habit-card.today-done .habit-card-bar{background:#f8fafc;}
+.habit-card.today-done .habit-card-bar-fill{background:#6ee7b7;box-shadow:none;}
+.habit-card.today-done .habit-card-streak .streak-num{color:#94a3b8;}
+.habit-card.today-done .habit-card-streak{opacity:.5;}
+/* 완료 뱃지 */
+.habit-card-done-badge{position:absolute;top:14px;right:14px;width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;box-shadow:0 2px 6px rgba(16,185,129,0.25);}
+/* completed 상태 (once 등) */
+.habit-card.completed{background:#fdfdfd;border:1px solid #d1fae5;box-shadow:none;}
+.habit-card.completed .habit-card-title{color:#94a3b8;}
+.habit-card.completed .habit-card-unit{background:#ecfdf5;color:#10b981;}
+.habit-card.completed .habit-card-mid{opacity:.5;}
+.habit-card.completed .habit-card-bot{opacity:.5;}
 
 /* 도전 카드 */
 .challenge-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.03);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;transition:all .2s;touch-action:pan-y;user-select:none;position:relative;}

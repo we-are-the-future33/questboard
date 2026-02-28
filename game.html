@@ -4,9 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>동물 키우기 - 목표 달성 게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://cdn.jsdelivr.net/npm/line-seed-kr@1.0.0/css/LINESeedKR.css');
-@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
 :root {
   --bg:#ffffff;
   --surface:#f4f6ff;
@@ -26,7 +30,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 button{-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent;}
-body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;min-height:100vh;}
+body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
 
 .screen{display:none;min-height:100vh;position:relative;z-index:1;}
 .screen.active{display:block;}
@@ -49,12 +53,12 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .login-sub{text-align:center;color:var(--text-dim);font-size:12px;letter-spacing:3px;margin-bottom:40px;}
 .input-group{margin-bottom:16px;}
 .input-group label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;font-weight:700;}
-.input-group input{width:100%;background:#fff;border:2px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:15px;font-family:'LINESeedKR',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;box-shadow:var(--shadow-sm);}
+.input-group input{width:100%;background:#fff;border:2px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;box-shadow:var(--shadow-sm);}
 .input-group input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(25,82,245,.10);}
 .save-login-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .save-login-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
 .save-login-row label{font-size:12px;color:var(--text-dim);cursor:pointer;}
-.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:1px;box-shadow:0 6px 18px rgba(25,82,245,.32);}
+.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:1px;box-shadow:0 6px 18px rgba(25,82,245,.32);}
 .btn-primary:hover{opacity:.9;transform:translateY(-1px);}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 .login-error{color:var(--danger);font-size:13px;text-align:center;margin-top:12px;display:none;}
@@ -65,7 +69,7 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .nav-badge{font-size:10px;color:var(--accent2);margin-left:5px;}
 .nav-right{display:flex;align-items:center;gap:8px;}
 .nav-user{font-size:12px;color:var(--text-dim);font-weight:700;}
-.btn-sm{background:var(--surface2);border:2px solid var(--border);color:var(--text-dim);border-radius:8px;padding:5px 12px;font-size:12px;font-family:'LINESeedKR',sans-serif;cursor:pointer;transition:all .2s;font-weight:700;}
+.btn-sm{background:var(--surface2);border:2px solid var(--border);color:var(--text-dim);border-radius:8px;padding:5px 12px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;font-weight:700;}
 .btn-sm:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 
 /* ADMIN */
@@ -77,9 +81,9 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .create-form{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);}
 .form-row{margin-bottom:14px;}
 .form-row label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:700;}
-.form-row input{width:100%;background:#fff;border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'LINESeedKR',sans-serif;outline:none;transition:border-color .2s;}
+.form-row input{width:100%;background:#fff;border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s;}
 .form-row input:focus{border-color:var(--accent);}
-.btn-accent{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(25,82,245,.28);}
+.btn-accent{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(25,82,245,.28);}
 .btn-accent:hover{opacity:.9;transform:translateY(-1px);}
 .btn-accent.full{width:100%;margin-top:4px;}
 .user-table{width:100%;border-collapse:collapse;margin-top:4px;}
@@ -136,8 +140,8 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .pencil-btn{background:var(--surface2);border:2px solid var(--border);color:var(--text-dim);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:all .2s;flex-shrink:0;}
 .pencil-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 .nickname-edit-row{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;}
-.nickname-input{flex:1;background:#fff;border:2px solid var(--accent);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-family:'LINESeedKR',sans-serif;outline:none;text-align:center;}
-.nickname-save-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 3px 10px rgba(25,82,245,.25);}
+.nickname-input{flex:1;background:#fff;border:2px solid var(--accent);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;text-align:center;}
+.nickname-save-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 3px 10px rgba(25,82,245,.25);}
 .avatar-msg{font-size:13px;color:var(--text-dim);line-height:1.6;text-align:center;max-width:260px;}
 .avatar-progress-row{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;}
 .ap-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
@@ -149,7 +153,7 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .goals-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .goals-section-title{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:2px;color:var(--text-dim);}
 .goal-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.goal-btn{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:12px 10px;cursor:pointer;text-align:left;transition:all .2s;font-family:'LINESeedKR',sans-serif;position:relative;overflow:hidden;height:88px;display:flex;flex-direction:column;justify-content:center;color:var(--text);-webkit-appearance:none;appearance:none;box-shadow:var(--shadow-sm);}
+.goal-btn{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:12px 10px;cursor:pointer;text-align:left;transition:all .2s;font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden;height:88px;display:flex;flex-direction:column;justify-content:center;color:var(--text);-webkit-appearance:none;appearance:none;box-shadow:var(--shadow-sm);}
 .goal-btn:hover:not(.disabled){border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow);}
 .goal-btn.active{border-color:var(--accent);background:var(--accent-light);box-shadow:0 4px 14px rgba(25,82,245,.18);}
 .goal-btn.disabled{border-style:dashed;cursor:default;background:#fff;box-shadow:none;border-color:var(--border);}
@@ -169,17 +173,17 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .unit-card-title{font-family:'Black Han Sans',sans-serif;font-size:17px;letter-spacing:1px;margin-bottom:6px;color:var(--text);}
 .unit-card-sub{color:var(--text-dim);font-size:13px;margin-bottom:20px;}
 .unit-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
-.unit-opt{background:#fff;border:2px solid var(--border);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;font-size:13px;font-weight:700;transition:all .2s;font-family:'LINESeedKR',sans-serif;color:var(--text);}
+.unit-opt{background:#fff;border:2px solid var(--border);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;font-size:13px;font-weight:700;transition:all .2s;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
 .unit-opt:hover{border-color:var(--accent);background:var(--accent-light);}
 .unit-opt.selected{border-color:var(--accent);background:var(--accent-light);color:var(--accent);}
-.unit-confirm-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(25,82,245,.28);}
+.unit-confirm-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(25,82,245,.28);}
 
 /* CALENDAR */
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .cal-goal-name{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);}
 .cal-meta{display:flex;align-items:center;gap:8px;}
 .cal-unit-badge{background:var(--accent-light);border:2px solid rgba(25,82,245,.2);border-radius:100px;padding:3px 10px;font-size:11px;color:var(--accent);font-weight:700;}
-.edit-unit-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(25,82,245,.22);}
+.edit-unit-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(25,82,245,.22);}
 .month-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
 .month-nav-btn{background:#fff;border:2px solid var(--border);color:var(--text);border-radius:10px;padding:6px 14px;font-size:14px;cursor:pointer;font-weight:700;transition:all .2s;}
 .month-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -212,7 +216,7 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 /* 폰트 위계 개선 */
 .cal-goal-name{font-family:'Black Han Sans',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);}
 .cal-unit-badge{background:var(--accent-light);border:2px solid rgba(25,82,245,.2);border-radius:100px;padding:5px 13px;font-size:13px;color:var(--accent);font-weight:700;}
-.edit-unit-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:7px 16px;font-size:13px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(25,82,245,.22);}
+.edit-unit-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:7px 16px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(25,82,245,.22);}
 .month-label{font-family:'Black Han Sans',sans-serif;font-size:17px;letter-spacing:1px;color:var(--text);}
 .month-nav-btn{background:#fff;border:2px solid var(--border);color:var(--text);border-radius:10px;padding:7px 16px;font-size:16px;cursor:pointer;font-weight:700;transition:all .2s;}
 .cal-day-lbl{text-align:center;font-size:12px;color:var(--text-dim);padding:3px 0;font-weight:700;}
@@ -227,8 +231,8 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .goals-section-title{font-family:'Black Han Sans',sans-serif;font-size:17px;letter-spacing:2px;color:var(--text-dim);}
 .nav-logo{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);letter-spacing:2px;}
 .nav-user{font-size:13px;color:var(--text-dim);font-weight:700;}
-.btn-sm{background:var(--surface2);border:2px solid var(--border);color:var(--text-dim);border-radius:8px;padding:6px 14px;font-size:13px;font-family:'LINESeedKR',sans-serif;cursor:pointer;transition:all .2s;font-weight:700;}
-.tab-btn{flex:1;padding:14px 0;font-size:14px;font-weight:700;font-family:'LINESeedKR',sans-serif;background:#fff;border:none;color:var(--text-dim);cursor:pointer;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;margin-bottom:-2px;}
+.btn-sm{background:var(--surface2);border:2px solid var(--border);color:var(--text-dim);border-radius:8px;padding:6px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;font-weight:700;}
+.tab-btn{flex:1;padding:14px 0;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;background:#fff;border:none;color:var(--text-dim);cursor:pointer;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;margin-bottom:-2px;}
 .friend-name{font-weight:700;font-size:15px;margin-bottom:3px;color:var(--text);}
 .friend-stage{font-size:12px;color:var(--text-dim);}
 .friend-pct{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--accent);flex-shrink:0;}
@@ -246,7 +250,7 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .once-btn.done{background:var(--accent-light);border-color:var(--accent);box-shadow:0 0 0 4px rgba(25,82,245,.12);}
 .once-done{margin-top:12px;font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--accent);}
 .add-goal-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);}
-.add-goal-input{width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'LINESeedKR',sans-serif;outline:none;margin-bottom:14px;transition:border-color .2s;}
+.add-goal-input{width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:14px;transition:border-color .2s;}
 .add-goal-input:focus{border-color:var(--accent);}
 .detail-empty{text-align:center;padding:48px 20px;color:var(--text-dim);font-size:14px;line-height:1.8;}
 
@@ -290,7 +294,7 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .tut-avatar-art{width:120px;height:120px;background:var(--surface2);border:2px solid var(--border);border-radius:20px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .tut-avatar-art svg{width:106px;height:106px;}
 .tut-avatar-stage{font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--accent);letter-spacing:2px;}
-.tut-confirm-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;letter-spacing:1px;transition:all .2s;box-shadow:0 6px 18px rgba(25,82,245,.30);}
+.tut-confirm-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;letter-spacing:1px;transition:all .2s;box-shadow:0 6px 18px rgba(25,82,245,.30);}
 .tut-confirm-btn:hover{opacity:.9;transform:translateY(-1px);}
 .tut-confirm-btn.ghost{background:transparent;border:2px solid var(--border);color:var(--text-dim);margin-top:8px;box-shadow:none;}
 .tut-global-bar{background:#fff;border:2px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);}
@@ -397,7 +401,7 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 
 /* TABS */
 .tab-bar{display:flex;border-bottom:2px solid var(--border);background:#fff;position:sticky;top:56px;z-index:40;box-shadow:0 2px 8px rgba(25,82,245,.06);}
-.tab-btn{flex:1;padding:13px 0;font-size:13px;font-weight:700;font-family:'LINESeedKR',sans-serif;background:#fff;border:none;color:var(--text-dim);cursor:pointer;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;margin-bottom:-2px;}
+.tab-btn{flex:1;padding:13px 0;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;background:#fff;border:none;color:var(--text-dim);cursor:pointer;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;margin-bottom:-2px;}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 .tab-panel{display:none;}
 .tab-panel.active{display:block;}
@@ -446,9 +450,9 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .cheer-text{font-size:13px;color:var(--text);line-height:1.5;}
 .cheer-time{font-size:10px;color:var(--text-dim);margin-top:3px;}
 .cheer-input-row{display:flex;gap:6px;align-items:center;}
-.cheer-text-input{flex:1;background:#fff;border:2px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'LINESeedKR',sans-serif;outline:none;transition:all .2s;}
+.cheer-text-input{flex:1;background:#fff;border:2px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:all .2s;}
 .cheer-text-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(25,82,245,.10);}
-.cheer-send-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 3px 10px rgba(25,82,245,.25);}
+.cheer-send-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 3px 10px rgba(25,82,245,.25);}
 
 /* ADMIN GROUP */
 .group-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
@@ -458,9 +462,9 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .group-member-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
 .group-member-name{font-size:13px;font-weight:700;flex:1;color:var(--text);}
 .group-member-id{font-size:11px;color:var(--text-dim);}
-.group-remove-btn{background:transparent;border:2px solid var(--border);color:var(--text-dim);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:'LINESeedKR',sans-serif;transition:all .2s;}
+.group-remove-btn{background:transparent;border:2px solid var(--border);color:var(--text-dim);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
 .group-remove-btn:hover{border-color:var(--danger);color:var(--danger);}
-.group-add-select{width:100%;background:#fff;border:2px solid var(--border);border-radius:10px;padding:9px 11px;color:var(--text);font-size:13px;font-family:'LINESeedKR',sans-serif;outline:none;margin-top:10px;transition:border-color .2s;}
+.group-add-select{width:100%;background:#fff;border:2px solid var(--border);border-radius:10px;padding:9px 11px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:10px;transition:border-color .2s;}
 .group-add-select:focus{border-color:var(--accent);}
 </style>
 </head>
@@ -548,7 +552,7 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
           <div class="tut-bubble-tag">STEP 1 · 목표 설정</div>
           <div class="tut-bubble-text">먼저 <strong>달성하고 싶은 목표</strong>를 정해볼게요.<br>아래 목표를 탭해서 시작해보세요!</div>
         </div>
-        <button id="tutGoalBtn" onclick="tutStep1Confirm()" style="width:100%;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:18px 16px;color:var(--text);font-size:16px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;text-align:left;margin-bottom:20px;animation:pulse-border 1.2s ease-in-out infinite;transition:background .2s;">
+        <button id="tutGoalBtn" onclick="tutStep1Confirm()" style="width:100%;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:18px 16px;color:var(--text);font-size:16px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;text-align:left;margin-bottom:20px;animation:pulse-border 1.2s ease-in-out infinite;transition:background .2s;">
           12시 전에 자기
         </button>
       </div>
@@ -1339,7 +1343,7 @@ window.startEditMsg=function(){
   cancelEditNickname();
   const cur=localDash.msg||'좋은 습관 만드는 중';
   const wrap=document.getElementById('avatarMsgWrap');
-  wrap.innerHTML=`<input id="msgInput" type="text" value="${escAttr(cur)}" maxlength="20" placeholder="한 줄 문구" class="nickname-input" style="font-size:14px;font-family:'LINESeedKR',sans-serif;font-weight:400;letter-spacing:0;">
+  wrap.innerHTML=`<input id="msgInput" type="text" value="${escAttr(cur)}" maxlength="20" placeholder="한 줄 문구" class="nickname-input" style="font-size:14px;font-family:'Noto Sans KR',sans-serif;font-weight:400;letter-spacing:0;">
     <button onclick="saveMsg()" class="nickname-save-btn">저장</button>`;
   document.getElementById('msgInput').focus();
   document.getElementById('msgInput').addEventListener('keydown',e=>{ if(e.key==='Enter') window.saveMsg(); });
@@ -1473,7 +1477,7 @@ window.enterEditUnit=function(idx){
       <button onclick="renderDetail(${idx})" style="background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
     <div style="font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">목표 제목</div>
-    <input id="editGoalTitle${idx}" type="text" value="${escAttr(g.title||'')}" placeholder="목표 이름" style="width:100%;background:#fff;border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'LINESeedKR',sans-serif;outline:none;margin-bottom:20px;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    <input id="editGoalTitle${idx}" type="text" value="${escAttr(g.title||'')}" placeholder="목표 이름" style="width:100%;background:#fff;border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:20px;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
     <div style="font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">달성 단위</div>
     <div class="unit-opts" id="unitOpts${idx}"></div>
     <button class="unit-confirm-btn" onclick="confirmEditGoal(${idx})">수정 완료</button>

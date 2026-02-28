@@ -567,7 +567,8 @@ window.switchTab = function (tab) {
     }, { passive: true });
 
     function doSnap() {
-      const snapPoint = subBar.offsetTop;
+      // 서브탭바 바로 위쪽으로 스냅 (서브탭 + 섹션헤더 모두 보이도록)
+      const snapPoint = subBar.offsetTop - 8;
       const curY = scroll.scrollTop;
 
       // 이미 스냅된 상태에서 위로 조금 올리면 → 위로 복귀
@@ -588,18 +589,21 @@ window.switchTab = function (tab) {
     }
 
     function snapTo(target) {
-      const snapPoint = subBar.offsetTop;
+      const snapPoint = subBar.offsetTop - 8;
       isSnapping = true;
       if (target >= snapPoint) {
         // 아래로 스냅: 탭바 공간 자체를 제거
         tabBar.style.display = 'none';
+        // 탭바 제거 후 레이아웃 변경됨 → 새 위치로 스냅
+        const newTarget = subBar.offsetTop - 8;
         snappedDown = true;
+        scroll.scrollTo({ top: newTarget, behavior: 'instant' });
       } else {
         // 위로 스냅: 탭바 다시 표시
         tabBar.style.display = '';
         snappedDown = false;
+        scroll.scrollTo({ top: 0, behavior: 'instant' });
       }
-      scroll.scrollTo({ top: target, behavior: 'instant' });
       setTimeout(() => { isSnapping = false; lastY = scroll.scrollTop; }, 100);
     }
   }
@@ -638,7 +642,7 @@ function applyTimeBackground() {
 
   if (h >= 0 && h < 5) {
     // 🌌 새벽
-    bg = 'linear-gradient(180deg, #0f0c29 0%, #1a1a4e 50%, #302b63 100%)';
+    bg = 'linear-gradient(180deg, #252060 0%, #3f3a8e 50%, #5e58b4 100%)';
     nickColor = '#e2e8f0'; stageColor = '#a5b4fc'; stageBg = 'rgba(165,180,252,.15)';
     decoHTML = `
       <div class="sky-deco star" style="top:12%;left:15%;font-size:8px;animation-delay:0s;">✦</div>
@@ -646,7 +650,7 @@ function applyTimeBackground() {
       <div class="sky-deco star" style="top:22%;left:80%;font-size:10px;animation-delay:0.6s;">✦</div>
       <div class="sky-deco star" style="top:5%;left:35%;font-size:5px;animation-delay:1.8s;">✦</div>
       <div class="sky-deco star" style="top:18%;left:65%;font-size:7px;animation-delay:2.4s;">✦</div>
-      <div class="sky-deco moon" style="top:6%;right:12%;font-size:28px;">🌙</div>`;
+      <div class="sky-deco moon" style="top:2%;right:12%;font-size:26px;">🌙</div>`;
   } else if (h >= 5 && h < 9) {
     // 🌅 아침
     bg = 'linear-gradient(180deg, #ffecd2 0%, #fcb69f 40%, #ff9a9e 100%)';
@@ -671,7 +675,7 @@ function applyTimeBackground() {
       <div class="sky-deco cloud" style="top:12%;left:60%;font-size:14px;animation-delay:2.5s;">☁️</div>`;
   } else if (h >= 17 && h < 20) {
     // 🌇 저녁
-    bg = 'linear-gradient(180deg, #2d1b69 0%, #c2185b 40%, #ff6f00 70%, #ffab40 100%)';
+    bg = 'linear-gradient(180deg, #3d2a7a 0%, #d4336e 40%, #ff8534 70%, #ffbb5c 100%)';
     nickColor = '#fef3c7'; stageColor = '#fbbf24'; stageBg = 'rgba(251,191,36,.15)';
     decoHTML = `
       <div class="sky-deco cloud" style="top:10%;left:15%;font-size:18px;opacity:0.6;animation-delay:0s;">☁️</div>
@@ -680,10 +684,10 @@ function applyTimeBackground() {
       <div class="sky-deco star" style="top:8%;right:30%;font-size:4px;animation-delay:2s;">✦</div>`;
   } else {
     // 🌙 밤
-    bg = 'linear-gradient(180deg, #0d1b2a 0%, #1b2838 40%, #1e3a5f 100%)';
+    bg = 'linear-gradient(180deg, #1e3356 0%, #2c4a70 40%, #3a5d8a 100%)';
     nickColor = '#e2e8f0'; stageColor = '#93c5fd'; stageBg = 'rgba(147,197,253,.15)';
     decoHTML = `
-      <div class="sky-deco moon" style="top:8%;right:15%;font-size:30px;">🌙</div>
+      <div class="sky-deco moon" style="top:3%;right:15%;font-size:28px;">🌙</div>
       <div class="sky-deco star" style="top:10%;left:12%;font-size:8px;animation-delay:0s;">✦</div>
       <div class="sky-deco star" style="top:6%;left:40%;font-size:6px;animation-delay:0.8s;">✦</div>
       <div class="sky-deco star" style="top:20%;left:70%;font-size:10px;animation-delay:1.6s;">✦</div>
@@ -896,13 +900,14 @@ function initHabitSwipe(idx) {
   }
 
   // Mobile touch swipe
-  let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
+  let sx = 0, sy = 0, dx = 0, swiping = false, locked = false, touchStartTime = 0, totalMove = 0;
   const TH = 60;
   const outer = document.getElementById(`hcOuter_${idx}`);
 
   function onS(e) {
     const t = e.touches[0];
     sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false;
+    touchStartTime = Date.now(); totalMove = 0;
     card.classList.remove('snapping');
     if (outer) { outer.classList.remove('swiping-right', 'swiping-left'); }
   }
@@ -910,6 +915,7 @@ function initHabitSwipe(idx) {
     if (locked) return;
     const t = e.touches[0];
     const dX = t.clientX - sx, dY = t.clientY - sy;
+    totalMove = Math.abs(dX) + Math.abs(dY);
     if (!swiping && Math.abs(dY) > Math.abs(dX)) { locked = true; return; }
     if (Math.abs(dX) > 8) swiping = true;
     if (!swiping) return;
@@ -924,10 +930,14 @@ function initHabitSwipe(idx) {
   }
   function onE() {
     if (outer) { outer.classList.remove('swiping-right', 'swiping-left'); }
+    const elapsed = Date.now() - touchStartTime;
     if (!swiping) {
       card.style.transform = '';
       card.classList.remove('swiping');
-      openGoalBottomSheet(idx);
+      // 명확한 탭: 이동량 적고, 너무 짧지 않은 터치
+      if (totalMove < 10 && elapsed > 80 && elapsed < 500) {
+        openGoalBottomSheet(idx);
+      }
       return;
     }
     card.classList.remove('swiping');
@@ -1135,11 +1145,12 @@ function initBucketSwipe(idx) {
   }
   function onE() {
     card.classList.remove('swiping'); card.classList.add('snapping');
+    const elapsed = Date.now() - tapStart;
     if (Math.abs(dx) >= TH) { card.style.transform = `translateX(${dx > 0 ? window.innerWidth : -window.innerWidth}px)`; setTimeout(() => swipeBucket(idx), 250); }
     else {
       card.style.transform = 'translateX(0)';
-      // 탭 감지 (짧은 터치 + 이동 없음)
-      if (!swiping && Date.now() - tapStart < 300) openBucketDetail(idx);
+      const totalMove = Math.abs(sx - (dx + sx));
+      if (!swiping && elapsed > 80 && elapsed < 500 && totalMove < 10) openBucketDetail(idx);
     }
     dx = 0; swiping = false;
   }

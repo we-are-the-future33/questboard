@@ -591,18 +591,12 @@ window.switchTab = function (tab) {
       const snapPoint = subBar.offsetTop;
       isSnapping = true;
       if (target >= snapPoint) {
-        // 아래로 스냅: 탭바 숨기기
-        tabBar.style.transition = 'none';
-        tabBar.style.transform = 'translateY(-100%)';
-        tabBar.style.opacity = '0';
-        tabBar.style.pointerEvents = 'none';
+        // 아래로 스냅: 탭바 공간 자체를 제거
+        tabBar.style.display = 'none';
         snappedDown = true;
       } else {
-        // 위로 스냅: 탭바 보이기
-        tabBar.style.transition = 'none';
-        tabBar.style.transform = 'translateY(0)';
-        tabBar.style.opacity = '1';
-        tabBar.style.pointerEvents = '';
+        // 위로 스냅: 탭바 다시 표시
+        tabBar.style.display = '';
         snappedDown = false;
       }
       scroll.scrollTo({ top: target, behavior: 'instant' });

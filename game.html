@@ -826,9 +826,34 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // ===== 상수 =====
-const UNIT_LABELS = { once:'한 번', daily:'매일', w1:'주 1회', w2:'주 2~3회', w4:'주 4~5회', w6:'주 6회', health_sleep:'🌙 수면 자동', health_workout:'💪 운동 자동' };
-const UNIT_FREQ   = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6, health_sleep:7, health_workout:2 };
 const HEALTH_UNITS = ['health_sleep','health_workout'];
+// 구버전 unit 마이그레이션
+const LEGACY_UNIT_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
+function migrateGoal(g){
+  if(!g) return g;
+  if(LEGACY_UNIT_MAP[g.unit]){
+    return Object.assign({}, g, LEGACY_UNIT_MAP[g.unit]);
+  }
+  return g;
+}
+function getGoalFreq(g){
+  if(!g) return 1;
+  if(g.unit==='once') return 0;
+  if(g.unit==='daily') return getMonthDays(new Date().getFullYear(), new Date().getMonth()+1);
+  if(g.unit==='health_sleep') return 7;
+  if(g.unit==='health_workout') return 2;
+  return g.freq || 1; // weekly, biweekly
+}
+function getUnitLabel(g){
+  if(!g) return '';
+  if(g.unit==='once') return '한 번';
+  if(g.unit==='daily') return '매일';
+  if(g.unit==='health_sleep') return '🌙 수면 자동';
+  if(g.unit==='health_workout') return '💪 운동 자동';
+  if(g.unit==='weekly') return `주 ${g.freq}회`;
+  if(g.unit==='biweekly') return `2주 ${g.freq}회`;
+  return g.unit;
+}
 const MAX_GOALS   = 9;
 const TUT_STEPS   = 5;
 
@@ -885,7 +910,7 @@ let currentUser = null;
 let localDash = null;
 let activeGoalIdx = null;
 let viewMonth = null;
-let selectedUnit = {};
+// selectedUnit 제거됨 - selectedPeriod/selectedFreq로 대체
 // 튜토리얼 상태
 let tutState = { goalName:'', unit:'w4', checkedDays:new Set(), currentStep:1 };
 
@@ -1098,24 +1123,19 @@ window.adminSelectUser = async function(id) {
   // 목표별 진척률 계산
   function calcGoalPct(g, gi) {
     if(!g||!g.unit) return null;
-    const freq = UNIT_FREQ[g.unit]||1;
+    g = migrateGoal(g);
     if(g.unit==='once') {
       const done = completions[`g${gi}_once`]===true ? 1 : 0;
       return {done,mod:1,pct:done*100,streakMonths:0};
     }
-    const dim = new Date(curY,curM,0).getDate();
-    const weeks = Math.ceil(dim/7);
-    const mod = freq*weeks;
+    const mod = goalModulus(g, gi, curY, curM);
     const pfx=`g${gi}_${curY}_${curM}_`;
     const done = Object.entries(completions).filter(([k,v])=>k.startsWith(pfx)&&v===true).length;
     const pct = mod>0?Math.min(100,Math.round(done/mod*100)):0;
-    // 연속 달성 계산 (최근 3개월)
     let streak=0;
     for(let i=0;i<3;i++){
       let y=curY,m=curM-i; if(m<=0){m+=12;y--;}
-      const dim2=new Date(y,m,0).getDate();
-      const w2=Math.ceil(dim2/7);
-      const mod2=freq*w2;
+      const mod2=goalModulus(g,gi,y,m);
       const pfx2=`g${gi}_${y}_${m}_`;
       const done2=Object.entries(completions).filter(([k,v])=>k.startsWith(pfx2)&&v===true).length;
       const pct2=mod2>0?Math.min(100,Math.round(done2/mod2*100)):0;
@@ -1128,7 +1148,7 @@ window.adminSelectUser = async function(id) {
     if(!g||!g.title) return '';
     const stat = calcGoalPct(g,gi);
     if(!stat) return '';
-    const unitLabel = UNIT_LABELS[g.unit]||g.unit;
+    const unitLabel = getUnitLabel(g);
     const streakTag = stat.streakMonths>=2 ? `<span class="admin-goal-tag highlight">🔥 ${stat.streakMonths}개월 연속</span>` : '';
     const pctColor = stat.pct>=70?'var(--accent)':stat.pct>=40?'var(--accent2)':'var(--danger)';
     return `<div class="admin-goal-card">
@@ -1207,14 +1227,14 @@ function initTutorial() {
   const dots = document.getElementById('tutDots');
   dots.innerHTML = Array(TUT_STEPS).fill(0).map((_,i)=>`<div class="tut-dot ${i===0?'active':''}" id="tutDot${i+1}"></div>`).join('');
   updateTutProgress(1);
-  // 단위 선택지 렌더 - 주4~5회(w4)만 클릭 가능, 나머지 딤드
+  // 단위 선택지 렌더 - 주당 4회만 클릭 가능, 나머지 딤드
   const uopts = document.getElementById('tutUnitOpts');
-  uopts.innerHTML = Object.entries(UNIT_LABELS).map(([u,l])=>{
-    if(u === 'w4') {
-      return `<div class="unit-opt" onclick="tutPickUnit('w4')" style="animation:pulse-border 1.2s ease-in-out infinite;border-color:var(--accent);cursor:pointer;">${l}</div>`;
-    }
-    return `<div class="unit-opt" style="opacity:.25;pointer-events:none;cursor:not-allowed;">${l}</div>`;
-  }).join('');
+  uopts.innerHTML = `
+    <div class="unit-opt" onclick="tutPickUnit('weekly',4)" style="animation:pulse-border 1.2s ease-in-out infinite;border-color:var(--accent);cursor:pointer;">주 4회</div>
+    <div class="unit-opt" style="opacity:.25;pointer-events:none;cursor:not-allowed;">매일</div>
+    <div class="unit-opt" style="opacity:.25;pointer-events:none;cursor:not-allowed;">주 2회</div>
+    <div class="unit-opt" style="opacity:.25;pointer-events:none;cursor:not-allowed;">2주 3회</div>
+  `;
   buildTutCal();
 }
 
@@ -1233,8 +1253,9 @@ function updateTutProgress(step) {
 
 window.tutNextStep = function(n) { updateTutProgress(n); };
 
-window.tutPickUnit = function(u) {
+window.tutPickUnit = function(u, freq) {
   tutState.unit = u;
+  tutState.freq = freq || 1;
   // 선택 표시 후 즉시 다음 스텝
   const el = document.querySelector(`#tutUnitOpts .unit-opt[onclick*="${u}"]`);
   if(el) { el.classList.add('selected'); el.style.animation='none'; }
@@ -1309,7 +1330,7 @@ window.tutStep3Confirm = function() {
   const y=now.getFullYear(), m=now.getMonth()+1;
   const dim = new Date(y,m,0).getDate();
   const weeks = Math.ceil(dim/7);
-  const freq = UNIT_FREQ[tutState.unit]||4;
+  const freq = tutState.freq || 4;
   const mod = freq * weeks;
   const done = tutState.checkedDays.size;
   const pct = Math.min(100,Math.round(done/mod*100));
@@ -1334,7 +1355,7 @@ window.tutFinish = async function() {
   if(!localDash.completions) localDash.completions={};
 
   // 슬롯 0에 목표 등록
-  localDash.goals[0] = { title: tutState.goalName, unit: tutState.unit };
+  localDash.goals[0] = { title: tutState.goalName, unit: tutState.unit, freq: tutState.freq||4 };
 
   // 체크한 날짜 반영
   tutState.checkedDays.forEach(d=>{
@@ -1405,8 +1426,16 @@ function getMonthDays(y,m){ return new Date(y,m,0).getDate(); }
 function getMonthWeeks(y,m){ return Math.ceil(getMonthDays(y,m)/7); }
 function goalModulus(g,gi,y,m){
   if(!g||!g.unit||g.unit==='once') return 1;
-  if(g.unit==='daily') return getMonthDays(y,m);
-  return UNIT_FREQ[g.unit]*getMonthWeeks(y,m);
+  g = migrateGoal(g);
+  if(g.unit==='daily'||g.unit==='health_sleep') return getMonthDays(y,m);
+  if(g.unit==='health_workout') return 2 * getMonthWeeks(y,m);
+  if(g.unit==='weekly') return (g.freq||1) * getMonthWeeks(y,m);
+  if(g.unit==='biweekly') {
+    // 한 달을 2주 단위로 나눔 (4주 기준 → 2번의 2주 기간)
+    const biweeks = Math.ceil(getMonthDays(y,m) / 14);
+    return (g.freq||1) * biweeks;
+  }
+  return 1;
 }
 function goalDone(g,gi,y,m){
   if(!g||!g.unit) return 0;
@@ -1581,31 +1610,77 @@ function renderDetail(idx){
   else renderCalendar(panel,g,idx);
 }
 
-function renderUnitOpts(cid,cur,idx){
-  const c=document.getElementById(cid);
+// selectedUnit 대신 selectedPeriod, selectedFreq 사용
+const selectedPeriod = {}; // idx -> 'daily'|'weekly'|'biweekly'|'once'|'health_sleep'|'health_workout'
+const selectedFreq = {};   // idx -> number
+
+function getSelectedGoalSpec(idx){
+  const p = selectedPeriod[idx];
+  if(!p) return null;
+  if(p==='once'||p==='daily'||p==='health_sleep'||p==='health_workout') return {unit:p};
+  return {unit:p, freq: selectedFreq[idx]||1};
+}
+
+function renderUnitOpts(cid, cur, idx, curFreq){
+  const c = document.getElementById(cid);
   if(!c) return;
-  if(!selectedUnit[idx]) selectedUnit[idx]=cur||null;
-  const manualUnits = ['once','daily','w1','w2','w4','w6'];
-  const healthUnits = ['health_sleep','health_workout'];
-  const manualHtml = manualUnits.map(u=>
-    `<div class="unit-opt ${selectedUnit[idx]===u?'selected':''}" onclick="pickUnit('${u}',${idx},'${cid}')">${UNIT_LABELS[u]}</div>`
+  // 초기값 세팅
+  if(!selectedPeriod[idx]){
+    if(cur) { selectedPeriod[idx]=cur; selectedFreq[idx]=curFreq||1; }
+  }
+  const p = selectedPeriod[idx];
+  const periods = [
+    {key:'daily', label:'매일'},
+    {key:'weekly', label:'주당'},
+    {key:'biweekly', label:'2주당'},
+    {key:'once', label:'한 번'},
+  ];
+  const periodHtml = periods.map(({key,label})=>
+    `<div class="unit-opt ${p===key?'selected':''}" onclick="pickPeriod('${key}',${idx},'${cid}')" style="flex:1;">${label}</div>`
   ).join('');
-  const healthHtml = healthUnits.map(u=>
-    `<div class="unit-opt ${selectedUnit[idx]===u?'selected':''}" onclick="pickUnit('${u}',${idx},'${cid}')" style="${selectedUnit[idx]===u?'':'border-color:#a78bfa;color:#7c3aed;background:#faf5ff;'}">${UNIT_LABELS[u]}</div>`
-  ).join('');
-  c.innerHTML=`
-    ${manualHtml}
-    <div style="grid-column:1/-1;margin:8px 0 4px;font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:1px;">⌚ 애플워치 자동 연동</div>
+
+  let freqHtml = '';
+  if(p==='weekly'){
+    freqHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
+      ${[1,2,3,4,5,6,7].map(n=>`<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}" onclick="pickFreq(${n},${idx},'${cid}')" style="min-width:38px;padding:10px 4px;">${n}회</div>`).join('')}
+    </div>`;
+  } else if(p==='biweekly'){
+    freqHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
+      ${Array.from({length:14},(_,i)=>i+1).map(n=>`<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}" onclick="pickFreq(${n},${idx},'${cid}')" style="min-width:38px;padding:10px 4px;">${n}회</div>`).join('')}
+    </div>`;
+  }
+
+  const healthHtml = `
+    <div style="grid-column:1/-1;margin:12px 0 6px;font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:1px;">⌚ 애플워치 자동 연동</div>
+    <div style="display:flex;gap:8px;">
+      <div class="unit-opt ${p==='health_sleep'?'selected':''}" onclick="pickPeriod('health_sleep',${idx},'${cid}')" style="flex:1;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_sleep'?'#ede9fe':'#faf5ff'};">🌙 수면 자동</div>
+      <div class="unit-opt ${p==='health_workout'?'selected':''}" onclick="pickPeriod('health_workout',${idx},'${cid}')" style="flex:1;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_workout'?'#ede9fe':'#faf5ff'};">💪 운동 자동</div>
+    </div>`;
+
+  c.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:4px;">${periodHtml}</div>
+    ${freqHtml}
     ${healthHtml}
   `;
 }
-window.pickUnit=function(u,idx,cid){ selectedUnit[idx]=u; renderUnitOpts(cid,u,idx); };
+
+window.pickPeriod = function(key, idx, cid){
+  selectedPeriod[idx] = key;
+  if(key==='weekly' && !selectedFreq[idx]) selectedFreq[idx]=1;
+  if(key==='biweekly' && !selectedFreq[idx]) selectedFreq[idx]=1;
+  renderUnitOpts(cid, null, idx);
+};
+window.pickFreq = function(n, idx, cid){
+  selectedFreq[idx] = n;
+  renderUnitOpts(cid, null, idx);
+};
 
 window.confirmUnit=async function(idx){
-  const u=selectedUnit[idx];
-  if(!u){showToast('단위를 선택해주세요');return;}
+  const spec=getSelectedGoalSpec(idx);
+  if(!spec){showToast('단위를 선택해주세요');return;}
+  if((spec.unit==='weekly'||spec.unit==='biweekly')&&!spec.freq){showToast('횟수를 선택해주세요');return;}
   if(!localDash.goals[idx]) localDash.goals[idx]={};
-  localDash.goals[idx].unit=u;
+  Object.assign(localDash.goals[idx], spec);
   await saveDash();
   showToast('✅ 단위 설정 완료!');
   renderGoalGrid(); renderDetail(idx); renderGlobal(); renderAvatar();
@@ -1613,19 +1688,20 @@ window.confirmUnit=async function(idx){
 
 window.saveNewGoal=async function(idx){
   const title=(document.getElementById('newGoalTitle')||{}).value?.trim();
-  const u=selectedUnit[idx];
+  const spec=getSelectedGoalSpec(idx);
   if(!title){showToast('목표 이름을 입력하세요');return;}
-  if(!u){showToast('단위를 선택하세요');return;}
+  if(!spec){showToast('단위를 선택하세요');return;}
+  if((spec.unit==='weekly'||spec.unit==='biweekly')&&!spec.freq){showToast('횟수를 선택해주세요');return;}
   if(!localDash.goals[idx]) localDash.goals[idx]={};
   localDash.goals[idx].title=title;
-  localDash.goals[idx].unit=u;
+  Object.assign(localDash.goals[idx], spec);
   await saveDash();
   showToast('🎯 목표 등록!');
   renderGoalGrid(); renderDetail(idx); renderGlobal(); renderAvatar();
 };
 
 window.enterEditUnit=function(idx){
-  const goals=getAllGoals(); const g=goals[idx];
+  const goals=getAllGoals(); const g=migrateGoal(goals[idx]);
   const panel=document.getElementById('detailSection');
   panel.innerHTML=`<div class="unit-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -1638,19 +1714,23 @@ window.enterEditUnit=function(idx){
     <div class="unit-opts" id="unitOpts${idx}"></div>
     <button class="unit-confirm-btn" onclick="confirmEditGoal(${idx})">수정 완료</button>
   </div>`;
-  selectedUnit[idx]=g.unit;
-  renderUnitOpts(`unitOpts${idx}`,g.unit,idx);
+  selectedPeriod[idx]=g.unit;
+  selectedFreq[idx]=g.freq||1;
+  renderUnitOpts(`unitOpts${idx}`, g.unit, idx, g.freq);
 };
 
 window.confirmEditGoal=async function(idx){
   const titleEl=document.getElementById(`editGoalTitle${idx}`);
   const title=titleEl?titleEl.value.trim():'';
-  const u=selectedUnit[idx];
+  const spec=getSelectedGoalSpec(idx);
   if(!title){showToast('❌ 목표 이름을 입력하세요');return;}
-  if(!u){showToast('❌ 단위를 선택하세요');return;}
+  if(!spec){showToast('❌ 단위를 선택하세요');return;}
+  if((spec.unit==='weekly'||spec.unit==='biweekly')&&!spec.freq){showToast('❌ 횟수를 선택하세요');return;}
   if(!localDash.goals[idx]) localDash.goals[idx]={};
   localDash.goals[idx].title=title;
-  localDash.goals[idx].unit=u;
+  // 기존 freq 제거 후 새 spec 적용
+  delete localDash.goals[idx].freq;
+  Object.assign(localDash.goals[idx], spec);
   await saveDash();
   showToast('✅ 수정 완료!');
   renderGoalGrid(); renderDetail(idx);
@@ -1693,7 +1773,7 @@ function renderOnce(panel,g,idx){
     <div class="cal-header">
       <div class="cal-goal-name">${esc(g.title)}</div>
       <div class="cal-meta">
-        <div class="cal-unit-badge">${UNIT_LABELS[g.unit]}</div>
+        <div class="cal-unit-badge">${getUnitLabel(g)}</div>
         <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">수정</button>
       </div>
     </div>
@@ -1712,10 +1792,11 @@ window.toggleOnce=async function(idx){
 
 function renderCalendar(panel,g,idx,wrap){
   const target = wrap || panel;
+  g = migrateGoal(g);
   const now=new Date();
   const {year,month}=viewMonth;
   const {done,mod,pct}=goalPct(g,idx,year,month);
-  const freq=UNIT_FREQ[g.unit]||1;
+  const freq = (g.unit==='weekly'||g.unit==='biweekly') ? (g.freq||1) : (g.unit==='daily'?1: g.unit==='health_sleep'?1: g.unit==='health_workout'?1: 1);
   const firstDay=new Date(year,month-1,1).getDay();
   const dim=getMonthDays(year,month);
   const DAY=['일','월','화','수','목','금','토'];
@@ -1799,7 +1880,7 @@ function renderCalendar(panel,g,idx,wrap){
     <div class="cal-header">
       <div class="cal-goal-name">${esc(g.title)}</div>
       <div class="cal-meta">
-        <div class="cal-unit-badge">${UNIT_LABELS[g.unit]}</div>
+        <div class="cal-unit-badge">${getUnitLabel(g)}</div>
         <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">수정</button>
       </div>
     </div>
@@ -1964,8 +2045,8 @@ window.toggleDay=async function(idx,day){
   localDash.completions[k] = !wasDone;
   await saveDash();
 
-  const g = localDash.goals[idx];
-  const freq = UNIT_FREQ[g?.unit]||1;
+  const g = migrateGoal(localDash.goals[idx]);
+  const freq = (g?.unit==='weekly'||g?.unit==='biweekly') ? (g.freq||1) : 1;
 
   // 완료/해제 토스트
   if(!wasDone){
@@ -2366,10 +2447,8 @@ async function renderFriendsTab() {
     const goals = (dash.goals||[]).filter(g=>g&&g.unit&&g.unit!=='once');
     let td=0,tm=0;
     goals.forEach((g,gi)=>{
-      const freq=UNIT_FREQ[g.unit]||1;
-      const dim=new Date(curY,curM,0).getDate();
-      const weeks=Math.ceil(dim/7);
-      const mod=freq*weeks;
+      const mg=migrateGoal(g);
+      const mod=goalModulus(mg,gi,curY,curM);
       const pfx=`g${gi}_${curY}_${curM}_`;
       const done=Object.entries(completions).filter(([k,v])=>k.startsWith(pfx)&&v===true).length;
       td+=done; tm+=mod;
@@ -2406,10 +2485,8 @@ function buildFriendDetail(id) {
 
   const goalBtns = goals.map((g,gi)=>{
     if(!g||!g.title||!g.unit||g.unit==='once') return '';
-    const freq=UNIT_FREQ[g.unit]||1;
-    const dim=new Date(curY,curM,0).getDate();
-    const weeks=Math.ceil(dim/7);
-    const mod=freq*weeks;
+    const mg=migrateGoal(g);
+    const mod=goalModulus(mg,gi,curY,curM);
     const pfx=`g${gi}_${curY}_${curM}_`;
     const done=Object.entries(completions).filter(([k,v])=>k.startsWith(pfx)&&v===true).length;
     const pct=mod>0?Math.min(100,Math.round(done/mod*100)):0;

@@ -911,6 +911,91 @@ let localDash = null;
 let activeGoalIdx = null;
 let viewMonth = null;
 // selectedUnit 제거됨 - selectedPeriod/selectedFreq로 대체
+
+// Apple HealthKit 전체 운동 타입 (공식 문서 기준)
+const APPLE_WORKOUT_TYPES = [
+  {key:'americanFootball', label:'미식축구'},
+  {key:'archery', label:'양궁'},
+  {key:'australianFootball', label:'호주식 축구'},
+  {key:'badminton', label:'배드민턴'},
+  {key:'baseball', label:'야구'},
+  {key:'basketball', label:'농구'},
+  {key:'bowling', label:'볼링'},
+  {key:'boxing', label:'복싱'},
+  {key:'climbing', label:'클라이밍'},
+  {key:'cricket', label:'크리켓'},
+  {key:'crossTraining', label:'크로스 트레이닝'},
+  {key:'curling', label:'컬링'},
+  {key:'cycling', label:'사이클'},
+  {key:'dance', label:'댄스'},
+  {key:'elliptical', label:'일립티컬'},
+  {key:'equestrianSports', label:'승마'},
+  {key:'fencing', label:'펜싱'},
+  {key:'fishing', label:'낚시'},
+  {key:'functionalStrengthTraining', label:'기능성 근력 운동'},
+  {key:'golf', label:'골프'},
+  {key:'gymnastics', label:'체조'},
+  {key:'handball', label:'핸드볼'},
+  {key:'hiking', label:'하이킹'},
+  {key:'hockey', label:'하키'},
+  {key:'hunting', label:'헌팅'},
+  {key:'lacrosse', label:'라크로스'},
+  {key:'martialArts', label:'무술'},
+  {key:'mindAndBody', label:'마음 챙김'},
+  {key:'mixedCardio', label:'복합 유산소'},
+  {key:'paddleSports', label:'패들 스포츠'},
+  {key:'pilates', label:'필라테스'},
+  {key:'play', label:'놀이'},
+  {key:'preparationAndRecovery', label:'준비 및 회복'},
+  {key:'racquetball', label:'라켓볼'},
+  {key:'rowing', label:'조정'},
+  {key:'rugby', label:'럭비'},
+  {key:'running', label:'달리기'},
+  {key:'sailing', label:'항해'},
+  {key:'skatingSports', label:'스케이팅'},
+  {key:'snowSports', label:'설상 스포츠'},
+  {key:'soccer', label:'축구'},
+  {key:'softball', label:'소프트볼'},
+  {key:'squash', label:'스쿼시'},
+  {key:'stairClimbing', label:'계단 오르기'},
+  {key:'surfingSports', label:'서핑'},
+  {key:'swimming', label:'수영'},
+  {key:'tableTennis', label:'탁구'},
+  {key:'tennis', label:'테니스'},
+  {key:'trackAndField', label:'육상'},
+  {key:'traditionalStrengthTraining', label:'헬스 (근력 운동)'},
+  {key:'volleyball', label:'배구'},
+  {key:'walking', label:'걷기'},
+  {key:'waterFitness', label:'수중 피트니스'},
+  {key:'waterPolo', label:'수구'},
+  {key:'waterSports', label:'수상 스포츠'},
+  {key:'wrestling', label:'레슬링'},
+  {key:'yoga', label:'요가'},
+  {key:'barre', label:'바레'},
+  {key:'coreTraining', label:'코어 트레이닝'},
+  {key:'crossCountrySkiing', label:'크로스컨트리 스키'},
+  {key:'downhillSkiing', label:'다운힐 스키'},
+  {key:'flexibility', label:'유연성 운동'},
+  {key:'highIntensityIntervalTraining', label:'HIIT'},
+  {key:'jumpRope', label:'줄넘기'},
+  {key:'kickboxing', label:'킥복싱'},
+  {key:'snowboarding', label:'스노보딩'},
+  {key:'stairs', label:'스텝퍼'},
+  {key:'stepTraining', label:'스텝 트레이닝'},
+  {key:'wheelchairWalkPace', label:'휠체어 (걷기)'},
+  {key:'wheelchairRunPace', label:'휠체어 (달리기)'},
+  {key:'taiChi', label:'태극권'},
+  {key:'mixedMetabolicCardioTraining', label:'복합 대사 유산소'},
+  {key:'discSports', label:'디스크 스포츠'},
+  {key:'fitnessGaming', label:'피트니스 게임'},
+  {key:'cardioDance', label:'카디오 댄스'},
+  {key:'socialDance', label:'소셜 댄스'},
+  {key:'pickleball', label:'피클볼'},
+  {key:'cooldown', label:'쿨다운'},
+  {key:'swimBikeRun', label:'트라이애슬론'},
+  {key:'transition', label:'전환 운동'},
+  {key:'underwaterDiving', label:'수중 다이빙'},
+];
 // 튜토리얼 상태
 let tutState = { goalName:'', unit:'w4', checkedDays:new Set(), currentStep:1 };
 
@@ -1048,7 +1133,10 @@ async function syncHealthGoalIndex() {
   goals.forEach((g, i) => {
     if(!g) return;
     if(g.unit === 'health_sleep') healthGoals.sleep = i;
-    if(g.unit === 'health_workout') healthGoals.workout = i;
+    if(g.unit === 'health_workout') {
+      healthGoals.workout = i;
+      if(g.workoutType) healthGoals.workoutType = g.workoutType;
+    }
   });
   await set(ref(db, `users/${currentUser.id}/healthGoals`), healthGoals);
 }
@@ -1623,13 +1711,19 @@ function renderDetail(idx){
 }
 
 // selectedUnit 대신 selectedPeriod, selectedFreq 사용
-const selectedPeriod = {}; // idx -> 'daily'|'weekly'|'biweekly'|'once'|'health_sleep'|'health_workout'
-const selectedFreq = {};   // idx -> number
+const selectedPeriod = {};
+const selectedFreq = {};
+const selectedWorkoutType = {}; // idx -> workout type key
 
 function getSelectedGoalSpec(idx){
   const p = selectedPeriod[idx];
   if(!p) return null;
-  if(p==='once'||p==='daily'||p==='health_sleep'||p==='health_workout') return {unit:p};
+  if(p==='once'||p==='daily'||p==='health_sleep') return {unit:p};
+  if(p==='health_workout'){
+    const wt = selectedWorkoutType[idx];
+    if(!wt) return null; // 운동 타입 필수
+    return {unit:p, workoutType:wt};
+  }
   return {unit:p, freq: selectedFreq[idx]||1};
 }
 
@@ -1680,9 +1774,41 @@ function renderUnitOpts(cid, cur, idx, curFreq){
         style="padding:14px 4px;font-size:14px;text-align:center;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_sleep'?'#ede9fe':'#faf5ff'};">🌙 수면 자동</div>
       <div class="unit-opt ${p==='health_workout'?'selected':''}" onclick="pickPeriod('health_workout',${idx},'${cid}')"
         style="padding:14px 4px;font-size:14px;text-align:center;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_workout'?'#ede9fe':'#faf5ff'};">💪 운동 자동</div>
-    </div>`;
+    </div>
+    ${p==='health_workout' ? renderWorkoutTypePicker(idx, cid) : ''}
+  `;
 
   c.innerHTML = periodHtml + freqHtml + healthHtml;
+}
+
+function renderWorkoutTypePicker(idx, cid){
+  const selected = selectedWorkoutType[idx];
+  const selectedLabel = selected ? (APPLE_WORKOUT_TYPES.find(t=>t.key===selected)?.label||selected) : '';
+  return `
+    <div style="margin-top:10px;">
+      <div style="font-size:12px;color:#7c3aed;font-weight:700;margin-bottom:6px;">운동 종목 선택 <span style="color:#ef4444;">*</span></div>
+      <div style="position:relative;">
+        <input id="workoutSearch${idx}"
+          type="text"
+          placeholder="종목 검색 (예: 헬스, 요가, 달리기)"
+          value="${selected ? selectedLabel : ''}"
+          oninput="filterWorkoutTypes(this.value,${idx},'${cid}')"
+          onfocus="showWorkoutDropdown(${idx},'${cid}')"
+          style="width:100%;background:#fff;border:2px solid ${selected?'#7c3aed':'var(--border)'};border-radius:10px;padding:10px 13px;font-size:13px;font-family:'Noto Sans KR',sans-serif;color:var(--text);outline:none;box-sizing:border-box;">
+        ${selected ? `<div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:16px;">✓</div>` : ''}
+      </div>
+      <div id="workoutDropdown${idx}" style="display:none;max-height:200px;overflow-y:auto;border:1.5px solid #c4b5fd;border-radius:10px;margin-top:4px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.1);">
+        ${APPLE_WORKOUT_TYPES.map(t=>
+          `<div onclick="selectWorkoutType('${t.key}','${t.label}',${idx},'${cid}')"
+            style="padding:10px 14px;font-size:13px;cursor:pointer;${selected===t.key?'background:#ede9fe;color:#7c3aed;font-weight:700;':''}
+            border-bottom:1px solid #f3f4f6;"
+            onmouseover="this.style.background='#faf5ff'"
+            onmouseout="this.style.background='${selected===t.key?'#ede9fe':'#fff'}'">
+            ${t.label}
+          </div>`
+        ).join('')}
+      </div>
+    </div>`;
 }
 
 window.pickPeriod = function(key, idx, cid){
@@ -1694,6 +1820,43 @@ window.pickPeriod = function(key, idx, cid){
 window.pickFreq = function(n, idx, cid){
   selectedFreq[idx] = n;
   renderUnitOpts(cid, null, idx);
+};
+window.showWorkoutDropdown = function(idx, cid){
+  const dd = document.getElementById(`workoutDropdown${idx}`);
+  if(dd) dd.style.display='block';
+};
+window.filterWorkoutTypes = function(query, idx, cid){
+  const dd = document.getElementById(`workoutDropdown${idx}`);
+  if(!dd) return;
+  dd.style.display='block';
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? APPLE_WORKOUT_TYPES.filter(t=>t.label.toLowerCase().includes(q)||t.key.toLowerCase().includes(q))
+    : APPLE_WORKOUT_TYPES;
+  const selected = selectedWorkoutType[idx];
+  dd.innerHTML = filtered.length
+    ? filtered.map(t=>
+        `<div onclick="selectWorkoutType('${t.key}','${t.label}',${idx},'${cid}')"
+          style="padding:10px 14px;font-size:13px;cursor:pointer;${selected===t.key?'background:#ede9fe;color:#7c3aed;font-weight:700;':''}border-bottom:1px solid #f3f4f6;"
+          onmouseover="this.style.background='#faf5ff'"
+          onmouseout="this.style.background='${selected===t.key?'#ede9fe':'#fff'}'">
+          ${t.label}
+        </div>`
+      ).join('')
+    : `<div style="padding:12px 14px;font-size:13px;color:var(--text-dim);">검색 결과 없음</div>`;
+};
+window.selectWorkoutType = function(key, label, idx, cid){
+  selectedWorkoutType[idx] = key;
+  const input = document.getElementById(`workoutSearch${idx}`);
+  if(input) input.value = label;
+  const dd = document.getElementById(`workoutDropdown${idx}`);
+  if(dd) dd.style.display='none';
+  renderUnitOpts(cid, null, idx);
+  // 드롭다운 닫기 후 input 복원
+  setTimeout(()=>{
+    const inp = document.getElementById(`workoutSearch${idx}`);
+    if(inp) inp.value = label;
+  }, 50);
 };
 
 window.confirmUnit=async function(idx){
@@ -1712,7 +1875,7 @@ window.saveNewGoal=async function(idx){
   const title=(document.getElementById('newGoalTitle')||{}).value?.trim();
   const spec=getSelectedGoalSpec(idx);
   if(!title){showToast('목표 이름을 입력하세요');return;}
-  if(!spec){showToast('단위를 선택하세요');return;}
+  if(!spec){showToast(selectedPeriod[idx]==='health_workout'?'운동 종목을 선택하세요':'단위를 선택하세요');return;}
   if((spec.unit==='weekly'||spec.unit==='biweekly')&&!spec.freq){showToast('횟수를 선택해주세요');return;}
   if(!localDash.goals[idx]) localDash.goals[idx]={};
   localDash.goals[idx].title=title;
@@ -1739,6 +1902,7 @@ window.enterEditUnit=function(idx){
   </div>`;
   selectedPeriod[idx]=g.unit;
   selectedFreq[idx]=g.freq||1;
+  if(g.workoutType) selectedWorkoutType[idx]=g.workoutType;
   renderUnitOpts(`unitOpts${idx}`, g.unit, idx, g.freq);
 };
 

@@ -414,7 +414,7 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .friend-name{font-weight:700;font-size:14px;margin-bottom:3px;color:var(--text);}
 .friend-stage{font-size:11px;color:var(--text-dim);}
 .friend-pct{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);flex-shrink:0;}
-.friend-detail{border:2px solid rgba(25,82,245,.2);border-radius:var(--radius);padding:16px;margin-top:8px;background:var(--accent-light);}
+.friend-detail{border:2px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:8px;background:#fff;}
 .friend-detail-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .friend-detail-name{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:1px;color:var(--text);}
 .fgoal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
@@ -1538,6 +1538,7 @@ function renderCalendar(panel,g,idx){
   const curY=now.getFullYear(), curM=now.getMonth()+1;
   const isEditableMonth = (year===curY && month===curM) ||
     (year===(curM===1?curY-1:curY) && month===(curM===1?12:curM-1));
+  const isCur=year===curY&&month===curM;
 
   let weeks=[]; let week=[];
   for(let i=0;i<firstDay;i++) week.push(0);
@@ -1603,7 +1604,6 @@ function renderCalendar(panel,g,idx){
         </div>
       </div>`;
   }
-  const isCur=year===now.getFullYear()&&month===now.getMonth()+1;
   const lockBanner = !isEditableMonth
     ? `<div style="display:flex;align-items:center;gap:8px;background:rgba(241,53,53,.08);border:1px solid rgba(241,53,53,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text-dim);">
         <span>🔒</span><span>전전월 이전 데이터는 조회만 가능해요</span>

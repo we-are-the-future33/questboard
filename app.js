@@ -371,7 +371,7 @@ function summarizeMyData() {
 
 function buildAnalysisPrompt() {
   const summary = summarizeMyData();
-  return `당신은 습관/목표 분석 전문가입니다. 아래는 한 사용자가 '목표 달성 앱'에 등록한 습관과 도전 데이터 요약입니다.
+  return `당신은 습관/목표 분석 전문가입니다. 아래는 한 사용자가 '키웁'에 등록한 습관과 도전 데이터 요약입니다.
 
 ${summary}
 위 데이터를 바탕으로 아래 항목들을 상세하게 분석하고 조언해 주세요:
@@ -437,6 +437,60 @@ window.copyAnalysisPrompt = async function () {
   }
 };
 
+// ===== SETTINGS =====
+const FONT_SIZES = [
+  { label: '아주 작게', scale: 0.85 },
+  { label: '작게', scale: 0.92 },
+  { label: '보통', scale: 1.0 },
+  { label: '크게', scale: 1.08 },
+  { label: '아주 크게', scale: 1.16 },
+];
+
+function applyFontSize(level) {
+  const scale = FONT_SIZES[level].scale;
+  document.documentElement.style.setProperty('--font-scale', scale);
+  localStorage.setItem('qb_font_level', level);
+}
+
+function initFontSize() {
+  const saved = localStorage.getItem('qb_font_level');
+  if (saved !== null) {
+    const level = parseInt(saved);
+    const scale = FONT_SIZES[level]?.scale || 1.0;
+    document.documentElement.style.setProperty('--font-scale', scale);
+  }
+}
+initFontSize();
+
+window.openSettings = function () {
+  document.getElementById('bsTitle').textContent = '⚙️ 설정';
+  clearMetaTags();
+  const curLevel = parseInt(localStorage.getItem('qb_font_level') ?? '2');
+  let h = `<div style="padding:8px 0;">`;
+  h += `<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:16px;">글씨 크기</div>`;
+  h += `<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:12px;">`;
+  FONT_SIZES.forEach((f, i) => {
+    const sel = i === curLevel;
+    const sz = 11 + i * 2;
+    h += `<button class="font-size-btn ${sel ? 'selected' : ''}" onclick="setFontLevel(${i})" style="font-size:${sz}px;">가</button>`;
+  });
+  h += `</div>`;
+  h += `<div style="text-align:center;font-size:13px;color:var(--text-dim);font-weight:700;" id="fontLevelLabel">${FONT_SIZES[curLevel].label}</div>`;
+  h += `</div>`;
+  document.getElementById('bsBody').innerHTML = h;
+  openBS();
+};
+
+window.setFontLevel = function (level) {
+  applyFontSize(level);
+  // Update UI
+  document.querySelectorAll('.font-size-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === level);
+  });
+  document.getElementById('fontLevelLabel').textContent = FONT_SIZES[level].label;
+  showToast(`글씨 크기: ${FONT_SIZES[level].label}`, 'normal');
+};
+
 // ===== TAB =====
 window.switchTab = function (tab) {
   document.getElementById('tabBtnMy').classList.toggle('active', tab === 'my');
@@ -451,6 +505,9 @@ function renderDashboard() {
   const now = new Date();
   if (!viewMonth) viewMonth = { year: now.getFullYear(), month: now.getMonth() + 1 };
   renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers();
+  // jin 전용 어드민 메뉴
+  const adminEl = document.getElementById('adminMenuItem');
+  if (adminEl) adminEl.style.display = (currentUser && currentUser.id === 'jin') ? '' : 'none';
 }
 
 function renderAvatar() {
@@ -527,7 +584,7 @@ function generateHabitCardHtml(g, idx, y, m) {
         <div class="habit-card-mid">
           <div class="habit-card-unit">${getUnitLabel(mg)}</div>
           <div class="habit-card-streak ${streak > 0 ? '' : 'zero'}">
-            <span class="fire">🔥</span><span class="streak-num">${streakLbl}</span>
+            <span class="streak-num">${streakLbl}</span>
           </div>
         </div>
       </div>
@@ -1413,7 +1470,7 @@ function renderBSBody(idx) {
           <div class="wsb-title"><span class="wsb-badge" style="background:var(--accent);">${unitLabel}</span> 진행 중 🏃</div>
           <div class="wsb-desc">현재 ${curDone}회 완료! (앞으로 ${freq - curDone}번 더)</div>
         </div>
-        <div class="wsb-icon">🔥</div>
+        <div class="wsb-icon">🏃</div>
       </div>`;
     }
   }
@@ -1425,9 +1482,6 @@ function renderBSBody(idx) {
 
   // 달력 (주간 하이라이트 포함)
   html += renderCalendar(idx, g, y, m, canEdit);
-
-  // 월별 요약
-  html += `<div style="margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:12px;"><span style="font-size:13px;color:var(--text-dim);font-weight:700;">이번 달</span><div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${Math.min(pct,100)}%;background:linear-gradient(90deg,#1952f5,#a78bfa);border-radius:4px;"></div></div><span style="font-family:'Black Han Sans';font-size:16px;color:var(--accent);">${pct}%</span></div>`;
 
   // 6개월 통계
   html += renderStats6Month(idx, g);
@@ -1513,23 +1567,28 @@ function renderStats6Month(idx, g) {
   const now = new Date(); let months = [];
   for (let i = 5; i >= 0; i--) { let mm = now.getMonth() + 1 - i, yy = now.getFullYear(); while (mm < 1) { mm += 12; yy--; } months.push({ y: yy, m: mm }); }
   const pcts = months.map(({ y, m }) => goalPct(g, idx, y, m).pct);
-  const maxPct = Math.max(...pcts, 1);
+  const maxPct = Math.max(...pcts, 100); // 최소 100% 기준
   const avg = Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length);
+  const hasData = pcts.some(p => p > 0);
+  const chartH = 160;
 
   let h = `<div class="stats-section"><div class="stats-title">📊 6개월 추이</div><div class="stats-chart">`;
-  h += `<div class="stats-avg-line" style="bottom:${Math.min(avg / maxPct * 160, 160)}px;"></div>`;
+  if (hasData && avg > 0) {
+    const avgH = Math.max(8, avg / maxPct * chartH);
+    h += `<div class="stats-avg-line" style="bottom:${avgH}px;"></div>`;
+  }
   months.forEach(({ y, m }, i) => {
-    const p = pcts[i], barH = maxPct > 0 ? Math.max(4, p / maxPct * 160) : 4;
+    const p = pcts[i], barH = p > 0 ? Math.max(8, p / maxPct * chartH) : 4;
     const isCur = y === now.getFullYear() && m === now.getMonth() + 1;
-    h += `<div class="stats-bar-wrap"><div class="stats-bar-col"><div class="stats-bar ${isCur ? 'current-month' : 'past'}" style="height:${barH}px;"><span class="stats-bar-pct">${p}%</span></div></div><div class="stats-bar-lbl ${isCur ? 'current' : ''}">${m}월</div></div>`;
+    h += `<div class="stats-bar-wrap"><div class="stats-bar-col"><div class="stats-bar ${isCur ? 'current-month' : 'past'}" style="height:${barH}px;${p === 0 ? 'opacity:0.3;' : ''}"><span class="stats-bar-pct">${p}%</span></div></div><div class="stats-bar-lbl ${isCur ? 'current' : ''}">${m}월</div></div>`;
   });
   h += `</div>`;
-  // 인사이트
   const curPct = pcts[5], prevPct = pcts[4], diff = curPct - prevPct;
   h += `<div class="stats-insight">`;
   h += `<div class="stats-insight-row"><span class="stats-insight-icon">📈</span><span class="stats-insight-text">6개월 평균 <strong>${avg}%</strong></span></div>`;
-  if (diff > 0) h += `<div class="stats-insight-row"><span class="stats-insight-icon">🔥</span><span class="stats-insight-text">지난달보다 <strong>+${diff}%p</strong> 상승!</span></div>`;
+  if (diff > 0) h += `<div class="stats-insight-row"><span class="stats-insight-icon">🚀</span><span class="stats-insight-text">지난달보다 <strong>+${diff}%p</strong> 상승!</span></div>`;
   else if (diff < 0) h += `<div class="stats-insight-row"><span class="stats-insight-icon">💪</span><span class="stats-insight-text">지난달보다 <strong>${diff}%p</strong> — 다시 힘내요!</span></div>`;
+  if (!hasData) h += `<div class="stats-insight-row"><span class="stats-insight-icon">🌱</span><span class="stats-insight-text">아직 기록이 없어요. 오늘부터 시작해볼까요?</span></div>`;
   h += `</div></div>`;
   return h;
 }
@@ -1965,6 +2024,12 @@ const ADMIN_UNIT_FREQ = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6 };
 let _adminUsers = {}, _adminDash = {}, _adminGroups = {};
 let _adminDetailTab = 'habit';
 
+window.openAdminPanel = function () {
+  if (!currentUser || currentUser.id !== 'jin') return;
+  showScreen('adminScreen');
+  renderAdminList();
+};
+
 async function renderAdminList() {
   try {
     const [uSnap, dSnap, gSnap] = await Promise.all([
@@ -2306,7 +2371,7 @@ function buildHamster(container) {
   }
 
   // --- 이모지 파티클 시스템 ---
-  const emojiPool = ['❤️','⭐','🌟','✨','💖','🎉','🔥','💕','🌈','🍀'];
+  const emojiPool = ['❤️','⭐','🌟','✨','💖','🎉','💕','🌈','🍀','👏'];
   function spawnEmoji(cx, cy) {
     for (let i = 0; i < 6; i++) {
       const em = document.createElement('div');

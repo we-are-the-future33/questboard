@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
-<title>동물 키우기 - 목표 달성 게임</title>
+<title>키웁 - 성장 게임</title>
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="키웁">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com">
@@ -15,7 +21,7 @@
 <!-- LOADING -->
 <div id="loadingScreen" class="screen active">
   <div class="mobile-wrap">
-    <div class="loading-logo">동물 키우기</div>
+    <div class="loading-logo">키웁</div>
     <div class="loading-spinner"></div>
   </div>
 </div>
@@ -27,8 +33,8 @@
     <div class="login-top-bg"></div>
     <div class="login-hero">
       <div class="login-logo">🐣</div>
-      <div class="login-title">동물 키우기</div>
-      <div class="login-sub">목표 달성 게임</div>
+      <div class="login-title">키웁</div>
+      <div class="login-sub">성장 게임</div>
     </div>
     <div class="login-bottom-area">
       <div class="login-card">
@@ -51,7 +57,7 @@
 <div id="adminScreen" class="screen">
   <div class="mobile-wrap" style="max-width:900px;">
     <nav class="topnav">
-      <div class="nav-logo">동물 키우기 <span class="nav-badge">ADMIN</span></div>
+      <div class="nav-logo">키웁 <span class="nav-badge">ADMIN</span></div>
       <div class="nav-right"><button class="btn-sm" onclick="doLogout()">로그아웃</button></div>
     </nav>
     <div class="page-pad" style="padding-bottom:60px;">
@@ -163,7 +169,7 @@
 <div id="dashboardScreen" class="screen">
   <div class="mobile-wrap">
     <nav class="topnav">
-      <div class="nav-logo">동물 키우기</div>
+      <div class="nav-logo">키웁</div>
       <div class="nav-right">
         <span class="nav-user" id="navUserName"></span>
         <div class="hamburger-wrap">
@@ -172,6 +178,8 @@
           </button>
           <div class="hamburger-menu" id="hamburgerMenu">
             <button class="hamburger-item" onclick="openAboutMe(); toggleHamburger();">🔍 나 알아보기</button>
+            <button class="hamburger-item" onclick="openSettings(); toggleHamburger();">⚙️ 설정</button>
+            <button class="hamburger-item" id="adminMenuItem" style="display:none;" onclick="openAdminPanel(); toggleHamburger();">🔧 어드민 기능</button>
             <button class="hamburger-item" onclick="doLogout()">🚪 로그아웃</button>
           </div>
         </div>
@@ -189,8 +197,8 @@
       </div>
       <!-- 나의 목표 탭 -->
       <div class="tab-panel active" id="tabMy">
-        <div class="avatar-section" style="padding-top:8px;padding-bottom:8px;">
-          <div class="avatar-art" id="avatarArt" style="margin-bottom:4px;"></div>
+        <div class="avatar-section">
+          <div class="avatar-art" id="avatarArt"></div>
           <div class="avatar-stage" id="avatarStage" style="margin-bottom:4px;">1단계</div>
           <div class="avatar-nickname-row" id="avatarNicknameRow">
             <div class="avatar-nickname" id="avatarNickname">나의 캐릭터</div>

@@ -59,6 +59,30 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .nav-logo{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);letter-spacing:2px;}
 .nav-badge{font-size:10px;color:var(--accent2);margin-left:5px;}
 .nav-right{display:flex;align-items:center;gap:8px;}
+/* 글씨 크기 설정 */
+:root{--font-scale:1;}
+.mobile-wrap{font-size:calc(14px * var(--font-scale));}
+.mobile-wrap .habit-card-title,.mobile-wrap .challenge-card-title{font-size:calc(15px * var(--font-scale));}
+.mobile-wrap .habit-card-unit,.mobile-wrap .challenge-card-type,.mobile-wrap .habit-card-streak{font-size:calc(11px * var(--font-scale));}
+.mobile-wrap .habit-card-pct,.mobile-wrap .challenge-card-pct{font-size:calc(13px * var(--font-scale));}
+.mobile-wrap .section-hdr-title{font-size:calc(16px * var(--font-scale));}
+.mobile-wrap .group-header{font-size:calc(13px * var(--font-scale));}
+.mobile-wrap .bs-meta-chip{font-size:calc(11px * var(--font-scale));}
+.mobile-wrap .filter-pill{font-size:calc(12px * var(--font-scale));}
+.mobile-wrap .nav-user{font-size:calc(12px * var(--font-scale));}
+.mobile-wrap .tab-btn{font-size:calc(14px * var(--font-scale));}
+.mobile-wrap .sub-tab-btn{font-size:calc(14px * var(--font-scale));}
+.mobile-wrap .swipe-hint{font-size:calc(11px * var(--font-scale));}
+.mobile-wrap .wsb-title{font-size:calc(15px * var(--font-scale));}
+.mobile-wrap .wsb-desc{font-size:calc(12px * var(--font-scale));}
+.bottomsheet{font-size:calc(14px * var(--font-scale));}
+.mobile-wrap .chip-opt{font-size:calc(12px * var(--font-scale));}
+.mobile-wrap .proj-edit-input{font-size:calc(14px * var(--font-scale));}
+.mobile-wrap .stats-insight-text{font-size:calc(13px * var(--font-scale));}
+.mobile-wrap .hamburger-item{font-size:calc(14px * var(--font-scale));}
+.font-size-btn{flex:1;padding:10px 0;border-radius:10px;border:2px solid var(--border);background:#fff;color:var(--text-dim);font-weight:800;cursor:pointer;transition:all 0.2s;font-family:'Noto Sans KR',sans-serif;}
+.font-size-btn.selected{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+.font-size-btn:hover{border-color:var(--accent);}
 /* 햄버거 메뉴 */
 .hamburger-wrap{position:relative;}
 .hamburger-btn{background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;gap:4px;justify-content:center;}
@@ -86,9 +110,9 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .gb-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.25) 0%,transparent 60%);border-radius:100px;}
 
 /* 아바타 */
-.avatar-section{padding:8px 20px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;border-bottom:2px solid var(--border);}
-.avatar-art{width:280px;height:280px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;}
-.avatar-art canvas{width:280px!important;height:280px!important;}
+.avatar-section{padding:0 20px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;border-bottom:2px solid var(--border);}
+.avatar-art{width:220px;height:220px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;}
+.avatar-art canvas{width:220px!important;height:220px!important;}
 .avatar-stage{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:4px 10px;border-radius:8px;}
 .avatar-nickname-row{display:flex;align-items:center;justify-content:center;gap:8px;}
 .avatar-nickname{font-family:'Black Han Sans',sans-serif;font-size:24px;color:#111827;letter-spacing:1px;}
@@ -110,7 +134,7 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .goal-filter-btn.active{background:#fff;color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.08);}
 
 /* 습관/도전 서브탭 */
-.sub-tab-bar{display:flex;background:#f1f5f9;border-radius:14px;padding:4px;margin:0 20px;gap:4px;}
+.sub-tab-bar{display:flex;background:#f1f5f9;border-radius:14px;padding:4px;margin:0 20px;gap:4px;position:sticky;top:0;z-index:30;box-shadow:0 2px 6px rgba(0,0,0,0.04);}
 .sub-tab-btn{flex:1;padding:12px 0;border:none;border-radius:11px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;color:#9ca3af;background:transparent;transition:all .2s;}
 .sub-tab-btn.active{background:#fff;color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.08);}
 .sub-tab-panel{display:none;}

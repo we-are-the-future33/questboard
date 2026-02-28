@@ -130,9 +130,9 @@ body{background:#e8eeff;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 
 /* 아바타 */
 .avatar-section{padding:28px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;border-bottom:2px solid var(--border);}
-.avatar-art{width:200px;height:200px;flex-shrink:0;background:radial-gradient(circle at 50% 50%,#f7f1e3 0%,#e0d4c3 100%);border:3px solid var(--border);border-radius:28px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
-.avatar-art svg{width:130px;height:130px;}
-.avatar-art canvas{width:200px!important;height:200px!important;}
+.avatar-art{width:280px;height:280px;flex-shrink:0;background:transparent;border:none;border-radius:0;overflow:visible;display:flex;align-items:center;justify-content:center;box-shadow:none;}
+.avatar-art svg{width:260px;height:260px;}
+.avatar-art canvas{width:280px!important;height:280px!important;border-radius:0;}
 .avatar-stage{font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--accent);letter-spacing:2px;text-align:center;}
 .avatar-nickname-row{display:flex;align-items:center;justify-content:center;gap:8px;}
 .avatar-nickname{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--text);letter-spacing:1px;}
@@ -1879,7 +1879,7 @@ window.saveNickname=async function(){
 
 // ===== HAMSTER AVATAR (Three.js) =====
 async function initHamsterAvatar(container) {
-  const W = 200, H = 200;
+  const W = 280, H = 280;
   const _THREE = await import('https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js');
 
   const scene = new _THREE.Scene();

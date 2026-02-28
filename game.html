@@ -1734,6 +1734,8 @@ function renderUnitOpts(cid, cur, idx, curFreq){
     if(cur) { selectedPeriod[idx]=cur; selectedFreq[idx]=curFreq||1; }
   }
   const p = selectedPeriod[idx];
+
+  // ── 1뎁스: 기간 선택 ──
   const periods = [
     {key:'daily', label:'매일'},
     {key:'weekly', label:'주당'},
@@ -1741,39 +1743,46 @@ function renderUnitOpts(cid, cur, idx, curFreq){
     {key:'once', label:'한 번'},
   ];
   const periodHtml = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
       ${periods.map(({key,label})=>
-        `<div class="unit-opt ${p===key?'selected':''}" onclick="pickPeriod('${key}',${idx},'${cid}')"
-          style="padding:14px 4px;font-size:14px;text-align:center;">${label}</div>`
+        `<div class="unit-opt ${p===key?'selected':''}"
+          onclick="pickPeriod('${key}',${idx},'${cid}')"
+          style="height:48px;display:flex;align-items:center;justify-content:center;font-size:14px;">${label}</div>`
       ).join('')}
     </div>`;
 
+  // ── 2뎁스: 횟수 선택 ──
   let freqHtml = '';
   if(p==='weekly'){
     freqHtml = `
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px;">
         ${[1,2,3,4,5,6,7].map(n=>
-          `<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}" onclick="pickFreq(${n},${idx},'${cid}')"
-            style="padding:12px 4px;font-size:13px;text-align:center;">${n}회</div>`
+          `<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}"
+            onclick="pickFreq(${n},${idx},'${cid}')"
+            style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;">${n}회</div>`
         ).join('')}
       </div>`;
   } else if(p==='biweekly'){
     freqHtml = `
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px;">
         ${Array.from({length:14},(_,i)=>i+1).map(n=>
-          `<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}" onclick="pickFreq(${n},${idx},'${cid}')"
-            style="padding:12px 4px;font-size:13px;text-align:center;">${n}회</div>`
+          `<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}"
+            onclick="pickFreq(${n},${idx},'${cid}')"
+            style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;">${n}회</div>`
         ).join('')}
       </div>`;
   }
 
+  // ── 애플워치 섹션 ──
   const healthHtml = `
-    <div style="margin:14px 0 6px;font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:1px;">⌚ 애플워치 자동 연동</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div class="unit-opt ${p==='health_sleep'?'selected':''}" onclick="pickPeriod('health_sleep',${idx},'${cid}')"
-        style="padding:14px 4px;font-size:14px;text-align:center;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_sleep'?'#ede9fe':'#faf5ff'};">🌙 수면 자동</div>
-      <div class="unit-opt ${p==='health_workout'?'selected':''}" onclick="pickPeriod('health_workout',${idx},'${cid}')"
-        style="padding:14px 4px;font-size:14px;text-align:center;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_workout'?'#ede9fe':'#faf5ff'};">💪 운동 자동</div>
+    <div style="margin-bottom:8px;font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:1px;">⌚ 애플워치 자동 연동</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:${p==='health_workout'?'12px':'0'};">
+      <div class="unit-opt ${p==='health_sleep'?'selected':''}"
+        onclick="pickPeriod('health_sleep',${idx},'${cid}')"
+        style="height:48px;display:flex;align-items:center;justify-content:center;font-size:14px;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_sleep'?'#ede9fe':'#faf5ff'};">🌙 수면 자동</div>
+      <div class="unit-opt ${p==='health_workout'?'selected':''}"
+        onclick="pickPeriod('health_workout',${idx},'${cid}')"
+        style="height:48px;display:flex;align-items:center;justify-content:center;font-size:14px;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_workout'?'#ede9fe':'#faf5ff'};">💪 운동 자동</div>
     </div>
     ${p==='health_workout' ? renderWorkoutTypePicker(idx, cid) : ''}
   `;

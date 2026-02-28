@@ -202,11 +202,43 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .cal-today .cal-dn{color:var(--accent);}
 .cal-dn{font-size:11px;font-weight:700;color:var(--text);}
 .cal-chk{font-size:10px;opacity:0;}
-.month-stat{background:#fff;border:2px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);}
-.ms-label{font-size:12px;color:var(--text-dim);white-space:nowrap;font-weight:700;}
-.ms-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
-.ms-fill{height:100%;background:linear-gradient(90deg,var(--accent),#6b8fff);border-radius:3px;transition:width .5s;}
-.ms-nums{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--accent);white-space:nowrap;}
+.month-stat{background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px 18px;margin-top:12px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sm);}
+.month-stat-top{margin-top:0;margin-bottom:16px;background:linear-gradient(135deg,var(--accent-light),#fff0f8);border-color:rgba(25,82,245,.18);}
+.ms-label{font-size:13px;color:var(--text-dim);white-space:nowrap;font-weight:700;}
+.ms-track{flex:1;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden;}
+.ms-fill{height:100%;background:linear-gradient(90deg,#1952f5,#a78bfa,#ff5e7d);border-radius:5px;transition:width .6s ease;}
+.ms-nums{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);white-space:nowrap;}
+
+/* 폰트 위계 개선 */
+.cal-goal-name{font-family:'Black Han Sans',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);}
+.cal-unit-badge{background:var(--accent-light);border:2px solid rgba(25,82,245,.2);border-radius:100px;padding:5px 13px;font-size:13px;color:var(--accent);font-weight:700;}
+.edit-unit-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:7px 16px;font-size:13px;font-weight:700;font-family:'LINESeedKR',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(25,82,245,.22);}
+.month-label{font-family:'Black Han Sans',sans-serif;font-size:17px;letter-spacing:1px;color:var(--text);}
+.month-nav-btn{background:#fff;border:2px solid var(--border);color:var(--text);border-radius:10px;padding:7px 16px;font-size:16px;cursor:pointer;font-weight:700;transition:all .2s;}
+.cal-day-lbl{text-align:center;font-size:12px;color:var(--text-dim);padding:3px 0;font-weight:700;}
+.cal-dn{font-size:13px;font-weight:700;color:var(--text);}
+.cal-cell.done .cal-dn{color:#fff;}
+.goal-btn-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.goal-btn-pct{font-family:'Black Han Sans',sans-serif;font-size:19px;color:var(--accent);}
+.goal-btn-need{font-size:11px;color:var(--text-dim);margin-top:4px;}
+.avatar-nickname{font-family:'Black Han Sans',sans-serif;font-size:24px;color:var(--text);letter-spacing:1px;}
+.avatar-stage{font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--accent);letter-spacing:2px;text-align:center;}
+.avatar-msg{font-size:14px;color:var(--text-dim);line-height:1.6;text-align:center;max-width:260px;}
+.goals-section-title{font-family:'Black Han Sans',sans-serif;font-size:17px;letter-spacing:2px;color:var(--text-dim);}
+.nav-logo{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);letter-spacing:2px;}
+.nav-user{font-size:13px;color:var(--text-dim);font-weight:700;}
+.btn-sm{background:var(--surface2);border:2px solid var(--border);color:var(--text-dim);border-radius:8px;padding:6px 14px;font-size:13px;font-family:'LINESeedKR',sans-serif;cursor:pointer;transition:all .2s;font-weight:700;}
+.tab-btn{flex:1;padding:14px 0;font-size:14px;font-weight:700;font-family:'LINESeedKR',sans-serif;background:#fff;border:none;color:var(--text-dim);cursor:pointer;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;margin-bottom:-2px;}
+.friend-name{font-weight:700;font-size:15px;margin-bottom:3px;color:var(--text);}
+.friend-stage{font-size:12px;color:var(--text-dim);}
+.friend-pct{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--accent);flex-shrink:0;}
+.stats-title{font-family:'Black Han Sans',sans-serif;font-size:14px;letter-spacing:2px;color:var(--text-dim);margin-bottom:16px;}
+.stats-bar-pct{font-size:10px;color:var(--text-dim);position:absolute;top:-16px;left:50%;transform:translateX(-50%);white-space:nowrap;font-weight:700;}
+.stats-bar-lbl{font-size:10px;color:var(--text-dim);margin-top:4px;white-space:nowrap;font-weight:700;}
+.stats-insight-text{font-size:13px;color:var(--text);line-height:1.7;}
+.cheer-from{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:3px;}
+.cheer-text{font-size:13px;color:var(--text);line-height:1.5;}
+.cheer-time{font-size:11px;color:var(--text-dim);margin-top:3px;}
 .once-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:28px;text-align:center;box-shadow:var(--shadow-sm);}
 .once-sub{color:var(--text-dim);font-size:12px;margin-bottom:24px;}
 .once-btn{background:#fff;border:3px solid var(--border);border-radius:50%;width:80px;height:80px;font-size:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:var(--shadow-sm);}
@@ -1415,6 +1447,11 @@ function renderCalendar(panel,g,idx){
         <button class="edit-unit-btn" onclick="enterEditUnit(${idx})">수정</button>
       </div>
     </div>
+    <div class="month-stat month-stat-top">
+      <div class="ms-label">이달 진척</div>
+      <div class="ms-track"><div class="ms-fill" style="width:${pct}%"></div></div>
+      <div class="ms-nums">${done}/${mod} · ${pct}%</div>
+    </div>
     <div class="month-nav">
       <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
       <div class="month-label">${year}년 ${month}월</div>
@@ -1422,11 +1459,6 @@ function renderCalendar(panel,g,idx){
     </div>
     ${lockBanner}
     ${calHtml}
-    <div class="month-stat">
-      <div class="ms-label">이달 진척</div>
-      <div class="ms-track"><div class="ms-fill" style="width:${pct}%"></div></div>
-      <div class="ms-nums">${done}/${mod} · ${pct}%</div>
-    </div>
     ${renderStats(g,idx)}`;
 }
 // ===== STATS =====

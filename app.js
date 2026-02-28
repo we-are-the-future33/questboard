@@ -307,6 +307,37 @@ function renderHabitCards() {
   let filtered = habitFilter === 'active' ? valid.filter(({ g, idx }) => isGoalActiveThisWeek(g, idx)) : valid;
   document.getElementById('habitCount').textContent = valid.length;
 
+  // 동적 정렬: 미완료 우선, 완료 후순
+  const now2 = new Date();
+  filtered = filtered.map(item => {
+    const { g, idx } = item;
+    const mg = migrateGoal(g);
+    const isOnce = mg.unit === 'once';
+    const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
+    const isDone = localDash.completions[todayKey] === true || (isOnce && localDash.completions[`g${idx}_once`]);
+    // 최근 완료 타임스탬프 (completions에서 가장 최근 날짜)
+    let lastDoneTs = 0;
+    Object.keys(localDash.completions).forEach(k => {
+      if (!k.startsWith(`g${idx}_`) || localDash.completions[k] !== true) return;
+      const parts = k.split('_');
+      if (parts.length === 4) {
+        const d = new Date(+parts[1], +parts[2] - 1, +parts[3]);
+        if (d.getTime() > lastDoneTs) lastDoneTs = d.getTime();
+      }
+    });
+    return { ...item, isDone, lastDoneTs, createdIdx: idx };
+  });
+  filtered.sort((a, b) => {
+    // 미완료 먼저
+    if (a.isDone !== b.isDone) return a.isDone ? 1 : -1;
+    if (!a.isDone && !b.isDone) {
+      // 미완료끼리: 최근 완료한 순 (lastDoneTs 큰 게 위)
+      return b.lastDoneTs - a.lastDoneTs;
+    }
+    // 완료끼리: 최근 등록한 순 (idx 큰 게 위)
+    return b.createdIdx - a.createdIdx;
+  });
+
   let html = '';
   filtered.forEach(({ g, idx }) => {
     const mg = migrateGoal(g), { pct } = goalPct(mg, idx, y, m);
@@ -454,20 +485,23 @@ function renderChallengeCards() {
       const done = c.done === true;
       html += `<div class="challenge-card-outer" id="ccOuter_${idx}">
         <div class="challenge-swipe-bg ${done ? 'done' : 'todo'}">
-          <div class="swipe-bg-text">${done ? '↩ 해제' : '✓ 완료'}</div>
+          <div class="swipe-bg-text">${done ? '↩ 취소' : '✓ 완료'}</div>
         </div>
-        <div class="challenge-card type-bucket ${done ? 'bucket-done swiping-target' : ''}" id="cc_${idx}" data-idx="${idx}">
+        <div class="challenge-card type-bucket ${done ? 'bucket-done' : ''}" id="cc_${idx}" data-idx="${idx}">
+          ${done ? '<div class="challenge-card-done-badge">✓</div>' : ''}
           <div>
             <div class="challenge-card-title">${esc(c.title)}</div>
             <span class="challenge-card-type bucket">버킷리스트</span>
           </div>
-          ${done ? '<div><span class="challenge-card-sparkle">✨</span><div class="challenge-card-achieve">내 인생의 성취</div></div>' : '<div></div>'}
+          ${done ? '<div><div class="challenge-card-achieve">달성 완료</div></div>' : '<div></div>'}
         </div>
       </div>`;
     } else {
       // project
       const { done, total, pct } = getProjectProgress(c);
-      html += `<div class="challenge-card type-project" id="cc_${idx}" data-idx="${idx}" onclick="openProjectDetail(${idx})">
+      const projDone = pct >= 100;
+      html += `<div class="challenge-card type-project ${projDone ? 'project-done' : ''}" id="cc_${idx}" data-idx="${idx}" onclick="openProjectDetail(${idx})">
+        ${projDone ? '<div class="challenge-card-done-badge">✓</div>' : ''}
         <div>
           <div class="challenge-card-title">${esc(c.title)}</div>
           <span class="challenge-card-type project">프로젝트</span>
@@ -543,7 +577,7 @@ async function swipeBucket(idx) {
   localDash.challenges[idx].done = !wasDone;
   await saveDash();
   if (!wasDone) { showToast('🎉 버킷리스트 달성!', 'done'); showConfetti(); }
-  else { showToast('↩️ 해제', 'undo'); }
+  else { showToast('↩️ 취소', 'undo'); }
   renderChallengeCards();
 }
 

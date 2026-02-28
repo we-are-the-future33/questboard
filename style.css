@@ -120,8 +120,8 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 
 /* 습관 카드 (스와이프) */
 .habit-card-outer{position:relative;overflow:hidden;border-radius:18px;}
-.habit-card-swipe-bg-left{position:absolute;top:0;left:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-end;padding-right:14px;border-radius:18px;background:#1952f5;}
-.habit-card-swipe-bg-right{position:absolute;top:0;right:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-start;padding-left:14px;border-radius:18px;background:#ff5e7d;}
+.habit-card-swipe-bg-left{position:absolute;top:0;left:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-start;padding-left:18px;border-radius:18px;background:#1952f5;}
+.habit-card-swipe-bg-right{position:absolute;top:0;right:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-end;padding-right:18px;border-radius:18px;background:#ff5e7d;}
 .habit-card-outer.swiping-right .habit-card-swipe-bg-left{display:flex;}
 .habit-card-outer.swiping-left .habit-card-swipe-bg-right{display:flex;}
 .swipe-bg-text{color:#fff;font-size:11px;font-weight:800;letter-spacing:1px;opacity:.9;}
@@ -161,32 +161,43 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .habit-card.completed .habit-card-mid{opacity:.5;}
 .habit-card.completed .habit-card-bot{opacity:.5;}
 
-/* 도전 카드 */
-.challenge-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.03);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;transition:all .2s;touch-action:pan-y;user-select:none;position:relative;}
-.challenge-card:active{box-shadow:var(--shadow);}
-.challenge-card.type-bucket{border-color:var(--accent2);border-left-width:4px;}
-.challenge-card.type-project{border-color:var(--accent);border-left-width:4px;}
-.challenge-card-title{font-size:14px;font-weight:800;color:#111827;margin-bottom:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+/* 도전 카드 - 파란 그라데이션 기본 */
+.challenge-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 8px 20px rgba(25,82,245,0.3);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;transition:all .2s;touch-action:pan-y;user-select:none;}
+.challenge-card:active{box-shadow:0 4px 10px rgba(25,82,245,0.4);transform:scale(0.96);}
+.challenge-card.type-bucket{border:none;}
+.challenge-card.type-project{border:none;}
+.challenge-card-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .challenge-card-type{font-size:10px;font-weight:700;border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:6px;}
-.challenge-card-type.bucket{background:#fff0f3;color:var(--accent2);border:1px solid rgba(255,94,125,.2);}
-.challenge-card-type.project{background:var(--accent-light);color:var(--accent);border:1px solid rgba(25,82,245,.2);}
-.challenge-card-progress{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--text-dim);}
-.challenge-card-bar{height:6px;background:#f1f5f9;border-radius:100px;overflow:hidden;margin-top:4px;}
+.challenge-card-type.bucket{background:rgba(255,255,255,0.25);color:#fff;border:none;}
+.challenge-card-type.project{background:rgba(255,255,255,0.25);color:#fff;border:none;}
+.challenge-card-progress{font-family:'Black Han Sans',sans-serif;font-size:13px;color:rgba(255,255,255,0.8);}
+.challenge-card-bar{height:8px;background:rgba(255,255,255,0.25);border-radius:100px;overflow:hidden;margin-top:4px;}
 .challenge-card-bar-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1);}
-.challenge-card-bar-fill.bucket{background:linear-gradient(90deg,#ff9eb5,#ff5e7d);}
-.challenge-card-bar-fill.project{background:linear-gradient(90deg,#60a5fa,#6366f1);}
-.challenge-card-pct{font-family:'Black Han Sans',sans-serif;font-size:13px;min-width:36px;text-align:right;}
-.challenge-card-pct.bucket{color:var(--accent2);}
-.challenge-card-pct.project{color:var(--accent);}
-.challenge-card.bucket-done{opacity:.5;}
-.challenge-card.bucket-done .challenge-card-title{text-decoration:line-through;color:#9ca3af;}
-.challenge-card-sparkle{position:absolute;top:10px;right:10px;font-size:20px;}
-.challenge-card-achieve{font-size:12px;color:var(--accent2);font-weight:700;margin-top:4px;}
+.challenge-card-bar-fill.bucket{background:#fff;}
+.challenge-card-bar-fill.project{background:#fff;}
+.challenge-card-pct{font-size:14px;font-weight:900;min-width:36px;text-align:right;}
+.challenge-card-pct.bucket{color:#fff;}
+.challenge-card-pct.project{color:#fff;}
+/* 버킷리스트 완료 - 민트/화이트 */
+.challenge-card.bucket-done{background:#fdfdfd;border:1px solid #d1fae5;box-shadow:none;opacity:1;}
+.challenge-card.bucket-done .challenge-card-title{text-decoration:none;color:#94a3b8;}
+.challenge-card.bucket-done .challenge-card-type.bucket{background:#ecfdf5;color:#10b981;}
+.challenge-card-done-badge{position:absolute;top:14px;right:14px;width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;box-shadow:0 2px 6px rgba(16,185,129,0.25);}
+.challenge-card-sparkle{display:none;}
+.challenge-card-achieve{font-size:12px;color:#34d399;font-weight:700;margin-top:4px;}
+/* 프로젝트 완료 */
+.challenge-card.project-done{background:#fdfdfd;border:1px solid #d1fae5;box-shadow:none;}
+.challenge-card.project-done .challenge-card-title{color:#94a3b8;}
+.challenge-card.project-done .challenge-card-type.project{background:#ecfdf5;color:#10b981;}
+.challenge-card.project-done .challenge-card-progress{color:#94a3b8;}
+.challenge-card.project-done .challenge-card-bar{background:#f8fafc;}
+.challenge-card.project-done .challenge-card-bar-fill.project{background:#6ee7b7;}
+.challenge-card.project-done .challenge-card-pct.project{color:#34d399;}
 /* 도전 카드 스와이프 (버킷리스트) */
 .challenge-card-outer{position:relative;overflow:hidden;border-radius:18px;}
-.challenge-swipe-bg{position:absolute;top:0;right:0;bottom:0;width:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:14px;border-radius:14px;}
-.challenge-swipe-bg.todo{background:linear-gradient(90deg,transparent 40%,var(--accent2));}
-.challenge-swipe-bg.done{background:linear-gradient(90deg,transparent 40%,#6b7280);}
+.challenge-swipe-bg{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;display:flex;align-items:center;border-radius:18px;}
+.challenge-swipe-bg.todo{background:#1952f5;justify-content:flex-start;padding-left:18px;}
+.challenge-swipe-bg.done{background:#ff5e7d;justify-content:flex-end;padding-right:18px;}
 .challenge-card.swiping{transition:none;position:relative;z-index:2;}
 .challenge-card.snapping{transition:transform .3s cubic-bezier(.4,0,.2,1);position:relative;z-index:2;}
 

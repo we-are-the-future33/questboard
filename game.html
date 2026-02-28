@@ -1041,6 +1041,18 @@ async function saveDash() {
   await set(ref(db,`dashboards/${currentUser.id}`),localDash);
 }
 
+async function syncHealthGoalIndex() {
+  // goals 배열 순회해서 health 타입 슬롯 인덱스를 별도 경로에 저장
+  const goals = getAllGoals();
+  const healthGoals = {};
+  goals.forEach((g, i) => {
+    if(!g) return;
+    if(g.unit === 'health_sleep') healthGoals.sleep = i;
+    if(g.unit === 'health_workout') healthGoals.workout = i;
+  });
+  await set(ref(db, `users/${currentUser.id}/healthGoals`), healthGoals);
+}
+
 // ===== ADMIN =====
 let adminUsers = {};
 let adminSelectedId = null;
@@ -1682,6 +1694,7 @@ window.confirmUnit=async function(idx){
   if(!localDash.goals[idx]) localDash.goals[idx]={};
   Object.assign(localDash.goals[idx], spec);
   await saveDash();
+  if(HEALTH_UNITS.includes(spec.unit)) await syncHealthGoalIndex();
   showToast('✅ 단위 설정 완료!');
   renderGoalGrid(); renderDetail(idx); renderGlobal(); renderAvatar();
 };
@@ -1696,6 +1709,7 @@ window.saveNewGoal=async function(idx){
   localDash.goals[idx].title=title;
   Object.assign(localDash.goals[idx], spec);
   await saveDash();
+  if(HEALTH_UNITS.includes(spec.unit)) await syncHealthGoalIndex();
   showToast('🎯 목표 등록!');
   renderGoalGrid(); renderDetail(idx); renderGlobal(); renderAvatar();
 };
@@ -1732,6 +1746,7 @@ window.confirmEditGoal=async function(idx){
   delete localDash.goals[idx].freq;
   Object.assign(localDash.goals[idx], spec);
   await saveDash();
+  if(HEALTH_UNITS.includes(spec.unit)) await syncHealthGoalIndex();
   showToast('✅ 수정 완료!');
   renderGoalGrid(); renderDetail(idx);
 };

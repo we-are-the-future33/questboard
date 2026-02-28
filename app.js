@@ -19,7 +19,8 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // ===== CONSTANTS =====
-const MAX_GOALS = 9;
+const MAX_HABITS = 10;
+const MAX_CHALLENGES = 10;
 const TUT_STEPS = 5;
 const LEGACY_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
 const STAGE_NAMES = ['알','병아리','고양이','강아지','여우','판다','토끼','사자','드래곤','유니콘'];
@@ -41,7 +42,9 @@ let currentUser = null;
 let localDash = null;
 let activeGoalIdx = null;
 let viewMonth = null;
-let goalFilter = 'all';
+let habitFilter = 'all'; // 'all' | 'active'
+let challengeFilter = 'all';
+let currentSubTab = 'habit';
 
 // ===== UTILITIES =====
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
@@ -89,7 +92,7 @@ function globalPct() {
   getAllGoals().forEach((g, i) => { if (!g || !g.unit) return; const { done, mod } = goalPct(g, i, y, m); td += done; tm += mod; });
   return tm > 0 ? Math.round(td / tm * 100) : 0;
 }
-function getAllGoals() { const g = []; for (let i = 0; i < MAX_GOALS; i++) g.push(localDash.goals[i] || null); return g; }
+function getAllGoals() { const g = []; for (let i = 0; i < MAX_HABITS; i++) g.push(localDash.goals[i] || null); return g; }
 
 // ===== STREAK =====
 function calcStreak(g, gi) {
@@ -175,6 +178,7 @@ async function loadDash() {
   localDash = snap.exists() ? snap.val() : {};
   if (!localDash.goals) localDash.goals = [];
   if (!localDash.completions) localDash.completions = {};
+  if (!localDash.challenges) localDash.challenges = [];
 }
 async function saveDash() { localDash.lastUpdate = new Date().toISOString(); await set(ref(db, `dashboards/${currentUser.id}`), localDash); }
 
@@ -255,15 +259,9 @@ window.switchTab = function (tab) {
 function renderDashboard() {
   const now = new Date();
   if (!viewMonth) viewMonth = { year: now.getFullYear(), month: now.getMonth() + 1 };
-  renderGlobal(); renderAvatar(); renderGoalCards(); loadNoticeBanner(); renderMainCheers();
+  renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers();
 }
-function renderGlobal() {
-  const p = globalPct(), fill = document.getElementById('gbFill');
-  fill.style.width = Math.min(p, 100) + '%';
-  if (p > 100) { fill.style.background = 'linear-gradient(90deg,#1952f5,#6b8fff,#a78bfa,#c084fc)'; fill.style.boxShadow = '0 0 16px 4px rgba(167,139,250,.65)'; }
-  else { fill.style.background = ''; fill.style.boxShadow = ''; }
-  document.getElementById('gbPct').textContent = p + '%';
-}
+
 function renderAvatar() {
   const p = globalPct(), stage = Math.min(9, Math.floor(p / 10));
   const artEl = document.getElementById('avatarArt');
@@ -274,6 +272,500 @@ function renderAvatar() {
   document.getElementById('avatarNicknameRow').innerHTML = `<div class="avatar-nickname">${esc(nick)}</div><button class="pencil-btn" onclick="startEditNickname()">✏️</button>`;
   document.getElementById('avatarMsgWrap').innerHTML = `<div class="avatar-msg">${esc(msg)}</div><button class="pencil-btn" onclick="startEditMsg()" style="flex-shrink:0;">✏️</button>`;
 }
+
+// ===== SUB TAB =====
+window.switchSubTab = function (tab) {
+  currentSubTab = tab;
+  document.getElementById('subTabHabit').classList.toggle('active', tab === 'habit');
+  document.getElementById('subTabChallenge').classList.toggle('active', tab === 'challenge');
+  document.getElementById('panelHabit').classList.toggle('active', tab === 'habit');
+  document.getElementById('panelChallenge').classList.toggle('active', tab === 'challenge');
+};
+
+// ===== HABIT FILTER =====
+window.toggleHabitFilter = function () {
+  habitFilter = habitFilter === 'all' ? 'active' : 'all';
+  const pill = document.getElementById('habitFilterPill');
+  pill.classList.toggle('active-filter', habitFilter === 'active');
+  pill.innerHTML = (habitFilter === 'active' ? '진행 중' : '모든 목표') + ' <span class="filter-dot"></span>';
+  renderHabitCards();
+};
+window.toggleChallengeFilter = function () {
+  challengeFilter = challengeFilter === 'all' ? 'active' : 'all';
+  const pill = document.getElementById('challengeFilterPill');
+  pill.classList.toggle('active-filter', challengeFilter === 'active');
+  pill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '모든 목표') + ' <span class="filter-dot"></span>';
+  renderChallengeCards();
+};
+
+// ===== HABIT CARDS (2-col grid) =====
+function renderHabitCards() {
+  const goals = getAllGoals(), now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  const grid = document.getElementById('habitCardGrid');
+  let valid = [];
+  for (let i = 0; i < MAX_HABITS; i++) { if (goals[i] && goals[i].title && goals[i].unit) valid.push({ g: goals[i], idx: i }); }
+  let filtered = habitFilter === 'active' ? valid.filter(({ g, idx }) => isGoalActiveThisWeek(g, idx)) : valid;
+  document.getElementById('habitCount').textContent = valid.length;
+
+  let html = '';
+  filtered.forEach(({ g, idx }) => {
+    const mg = migrateGoal(g), { pct } = goalPct(mg, idx, y, m);
+    const streak = calcStreak(mg, idx), streakLbl = getStreakLabel(mg, streak);
+    const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
+    const todayDone = localDash.completions[todayKey] === true;
+    const isOnce = mg.unit === 'once';
+    const isCompleted = pct >= 100;
+    const isOver = pct > 100;
+    html += `<div class="habit-card-outer" id="hcOuter_${idx}">
+      <div class="habit-card-swipe-bg ${todayDone || (isOnce && localDash.completions[`g${idx}_once`]) ? 'done' : 'todo'}">
+        <div class="swipe-bg-text">${todayDone || (isOnce && localDash.completions[`g${idx}_once`]) ? '↩ 취소' : '✓ 완료'}</div>
+      </div>
+      <div class="habit-card ${isCompleted ? 'completed' : ''}" id="hc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}">
+        <div>
+          <div class="habit-card-title">${esc(g.title)}</div>
+          <div class="habit-card-mid">
+            <div class="habit-card-unit">${getUnitLabel(mg)}</div>
+            <div class="habit-card-streak ${streak > 0 ? '' : 'zero'}">
+              <span class="fire">🔥</span><span class="streak-num">${streakLbl}</span>
+            </div>
+          </div>
+        </div>
+        <div class="habit-card-bot">
+          <div class="habit-card-bar"><div class="habit-card-bar-fill ${isOver ? 'over100' : ''}" style="width:${Math.min(pct, 100)}%"></div></div>
+          <div class="habit-card-pct">${pct}%</div>
+        </div>
+      </div>
+    </div>`;
+  });
+  // 추가 버튼 (9개까지)
+  if (valid.length < MAX_HABITS) html += `<div class="grid-add-btn" onclick="openAddHabitSheet()">＋</div>`;
+  grid.innerHTML = html;
+  document.getElementById('habitSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
+  filtered.forEach(({ idx }) => initHabitSwipe(idx));
+}
+
+// ===== HABIT SWIPE =====
+function initHabitSwipe(idx) {
+  const card = document.getElementById(`hc_${idx}`);
+  if (!card) return;
+  let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
+  const TH = 60;
+  function onS(e) { const t = e.touches ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; card.classList.remove('snapping'); }
+  function onM(e) {
+    if (locked) return; const t = e.touches ? e.touches[0] : e;
+    const dX = t.clientX - sx, dY = t.clientY - sy;
+    if (!swiping && Math.abs(dY) > Math.abs(dX)) { locked = true; return; }
+    if (Math.abs(dX) > 8) swiping = true;
+    if (!swiping) return; e.preventDefault();
+    dx = Math.max(0, dX); card.classList.add('swiping'); card.style.transform = `translateX(${dx}px)`;
+  }
+  function onE() {
+    if (!swiping) { card.style.transform = ''; card.classList.remove('swiping'); openGoalBottomSheet(idx); return; }
+    card.classList.remove('swiping'); card.classList.add('snapping');
+    if (dx >= TH) { card.style.transform = `translateX(${window.innerWidth}px)`; setTimeout(() => swipeCompleteHabit(idx), 250); }
+    else { card.style.transform = 'translateX(0)'; }
+    dx = 0; swiping = false;
+  }
+  card.addEventListener('touchstart', onS, { passive: true });
+  card.addEventListener('touchmove', onM, { passive: false });
+  card.addEventListener('touchend', onE);
+  card.addEventListener('mousedown', onS);
+  card.addEventListener('mousemove', onM);
+  card.addEventListener('mouseup', onE);
+  card.addEventListener('mouseleave', () => { if (swiping) onE(); });
+}
+
+async function swipeCompleteHabit(idx) {
+  const now = new Date();
+  const g = migrateGoal(localDash.goals[idx]);
+  const isOnce = g && g.unit === 'once';
+  let k, wasDone;
+  if (isOnce) { k = `g${idx}_once`; wasDone = localDash.completions[k] === true; }
+  else { k = `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`; wasDone = localDash.completions[k] === true; }
+  localDash.completions[k] = !wasDone;
+  await saveDash();
+  if (!wasDone) { showToast('🎉 완료!', 'done'); showConfettiSmall(); if (!isOnce) checkWeekClear(idx); }
+  else { showToast('↩️ 해제', 'undo'); }
+  renderHabitCards(); renderAvatar();
+}
+
+// ===== CHALLENGE CARDS (2-col grid) =====
+function renderChallengeCards() {
+  const challenges = localDash.challenges || [];
+  const grid = document.getElementById('challengeCardGrid');
+  let valid = [];
+  for (let i = 0; i < challenges.length; i++) { if (challenges[i] && challenges[i].title) valid.push({ c: challenges[i], idx: i }); }
+  let filtered = valid;
+  if (challengeFilter === 'active') filtered = valid.filter(({ c }) => !isChallengeComplete(c));
+  document.getElementById('challengeCount').textContent = valid.length;
+
+  let html = '';
+  filtered.forEach(({ c, idx }) => {
+    if (c.type === 'bucket') {
+      const done = c.done === true;
+      html += `<div class="challenge-card-outer" id="ccOuter_${idx}">
+        <div class="challenge-swipe-bg ${done ? 'done' : 'todo'}">
+          <div class="swipe-bg-text">${done ? '↩ 해제' : '✓ 완료'}</div>
+        </div>
+        <div class="challenge-card type-bucket ${done ? 'bucket-done swiping-target' : ''}" id="cc_${idx}" data-idx="${idx}">
+          <div>
+            <div class="challenge-card-title">${esc(c.title)}</div>
+            <span class="challenge-card-type bucket">버킷리스트</span>
+          </div>
+          ${done ? '<div><span class="challenge-card-sparkle">✨</span><div class="challenge-card-achieve">내 인생의 성취</div></div>' : '<div></div>'}
+        </div>
+      </div>`;
+    } else {
+      // project
+      const { done, total, pct } = getProjectProgress(c);
+      html += `<div class="challenge-card type-project" id="cc_${idx}" data-idx="${idx}" onclick="openProjectDetail(${idx})">
+        <div>
+          <div class="challenge-card-title">${esc(c.title)}</div>
+          <span class="challenge-card-type project">프로젝트</span>
+          <div class="challenge-card-progress">${done}/${total} 단계</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="challenge-card-bar" style="flex:1;"><div class="challenge-card-bar-fill project" style="width:${Math.min(pct,100)}%"></div></div>
+            <div class="challenge-card-pct project">${pct}%</div>
+          </div>
+        </div>
+      </div>`;
+    }
+  });
+  if (valid.length < MAX_CHALLENGES) html += `<div class="grid-add-btn" onclick="openAddChallengeSheet()">＋</div>`;
+  grid.innerHTML = html;
+  // init bucket swipe
+  filtered.forEach(({ c, idx }) => { if (c.type === 'bucket') initBucketSwipe(idx); });
+}
+
+function isChallengeComplete(c) {
+  if (c.type === 'bucket') return c.done === true;
+  if (c.type === 'project') { const { pct } = getProjectProgress(c); return pct >= 100; }
+  return false;
+}
+function getProjectProgress(c) {
+  if (!c.stages) return { done: 0, total: 0, pct: 0 };
+  let total = 0, done = 0;
+  c.stages.forEach(s => { (s.tasks || []).forEach(t => { total++; if (t.done) done++; }); });
+  return { done, total, pct: total > 0 ? Math.round(done / total * 100) : 0 };
+}
+
+// ===== BUCKET SWIPE =====
+function initBucketSwipe(idx) {
+  const card = document.getElementById(`cc_${idx}`);
+  if (!card) return;
+  let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
+  const TH = 60;
+  function onS(e) { const t = e.touches ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; card.classList.remove('snapping'); }
+  function onM(e) {
+    if (locked) return; const t = e.touches ? e.touches[0] : e;
+    const dX = t.clientX - sx, dY = t.clientY - sy;
+    if (!swiping && Math.abs(dY) > Math.abs(dX)) { locked = true; return; }
+    if (Math.abs(dX) > 8) swiping = true;
+    if (!swiping) return; e.preventDefault();
+    dx = Math.max(0, dX); card.classList.add('swiping'); card.style.transform = `translateX(${dx}px)`;
+  }
+  function onE() {
+    card.classList.remove('swiping'); card.classList.add('snapping');
+    if (dx >= TH) { card.style.transform = `translateX(${window.innerWidth}px)`; setTimeout(() => swipeBucket(idx), 250); }
+    else { card.style.transform = 'translateX(0)'; }
+    dx = 0; swiping = false;
+  }
+  card.addEventListener('touchstart', onS, { passive: true });
+  card.addEventListener('touchmove', onM, { passive: false });
+  card.addEventListener('touchend', onE);
+  card.addEventListener('mousedown', onS);
+  card.addEventListener('mousemove', onM);
+  card.addEventListener('mouseup', onE);
+  card.addEventListener('mouseleave', () => { if (swiping) onE(); });
+}
+async function swipeBucket(idx) {
+  const c = localDash.challenges[idx];
+  if (!c) return;
+  const wasDone = c.done === true;
+  localDash.challenges[idx].done = !wasDone;
+  await saveDash();
+  if (!wasDone) { showToast('🎉 버킷리스트 달성!', 'done'); showConfetti(); }
+  else { showToast('↩️ 해제', 'undo'); }
+  renderChallengeCards();
+}
+
+// ===== ADD CHALLENGE BOTTOM SHEET =====
+window.openAddChallengeSheet = function () {
+  document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
+  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:14px;">유형을 먼저 선택해 주세요</div>`;
+  h += `<div class="challenge-type-grid">
+    <div class="challenge-type-card" id="ctBucket" onclick="selectChallengeType('bucket')">
+      <span class="challenge-type-icon">⭐</span>
+      <div class="challenge-type-name">버킷리스트</div>
+      <div class="challenge-type-desc">한 번의 실천으로<br>완료되는 꿈</div>
+    </div>
+    <div class="challenge-type-card" id="ctProject" onclick="selectChallengeType('project')">
+      <span class="challenge-type-icon">🗺️</span>
+      <div class="challenge-type-name">프로젝트</div>
+      <div class="challenge-type-desc">단계별 로드맵이<br>필요한 목표</div>
+    </div>
+  </div>`;
+  h += `<div id="challengeFormArea"></div>`;
+  document.getElementById('bsBody').innerHTML = h;
+  openBS();
+};
+
+let _challengeType = null;
+window.selectChallengeType = function (type) {
+  _challengeType = type;
+  document.getElementById('ctBucket').classList.toggle('selected', type === 'bucket');
+  document.getElementById('ctProject').classList.toggle('selected', type === 'project');
+  const area = document.getElementById('challengeFormArea');
+  if (type === 'bucket') {
+    area.innerHTML = `<div style="margin-top:4px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>
+      <input class="proj-edit-input" id="bucketNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
+      <button class="unit-confirm-btn" style="margin-top:12px;" onclick="saveBucket()">도전 시작하기</button>
+    </div>`;
+    setTimeout(() => document.getElementById('bucketNameInput')?.focus(), 200);
+  } else {
+    area.innerHTML = `<div style="margin-top:4px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>
+      <input class="proj-edit-input" id="projNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">나의 궁극적인 목적 (WHY)</div>
+      <textarea class="proj-edit-input proj-edit-textarea" id="projWhyInput" placeholder="이 도전을 완료했을 때의 내 모습을 상상하며 적어보세요." maxlength="100"></textarea>
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">첫 번째 단계 설정</div>
+      <div class="proj-edit-stage-box">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div class="proj-stage-num">1</div>
+          <input class="proj-edit-task-input" id="projStage1Name" placeholder="첫 번째 단계의 이름을 적으세요" style="flex:1;">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:12px;">세부 계획은 도전 생성 후 상시 추가 가능합니다.</div>
+      <button class="unit-confirm-btn" onclick="saveProject()">도전 시작하기</button>
+    </div>`;
+    setTimeout(() => document.getElementById('projNameInput')?.focus(), 200);
+  }
+};
+
+window.saveBucket = async function () {
+  const name = document.getElementById('bucketNameInput').value.trim();
+  if (!name) return;
+  if (!localDash.challenges) localDash.challenges = [];
+  localDash.challenges.push({ type: 'bucket', title: name, done: false, createdAt: new Date().toISOString() });
+  await saveDash();
+  closeBottomSheet(); renderChallengeCards();
+  showToast('⭐ 도전 등록!', 'done');
+};
+
+window.saveProject = async function () {
+  const name = document.getElementById('projNameInput').value.trim();
+  if (!name) return;
+  const why = document.getElementById('projWhyInput').value.trim();
+  const stage1 = document.getElementById('projStage1Name').value.trim() || '단계 1';
+  if (!localDash.challenges) localDash.challenges = [];
+  localDash.challenges.push({
+    type: 'project', title: name, why: why, createdAt: new Date().toISOString(),
+    stages: [{ name: stage1, tasks: [] }]
+  });
+  await saveDash();
+  closeBottomSheet(); renderChallengeCards();
+  showToast('🗺️ 프로젝트 시작!', 'done');
+};
+
+// ===== PROJECT DETAIL BOTTOM SHEET =====
+window.openProjectDetail = function (idx) {
+  const c = localDash.challenges[idx];
+  if (!c || c.type !== 'project') return;
+  activeGoalIdx = idx;
+  document.getElementById('bsTitle').textContent = c.title;
+  renderProjectDetail(idx);
+  openBS();
+};
+
+function renderProjectDetail(idx) {
+  const c = localDash.challenges[idx], body = document.getElementById('bsBody');
+  const { done, total, pct } = getProjectProgress(c);
+  let h = `<div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">프로젝트 분석</div>`;
+  // WHY box
+  if (c.why) {
+    h += `<div class="proj-why-box"><span class="proj-why-label">나의 목적</span><div class="proj-why-text">"${esc(c.why)}"</div></div>`;
+  }
+  // Stages
+  (c.stages || []).forEach((s, si) => {
+    const stageTasks = s.tasks || [];
+    const stageDone = stageTasks.filter(t => t.done).length;
+    const allDone = stageTasks.length > 0 && stageDone === stageTasks.length;
+    h += `<div class="proj-stage"><div class="proj-stage-hdr"><div class="proj-stage-num ${allDone ? 'done' : ''}">${si + 1}</div><div class="proj-stage-title">${esc(s.name)}</div></div><div class="proj-task-list">`;
+    stageTasks.forEach((t, ti) => {
+      h += `<div class="proj-task ${t.done ? 'task-done' : ''}" onclick="toggleProjectTask(${idx},${si},${ti})"><div class="proj-task-check">${t.done ? '✓' : ''}</div><div class="proj-task-text">${esc(t.name)}</div></div>`;
+    });
+    h += `</div></div>`;
+  });
+  // Progress summary
+  h += `<div style="display:flex;align-items:center;gap:8px;padding:12px 0;"><div style="flex:1;height:8px;background:#f1f5f9;border-radius:100px;overflow:hidden;"><div style="height:100%;width:${Math.min(pct,100)}%;background:linear-gradient(90deg,#60a5fa,#6366f1);border-radius:100px;"></div></div><span style="font-family:'Black Han Sans';font-size:16px;color:var(--accent);">${pct}%</span></div>`;
+  // Edit & Delete buttons
+  h += `<button class="proj-edit-btn" onclick="openProjectEdit(${idx})">✏️ 수정</button>`;
+  h += `<button class="proj-edit-btn" style="color:var(--danger);border-color:var(--danger);margin-top:8px;" onclick="deleteChallenge(${idx})">🗑 삭제</button>`;
+  body.innerHTML = h;
+}
+
+window.toggleProjectTask = async function (cIdx, sIdx, tIdx) {
+  const task = localDash.challenges[cIdx].stages[sIdx].tasks[tIdx];
+  task.done = !task.done;
+  await saveDash();
+  renderProjectDetail(cIdx);
+  renderChallengeCards();
+  if (task.done) showConfettiSmall();
+};
+
+// ===== PROJECT EDIT MODE =====
+window.openProjectEdit = function (idx) {
+  const c = localDash.challenges[idx], body = document.getElementById('bsBody');
+  document.getElementById('bsTitle').textContent = '프로젝트 수정';
+  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>`;
+  h += `<input class="proj-edit-input" id="peTitle" value="${esc(c.title)}" maxlength="30">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">나의 궁극적인 목적 (WHY)</div>`;
+  h += `<textarea class="proj-edit-input proj-edit-textarea" id="peWhy" maxlength="100">${esc(c.why || '')}</textarea>`;
+  // Stages
+  (c.stages || []).forEach((s, si) => {
+    h += `<div class="proj-edit-stage-box" id="peStage_${si}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div class="proj-stage-num">${si + 1}</div>
+        <input class="proj-edit-task-input" id="peStageName_${si}" value="${esc(s.name)}" placeholder="단계 이름" style="flex:1;">
+        <button class="proj-edit-task-del" onclick="removeEditStage(${si})" title="단계 삭제">✕</button>
+      </div>`;
+    (s.tasks || []).forEach((t, ti) => {
+      h += `<div class="proj-edit-task-row"><input class="proj-edit-task-input" id="peTask_${si}_${ti}" value="${esc(t.name)}" placeholder="세부 항목"><button class="proj-edit-task-del" onclick="removeEditTask(${si},${ti})">✕</button></div>`;
+    });
+    h += `<button class="proj-add-task-btn" onclick="addEditTask(${si})">+ 세부 항목 추가</button></div>`;
+  });
+  h += `<button class="proj-add-stage-btn" onclick="addEditStage()">+ 새 단계 추가</button>`;
+  h += `<div class="proj-save-row"><button class="proj-save-btn cancel" onclick="cancelProjectEdit(${idx})">취소</button><button class="proj-save-btn save" onclick="saveProjectEdit(${idx})">저장</button></div>`;
+  body.innerHTML = h;
+};
+
+// Edit helpers - rebuild HTML each time for simplicity
+let _editStages = [];
+function getEditStagesFromDOM() {
+  const stages = [];
+  let si = 0;
+  while (document.getElementById(`peStageName_${si}`)) {
+    const name = document.getElementById(`peStageName_${si}`).value;
+    const tasks = [];
+    let ti = 0;
+    while (document.getElementById(`peTask_${si}_${ti}`)) {
+      tasks.push({ name: document.getElementById(`peTask_${si}_${ti}`).value, done: false });
+      ti++;
+    }
+    stages.push({ name, tasks });
+    si++;
+  }
+  return stages;
+}
+
+window.addEditTask = function (si) {
+  // Save current state then re-render
+  const c = { ...localDash.challenges[activeGoalIdx] };
+  const stages = getEditStagesFromDOM();
+  stages[si].tasks.push({ name: '', done: false });
+  // Preserve done states from original
+  const orig = localDash.challenges[activeGoalIdx].stages || [];
+  stages.forEach((s, i) => {
+    s.tasks.forEach((t, j) => {
+      if (orig[i] && orig[i].tasks && orig[i].tasks[j]) t.done = orig[i].tasks[j].done;
+    });
+  });
+  _editStages = stages;
+  rebuildEditUI();
+};
+window.removeEditTask = function (si, ti) {
+  const stages = getEditStagesFromDOM();
+  stages[si].tasks.splice(ti, 1);
+  _editStages = stages;
+  rebuildEditUI();
+};
+window.addEditStage = function () {
+  const stages = getEditStagesFromDOM();
+  stages.push({ name: '', tasks: [] });
+  _editStages = stages;
+  rebuildEditUI();
+};
+window.removeEditStage = function (si) {
+  const stages = getEditStagesFromDOM();
+  stages.splice(si, 1);
+  _editStages = stages;
+  rebuildEditUI();
+};
+
+function rebuildEditUI() {
+  const c = localDash.challenges[activeGoalIdx];
+  const title = document.getElementById('peTitle')?.value || c.title;
+  const why = document.getElementById('peWhy')?.value || c.why || '';
+  const stages = _editStages;
+  const body = document.getElementById('bsBody');
+  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>`;
+  h += `<input class="proj-edit-input" id="peTitle" value="${esc(title)}" maxlength="30">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">나의 궁극적인 목적 (WHY)</div>`;
+  h += `<textarea class="proj-edit-input proj-edit-textarea" id="peWhy" maxlength="100">${esc(why)}</textarea>`;
+  stages.forEach((s, si) => {
+    h += `<div class="proj-edit-stage-box" id="peStage_${si}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div class="proj-stage-num">${si + 1}</div>
+        <input class="proj-edit-task-input" id="peStageName_${si}" value="${esc(s.name)}" placeholder="단계 이름" style="flex:1;">
+        <button class="proj-edit-task-del" onclick="removeEditStage(${si})">✕</button>
+      </div>`;
+    (s.tasks || []).forEach((t, ti) => {
+      h += `<div class="proj-edit-task-row"><input class="proj-edit-task-input" id="peTask_${si}_${ti}" value="${esc(t.name)}" placeholder="세부 항목"><button class="proj-edit-task-del" onclick="removeEditTask(${si},${ti})">✕</button></div>`;
+    });
+    h += `<button class="proj-add-task-btn" onclick="addEditTask(${si})">+ 세부 항목 추가</button></div>`;
+  });
+  h += `<button class="proj-add-stage-btn" onclick="addEditStage()">+ 새 단계 추가</button>`;
+  h += `<div class="proj-save-row"><button class="proj-save-btn cancel" onclick="cancelProjectEdit(${activeGoalIdx})">취소</button><button class="proj-save-btn save" onclick="saveProjectEdit(${activeGoalIdx})">저장</button></div>`;
+  body.innerHTML = h;
+}
+
+window.cancelProjectEdit = function (idx) {
+  _editStages = [];
+  document.getElementById('bsTitle').textContent = localDash.challenges[idx].title;
+  renderProjectDetail(idx);
+};
+
+window.saveProjectEdit = async function (idx) {
+  const title = document.getElementById('peTitle').value.trim();
+  if (!title) { showToast('이름을 입력하세요', 'normal'); return; }
+  const why = document.getElementById('peWhy').value.trim();
+  const stages = getEditStagesFromDOM();
+  // Preserve done states
+  const orig = localDash.challenges[idx].stages || [];
+  stages.forEach((s, i) => {
+    s.tasks.forEach((t, j) => {
+      if (orig[i] && orig[i].tasks && orig[i].tasks[j]) t.done = orig[i].tasks[j].done;
+      if (!t.name.trim()) t.name = '항목';
+    });
+    if (!s.name.trim()) s.name = `단계 ${i + 1}`;
+  });
+  localDash.challenges[idx] = { ...localDash.challenges[idx], title, why, stages };
+  await saveDash();
+  _editStages = [];
+  document.getElementById('bsTitle').textContent = title;
+  renderProjectDetail(idx);
+  renderChallengeCards();
+  showToast('✅ 저장 완료!', 'done');
+};
+
+window.deleteChallenge = async function (idx) {
+  if (!confirm('이 도전을 삭제할까요?')) return;
+  localDash.challenges.splice(idx, 1);
+  await saveDash();
+  closeBottomSheet(); renderChallengeCards();
+  showToast('🗑 삭제됨', 'normal');
+};
+
+// ===== ADD HABIT =====
+window.openAddHabitSheet = function () {
+  document.getElementById('bsTitle').textContent = '습관 추가';
+  document.getElementById('bsBody').innerHTML = `<div><input class="proj-edit-input" id="newGoalInput" placeholder="습관 이름 입력 (예: 매일 독서 20분)" maxlength="20"><button class="unit-confirm-btn" onclick="confirmAddGoal()">다음 →</button></div>`;
+  openBS();
+  setTimeout(() => document.getElementById('newGoalInput')?.focus(), 400);
+};
 
 // ===== NICKNAME / MSG EDIT =====
 window.startEditNickname = function () {
@@ -299,111 +791,7 @@ window.saveMsg = async function () {
   renderAvatar();
 };
 
-// ===== GOAL FILTER =====
-window.setGoalFilter = function (f) {
-  goalFilter = f;
-  document.getElementById('filterAll').classList.toggle('active', f === 'all');
-  document.getElementById('filterActive').classList.toggle('active', f === 'active');
-  renderGoalCards();
-};
-
-// ===== GOAL CARDS =====
-function renderGoalCards() {
-  const goals = getAllGoals(), now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
-  const list = document.getElementById('goalCardList');
-  let valid = [];
-  for (let i = 0; i < MAX_GOALS; i++) { if (goals[i] && goals[i].title && goals[i].unit) valid.push({ g: goals[i], idx: i }); }
-  const recent8 = valid.slice(-8);
-  let filtered = goalFilter === 'active' ? recent8.filter(({ g, idx }) => isGoalActiveThisWeek(g, idx)) : recent8;
-
-  if (filtered.length === 0 && valid.length === 0) {
-    list.innerHTML = `<div class="goal-add-btn" onclick="openAddGoalSheet()">＋ 첫 번째 목표 추가하기</div>`;
-    document.getElementById('swipeHint').style.display = 'none'; return;
-  }
-  if (filtered.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--text-dim);font-size:14px;line-height:2;">🎉 이번 주 모든 목표를 달성했어요!</div>`;
-    document.getElementById('swipeHint').style.display = 'none'; return;
-  }
-
-  let html = '';
-  filtered.forEach(({ g, idx }) => {
-    const mg = migrateGoal(g), { pct } = goalPct(mg, idx, y, m);
-    const streak = calcStreak(mg, idx), streakLbl = getStreakLabel(mg, streak);
-    const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
-    const todayDone = localDash.completions[todayKey] === true;
-    const isOnce = mg.unit === 'once';
-    const isOver = pct > 100;
-    html += `<div class="goal-card-outer" id="gcOuter_${idx}">
-      <div class="goal-card-swipe-bg ${todayDone || (isOnce && localDash.completions[`g${idx}_once`]) ? 'done' : 'todo'}">
-        <div class="swipe-bg-text">${todayDone || (isOnce && localDash.completions[`g${idx}_once`]) ? '↩ 취소' : '✓ 완료'}</div>
-      </div>
-      <div class="goal-card ${todayDone ? 'today-done' : ''}" id="gc_${idx}" data-idx="${idx}" data-once="${isOnce ? 1 : 0}">
-        <div class="goal-card-top">
-          <div class="goal-card-title">${esc(g.title)}</div>
-          <div class="goal-card-streak ${streak > 0 ? '' : 'zero'}">
-            <span class="fire">🔥</span><span class="streak-num">${streakLbl}</span>
-          </div>
-        </div>
-        <div class="goal-card-bottom">
-          <div class="goal-card-unit">${getUnitLabel(mg)}</div>
-          <div class="goal-card-bar-wrap">
-            <div class="goal-card-bar"><div class="goal-card-bar-fill ${isOver ? 'over100' : ''}" style="width:${Math.min(pct, 100)}%"></div></div>
-            <div class="goal-card-pct">${pct}%</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  });
-  if (valid.length < MAX_GOALS) html += `<div class="goal-add-btn" onclick="openAddGoalSheet()">＋ 목표 추가</div>`;
-  list.innerHTML = html;
-  document.getElementById('swipeHint').style.display = 'block';
-  filtered.forEach(({ idx }) => initSwipeCard(idx));
-}
-
-// ===== SWIPE =====
-function initSwipeCard(idx) {
-  const card = document.getElementById(`gc_${idx}`);
-  if (!card) return;
-  let sx = 0, sy = 0, dx = 0, swiping = false, locked = false;
-  const TH = 80;
-  function onS(e) { const t = e.touches ? e.touches[0] : e; sx = t.clientX; sy = t.clientY; dx = 0; swiping = false; locked = false; card.classList.remove('snapping'); }
-  function onM(e) {
-    if (locked) return; const t = e.touches ? e.touches[0] : e;
-    const dX = t.clientX - sx, dY = t.clientY - sy;
-    if (!swiping && Math.abs(dY) > Math.abs(dX)) { locked = true; return; }
-    if (Math.abs(dX) > 8) swiping = true;
-    if (!swiping) return; e.preventDefault();
-    dx = Math.max(0, dX); card.classList.add('swiping'); card.style.transform = `translateX(${dx}px)`;
-  }
-  function onE() {
-    if (!swiping) { card.style.transform = ''; card.classList.remove('swiping'); openGoalBottomSheet(idx); return; }
-    card.classList.remove('swiping'); card.classList.add('snapping');
-    if (dx >= TH) { card.style.transform = `translateX(${window.innerWidth}px)`; setTimeout(() => swipeComplete(idx), 250); }
-    else { card.style.transform = 'translateX(0)'; }
-    dx = 0; swiping = false;
-  }
-  card.addEventListener('touchstart', onS, { passive: true });
-  card.addEventListener('touchmove', onM, { passive: false });
-  card.addEventListener('touchend', onE);
-  card.addEventListener('mousedown', onS);
-  card.addEventListener('mousemove', onM);
-  card.addEventListener('mouseup', onE);
-  card.addEventListener('mouseleave', () => { if (swiping) onE(); });
-}
-
-async function swipeComplete(idx) {
-  const now = new Date();
-  const g = migrateGoal(localDash.goals[idx]);
-  const isOnce = g && g.unit === 'once';
-  let k, wasDone;
-  if (isOnce) { k = `g${idx}_once`; wasDone = localDash.completions[k] === true; }
-  else { k = `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`; wasDone = localDash.completions[k] === true; }
-  localDash.completions[k] = !wasDone;
-  await saveDash();
-  if (!wasDone) { showToast('🎉 완료!', 'done'); showConfettiSmall(); if (!isOnce) checkWeekClear(idx); }
-  else { showToast('↩️ 해제', 'undo'); }
-  renderGoalCards(); renderGlobal(); renderAvatar();
-}
+// (habit filter and cards handled above)
 
 function checkWeekClear(idx) {
   const g = migrateGoal(localDash.goals[idx]);
@@ -486,7 +874,7 @@ window.bsToggleDay = async function (idx, y, m, d) {
   const k = `g${idx}_${y}_${m}_${d}`;
   localDash.completions[k] = localDash.completions[k] !== true;
   await saveDash();
-  renderBSBody(idx); renderGoalCards(); renderGlobal(); renderAvatar();
+  renderBSBody(idx); renderHabitCards(); renderAvatar();
   if (localDash.completions[k]) { showToast('✓ 체크!', 'done'); checkWeekClear(idx); }
 };
 
@@ -501,7 +889,7 @@ function renderBSOnce(idx, body) {
 
 window.bsToggleOnce = async function (idx) {
   const k = `g${idx}_once`; localDash.completions[k] = localDash.completions[k] !== true;
-  await saveDash(); renderBSBody(idx); renderGoalCards(); renderGlobal(); renderAvatar();
+  await saveDash(); renderBSBody(idx); renderHabitCards(); renderAvatar();
 };
 
 // ===== 6개월 통계 =====
@@ -530,19 +918,13 @@ function renderStats6Month(idx, g) {
   return h;
 }
 
-// ===== ADD GOAL =====
-window.openAddGoalSheet = function () {
-  document.getElementById('bsTitle').textContent = '목표 추가';
-  document.getElementById('bsBody').innerHTML = `<div><input class="add-goal-input" id="newGoalInput" placeholder="목표 이름 입력 (예: 매일 독서 20분)" maxlength="20"><button class="unit-confirm-btn" onclick="confirmAddGoal()">다음 →</button></div>`;
-  openBS();
-  setTimeout(() => document.getElementById('newGoalInput')?.focus(), 400);
-};
+// ===== ADD HABIT (continued) =====
 window.confirmAddGoal = async function () {
   const v = document.getElementById('newGoalInput').value.trim();
   if (!v) return;
   let slot = -1;
-  for (let i = 0; i < MAX_GOALS; i++) { if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; } }
-  if (slot === -1) { showToast('목표 최대 9개!', 'normal'); return; }
+  for (let i = 0; i < MAX_HABITS; i++) { if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; } }
+  if (slot === -1) { showToast('습관 최대 10개!', 'normal'); return; }
   localDash.goals[slot] = { title: v };
   await saveDash();
   openUnitSetupSheet(slot);
@@ -579,13 +961,13 @@ window.confirmUnit = async function (idx) {
   else { unit = 'weekly'; freq = parseInt(_selUnit.slice(1)); }
   localDash.goals[idx] = { ...localDash.goals[idx], unit, freq };
   await saveDash(); _selUnit = null;
-  closeBottomSheet(); renderGoalCards(); renderGlobal();
+  closeBottomSheet(); renderHabitCards(); renderAvatar();
   showToast('✅ 목표 설정 완료!', 'done');
 };
 window.deleteGoal = async function (idx) {
   if (!confirm('이 목표를 삭제할까요?')) return;
   localDash.goals[idx] = null; await saveDash();
-  closeBottomSheet(); renderGoalCards(); renderGlobal(); renderAvatar();
+  closeBottomSheet(); renderHabitCards(); renderAvatar();
   showToast('🗑 삭제됨', 'normal');
 };
 
@@ -672,7 +1054,7 @@ async function renderFriends() {
     const fGoals = d.goals || [], fComp = d.completions || {};
     const now = new Date(), fy = now.getFullYear(), fm = now.getMonth() + 1;
     let ftd = 0, ftm = 0;
-    for (let i = 0; i < MAX_GOALS; i++) {
+    for (let i = 0; i < MAX_HABITS; i++) {
       const fg = fGoals[i]; if (!fg || !fg.unit) continue;
       const mg = migrateGoal(fg);
       const mod = goalModulus(mg, i, fy, fm);
@@ -699,7 +1081,7 @@ window.openFriendDetail = async function (fid) {
   const goals = d.goals || [], comp = d.completions || {};
   const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
   let h = `<div class="friend-detail"><div class="friend-detail-hdr"><div class="friend-detail-name">${esc(nick)}</div></div><div class="fgoal-grid">`;
-  for (let i = 0; i < MAX_GOALS; i++) {
+  for (let i = 0; i < MAX_HABITS; i++) {
     const g = goals[i]; if (!g || !g.unit) continue;
     const mg = migrateGoal(g);
     const mod = goalModulus(mg, i, y, m);
@@ -813,7 +1195,7 @@ window.showAdminUserDetail = async function (uid) {
   let h = `<div class="admin-detail"><div class="admin-detail-header"><div><div class="admin-detail-name">${esc(u.name)}</div><div class="admin-detail-id">${uid}</div></div></div>`;
   h += `<div class="admin-meta-grid"><div class="admin-meta-card"><div class="admin-meta-label">마지막 로그인</div><div class="admin-meta-val">${u.lastLogin ? new Date(u.lastLogin).toLocaleString('ko') : '-'}</div></div><div class="admin-meta-card"><div class="admin-meta-label">마지막 업데이트</div><div class="admin-meta-val">${d.lastUpdate ? new Date(d.lastUpdate).toLocaleString('ko') : '-'}</div></div></div>`;
   h += `<div class="admin-goal-list">`;
-  for (let i = 0; i < MAX_GOALS; i++) {
+  for (let i = 0; i < MAX_HABITS; i++) {
     const g = goals[i]; if (!g || !g.unit) continue;
     const mg = migrateGoal(g), mod = goalModulus(mg, i, y, m);
     let done = 0;

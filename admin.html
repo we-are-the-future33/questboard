@@ -261,7 +261,6 @@ function renderUserTable(){
   const wrap = document.getElementById('userTableWrap');
   const users = Object.entries(allUsers).filter(([,u])=>u.role!=='admin');
   if(users.length===0){ wrap.innerHTML='<div class="empty">등록된 유저 없음</div>'; return; }
-  const now=new Date(); const cy=now.getFullYear(),cm=now.getMonth()+1;
   const rows = users.map(([id,u])=>{
     const dash=allDash[id]||{};
     const goals=Array.isArray(dash.goals)?dash.goals.filter(g=>g&&g.title):[];
@@ -272,14 +271,44 @@ function renderUserTable(){
       <td>${goals.length}개</td>
       <td>${tut}</td>
       <td style="font-size:11px;color:var(--text-dim);">${lastLogin}</td>
-      <td><button class="btn-danger" onclick="event.stopPropagation();deleteUser('${id}')">삭제</button></td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span id="pw_${id}" style="font-size:12px;color:var(--text-dim);font-family:monospace;">${esc(u.password||'')}</span>
+          <button class="btn-sm" style="padding:3px 8px;font-size:11px;" onclick="startEditPw('${id}')">수정</button>
+        </div>
+        <div id="pwEdit_${id}" style="display:none;gap:6px;align-items:center;margin-top:4px;">
+          <input id="pwInput_${id}" type="text" value="${esc(u.password||'')}" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:monospace;width:90px;outline:none;">
+          <button class="btn-accent" style="padding:4px 8px;font-size:11px;" onclick="savePw('${id}')">저장</button>
+          <button class="btn-sm" style="padding:4px 8px;font-size:11px;" onclick="cancelEditPw('${id}')">취소</button>
+        </div>
+      </td>
+      <td onclick="event.stopPropagation()"><button class="btn-danger" onclick="deleteUser('${id}')">삭제</button></td>
     </tr>`;
   }).join('');
   wrap.innerHTML=`<table class="user-table">
-    <thead><tr><th>유저</th><th>목표</th><th>튜토리얼</th><th>마지막 접속</th><th></th></tr></thead>
+    <thead><tr><th>유저</th><th>목표</th><th>튜토리얼</th><th>마지막 접속</th><th>비밀번호</th><th></th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
+
+window.startEditPw = function(id) {
+  document.getElementById(`pwEdit_${id}`).style.display='flex';
+  document.getElementById(`pw_${id}`).parentElement.style.display='none';
+  document.getElementById(`pwInput_${id}`).focus();
+};
+window.cancelEditPw = function(id) {
+  document.getElementById(`pwEdit_${id}`).style.display='none';
+  document.getElementById(`pw_${id}`).parentElement.style.display='flex';
+};
+window.savePw = async function(id) {
+  const newPw = document.getElementById(`pwInput_${id}`).value.trim();
+  if(!newPw){ toast('❌ 비밀번호를 입력하세요'); return; }
+  try {
+    await set(ref(db,`users/${id}/password`), newPw);
+    toast(`✅ ${allUsers[id]?.name||id} 비밀번호 변경 완료`);
+    loadAll();
+  } catch(e){ toast('❌ 변경 실패: '+e.message); }
+};
 
 // ===== CREATE / DELETE USER =====
 window.createUser = async function(){

@@ -119,13 +119,14 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;}
 
 /* 습관 카드 (스와이프) */
-.habit-card-outer{position:relative;overflow:hidden;border-radius:14px;}
-.habit-card-swipe-bg-left{position:absolute;top:0;left:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-end;padding-right:14px;border-radius:14px;background:#1952f5;}
-.habit-card-swipe-bg-right{position:absolute;top:0;right:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-start;padding-left:14px;border-radius:14px;background:#ff5e7d;}
+.habit-card-outer{position:relative;overflow:hidden;border-radius:18px;}
+.habit-card-swipe-bg-left{position:absolute;top:0;left:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-end;padding-right:14px;border-radius:18px;background:#1952f5;}
+.habit-card-swipe-bg-right{position:absolute;top:0;right:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-start;padding-left:14px;border-radius:18px;background:#ff5e7d;}
 .habit-card-outer.swiping-right .habit-card-swipe-bg-left{display:flex;}
 .habit-card-outer.swiping-left .habit-card-swipe-bg-right{display:flex;}
 .swipe-bg-text{color:#fff;font-size:11px;font-weight:800;letter-spacing:1px;opacity:.9;}
-.habit-card{position:relative;z-index:2;background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px 14px 12px;cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .2s;touch-action:pan-y;user-select:none;box-shadow:var(--shadow-sm);min-height:110px;display:flex;flex-direction:column;justify-content:space-between;}
+.habit-card{position:relative;z-index:2;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .2s,border-color .2s;touch-action:pan-y;user-select:none;box-shadow:0 4px 10px rgba(0,0,0,0.03);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;}
+.habit-card:active{box-shadow:0 8px 20px rgba(25,82,245,0.08);border-color:#c4d2fb;}
 .habit-card:active{box-shadow:var(--shadow);}
 .habit-card.swiping{transition:none;}
 .habit-card.snapping{transition:transform .3s cubic-bezier(.4,0,.2,1);}
@@ -142,18 +143,18 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .habit-card-bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#60a5fa,#6366f1);transition:width .6s cubic-bezier(.4,0,.2,1);}
 .habit-card-bar-fill.over100{background:linear-gradient(90deg,#6366f1,#a78bfa,#c084fc);box-shadow:0 0 8px rgba(167,139,250,.5);}
 .habit-card-pct{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--accent);min-width:36px;text-align:right;}
-.habit-card.completed{background:#f5f6f8;border-color:#e5e7eb;}
+.habit-card.completed{background:#f5f6f8;border-color:#eaedf0;}
 .habit-card.completed .habit-card-title{color:#b0b5be;}
 .habit-card.completed .habit-card-mid{opacity:.4;}
 .habit-card.completed .habit-card-bot{opacity:.4;}
-.habit-card.today-done{background:#f5f6f8;border-color:#e5e7eb;}
+.habit-card.today-done{background:#f5f6f8;border-color:#eaedf0;}
 .habit-card.today-done .habit-card-title{color:#b0b5be;}
 .habit-card.today-done .habit-card-mid{opacity:.35;}
 .habit-card.today-done .habit-card-bot{opacity:.35;}
-.habit-card.today-done::after{content:'✅';position:absolute;top:10px;right:10px;font-size:18px;}
+.habit-card.today-done::after{content:'✅';position:absolute;top:12px;right:12px;font-size:18px;}
 
 /* 도전 카드 */
-.challenge-card{background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px 14px 12px;cursor:pointer;box-shadow:var(--shadow-sm);min-height:110px;display:flex;flex-direction:column;justify-content:space-between;transition:all .2s;touch-action:pan-y;user-select:none;position:relative;}
+.challenge-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.03);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;transition:all .2s;touch-action:pan-y;user-select:none;position:relative;}
 .challenge-card:active{box-shadow:var(--shadow);}
 .challenge-card.type-bucket{border-color:var(--accent2);border-left-width:4px;}
 .challenge-card.type-project{border-color:var(--accent);border-left-width:4px;}
@@ -174,7 +175,7 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .challenge-card-sparkle{position:absolute;top:10px;right:10px;font-size:20px;}
 .challenge-card-achieve{font-size:12px;color:var(--accent2);font-weight:700;margin-top:4px;}
 /* 도전 카드 스와이프 (버킷리스트) */
-.challenge-card-outer{position:relative;overflow:hidden;border-radius:14px;}
+.challenge-card-outer{position:relative;overflow:hidden;border-radius:18px;}
 .challenge-swipe-bg{position:absolute;top:0;right:0;bottom:0;width:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:14px;border-radius:14px;}
 .challenge-swipe-bg.todo{background:linear-gradient(90deg,transparent 40%,var(--accent2));}
 .challenge-swipe-bg.done{background:linear-gradient(90deg,transparent 40%,#6b7280);}
@@ -182,8 +183,10 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .challenge-card.snapping{transition:transform .3s cubic-bezier(.4,0,.2,1);position:relative;z-index:2;}
 
 /* 카드 추가 버튼 (그리드 내) */
-.grid-add-btn{background:var(--surface);border:2px dashed var(--border);border-radius:14px;min-height:110px;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:28px;cursor:pointer;transition:all .2s;}
+.grid-add-btn{background:#f8fafc;border:2px dashed #cbd5e1;border-radius:18px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;cursor:pointer;transition:all .2s;}
 .grid-add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.grid-add-btn-icon{font-size:24px;margin-bottom:4px;}
+.grid-add-btn-text{font-size:13px;font-weight:700;}
 
 .swipe-hint{text-align:center;color:var(--text-dim);font-size:12px;margin-top:8px;opacity:.6;padding:0 20px;}
 

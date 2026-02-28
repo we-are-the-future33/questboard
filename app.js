@@ -336,7 +336,7 @@ function renderHabitCards() {
     </div>`;
   });
   // 추가 버튼 (9개까지)
-  if (valid.length < MAX_HABITS) html += `<div class="grid-add-btn" onclick="openAddHabitSheet()">＋</div>`;
+  if (valid.length < MAX_HABITS) html += `<div class="grid-add-btn" onclick="openAddHabitSheet()"><div class="grid-add-btn-icon">＋</div><div class="grid-add-btn-text">습관 추가</div></div>`;
   grid.innerHTML = html;
   document.getElementById('habitSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
   filtered.forEach(({ idx }) => initHabitSwipe(idx));
@@ -480,7 +480,7 @@ function renderChallengeCards() {
       </div>`;
     }
   });
-  if (valid.length < MAX_CHALLENGES) html += `<div class="grid-add-btn" onclick="openAddChallengeSheet()">＋</div>`;
+  if (valid.length < MAX_CHALLENGES) html += `<div class="grid-add-btn" onclick="openAddChallengeSheet()"><div class="grid-add-btn-icon">＋</div><div class="grid-add-btn-text">도전 추가</div></div>`;
   grid.innerHTML = html;
   // init bucket swipe
   filtered.forEach(({ c, idx }) => { if (c.type === 'bucket') initBucketSwipe(idx); });

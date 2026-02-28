@@ -58,6 +58,26 @@ function formatTargetMonth(tm) {
   const parts = tm.split('-');
   return `📅 ${parts[0]}년 ${parseInt(parts[1])}월`;
 }
+
+function setHabitMetaTags(g) {
+  const el = document.getElementById('bsMetaTags');
+  if (!el) return;
+  const timeLbl = TIME_LABELS[g.time || 'any'] || '🕒 시간 무관';
+  const catLbl = CAT_LABELS[g.category || 'etc'] || '📦 기타';
+  el.innerHTML = `<span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
+}
+function setChallengeMetaTags(c) {
+  const el = document.getElementById('bsMetaTags');
+  if (!el) return;
+  const typeLbl = TYPE_LABELS[c.type || 'bucket'] || '🎯 버킷리스트';
+  const catLbl = CAT_LABELS[c.category || 'etc'] || '📦 기타';
+  const monthLbl = formatTargetMonth(c.targetMonth);
+  el.innerHTML = `<span class="bs-meta-chip">${typeLbl}</span><span class="bs-meta-chip">${catLbl}</span><span class="bs-meta-chip">${monthLbl}</span>`;
+}
+function clearMetaTags() {
+  const el = document.getElementById('bsMetaTags');
+  if (el) el.innerHTML = '';
+}
 let currentSubTab = 'habit';
 
 // ===== UTILITIES =====
@@ -752,6 +772,7 @@ window.openBucketDetail = function (idx) {
   const c = localDash.challenges[idx];
   if (!c) return;
   document.getElementById('bsTitle').textContent = c.title;
+  setChallengeMetaTags(c);
   const done = c.done === true;
   let h = `<div style="text-align:center;padding:30px 0;">
     <div style="font-size:48px;margin-bottom:12px;">${done ? '🏆' : '🎯'}</div>
@@ -768,6 +789,7 @@ window.openBucketEdit = function (idx) {
   const c = localDash.challenges[idx];
   if (!c) return;
   document.getElementById('bsTitle').textContent = '버킷리스트 수정';
+  clearMetaTags();
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">이름</div>`;
   h += `<input class="proj-edit-input" id="editBucketName" value="${esc(c.title)}" maxlength="30">`;
   h += `<div class="proj-save-row" style="margin-top:20px;"><button class="proj-save-btn cancel" onclick="openBucketDetail(${idx})">취소</button><button class="proj-save-btn save" onclick="saveBucketEdit(${idx})">저장</button></div>`;
@@ -850,6 +872,7 @@ window.openAddChallengeSheet = function () {
   _createType = 'bucket'; _createCat = 'etc'; _createMonth = 'someday';
   _createStages = [{ name: '첫 번째 단계', tasks: [] }];
   document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
+  clearMetaTags();
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:14px;">유형을 먼저 선택해 주세요</div>`;
   h += `<div class="challenge-type-grid">
     <div class="challenge-type-card selected" id="ctBucket" onclick="selectChallengeType('bucket')">
@@ -940,6 +963,7 @@ window.openProjectDetail = function (idx) {
   if (!c || c.type !== 'project') return;
   activeGoalIdx = idx;
   document.getElementById('bsTitle').textContent = c.title;
+  setChallengeMetaTags(c);
   renderProjectDetail(idx);
   openBS();
 };
@@ -1126,6 +1150,7 @@ window.deleteChallenge = async function (idx) {
 // ===== ADD HABIT =====
 window.openAddHabitSheet = function () {
   document.getElementById('bsTitle').textContent = '습관 추가';
+  clearMetaTags();
   document.getElementById('bsBody').innerHTML = `
     <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">습관 이름</div>
     <input class="proj-edit-input" id="newGoalInput" placeholder="예: 매일 독서 20분" maxlength="20">
@@ -1178,6 +1203,7 @@ window.openGoalBottomSheet = function (idx) {
   activeGoalIdx = idx;
   viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
   document.getElementById('bsTitle').textContent = g.title;
+  setHabitMetaTags(g);
   renderBSBody(idx);
   openBS();
 };
@@ -1371,6 +1397,7 @@ window.habitAddStep2 = function () {
   _habitCycle1 = null;
   _habitCycle2 = null;
   document.getElementById('bsTitle').textContent = '주기 설정';
+  clearMetaTags();
   renderCycleStep();
 };
 
@@ -1516,6 +1543,7 @@ function openUnitSetupSheet(idx) {
   _habitCycle1 = null;
   _habitCycle2 = null;
   document.getElementById('bsTitle').textContent = '주기 설정';
+  clearMetaTags();
   // override confirmHabitAdd to update existing slot
   const origConfirm = window.confirmHabitAdd;
   window.confirmHabitAdd = async function () {
@@ -1573,6 +1601,7 @@ window.openHabitEdit = function (idx) {
   const g = localDash.goals[idx];
   if (!g) return;
   document.getElementById('bsTitle').textContent = '습관 수정';
+  clearMetaTags();
   const timeOpts = [['any','🕒 무관'],['morning','🌅 아침'],['afternoon','☀️ 오후'],['evening','🌙 저녁']];
   const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">습관 이름</div>`;

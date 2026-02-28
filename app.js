@@ -64,6 +64,7 @@ function getUnitLabel(g) {
   if (g.unit === 'health_workout') return '💪 운동';
   if (g.unit === 'weekly') return `주 ${g.freq}회`;
   if (g.unit === 'biweekly') return `2주 ${g.freq}회`;
+  if (g.unit === 'multiweek') return `${g.weeks||3}주 ${g.freq}회`;
   return g.unit;
 }
 function getMonthDays(y, m) { return new Date(y, m, 0).getDate(); }
@@ -74,6 +75,7 @@ function goalModulus(g, gi, y, m) {
   if (g.unit === 'health_workout') return 2 * getMonthWeeks(y, m);
   if (g.unit === 'weekly') return (g.freq || 1) * getMonthWeeks(y, m);
   if (g.unit === 'biweekly') return (g.freq || 1) * Math.ceil(getMonthDays(y, m) / 14);
+  if (g.unit === 'multiweek') return (g.freq || 1) * Math.ceil(getMonthDays(y, m) / ((g.weeks||3) * 7));
   return 1;
 }
 function goalDone(g, gi, y, m) {
@@ -823,9 +825,13 @@ window.deleteChallenge = async function (idx) {
 // ===== ADD HABIT =====
 window.openAddHabitSheet = function () {
   document.getElementById('bsTitle').textContent = '습관 추가';
-  document.getElementById('bsBody').innerHTML = `<div><input class="proj-edit-input" id="newGoalInput" placeholder="습관 이름 입력 (예: 매일 독서 20분)" maxlength="20"><button class="unit-confirm-btn" onclick="confirmAddGoal()">다음 →</button></div>`;
+  document.getElementById('bsBody').innerHTML = `
+    <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">습관 이름</div>
+    <input class="proj-edit-input" id="newGoalInput" placeholder="예: 매일 독서 20분" maxlength="20">
+    <button class="unit-confirm-btn" style="margin-top:12px;" onclick="habitAddStep2()">다음 →</button>`;
   openBS();
   setTimeout(() => document.getElementById('newGoalInput')?.focus(), 400);
+};
 };
 
 // ===== NICKNAME / MSG EDIT =====
@@ -867,7 +873,7 @@ function checkWeekClear(idx) {
 // ===== BOTTOM SHEET =====
 window.openGoalBottomSheet = function (idx) {
   const g = getAllGoals()[idx];
-  if (!g) { openAddGoalSheet(); return; }
+  if (!g) { openAddHabitSheet(); return; }
   if (!g.unit) { openUnitSetupSheet(idx); return; }
   activeGoalIdx = idx;
   viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
@@ -985,54 +991,176 @@ function renderStats6Month(idx, g) {
   return h;
 }
 
-// ===== ADD HABIT (continued) =====
-window.confirmAddGoal = async function () {
+// ===== ADD HABIT FLOW =====
+let _habitAddName = '';
+let _habitCycle1 = null; // 'daily','once','w1','w2','w3','w4'
+let _habitCycle2 = null; // number of times
+
+window.habitAddStep2 = function () {
   const v = document.getElementById('newGoalInput').value.trim();
-  if (!v) return;
-  let slot = -1;
-  for (let i = 0; i < MAX_HABITS; i++) { if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; } }
-  if (slot === -1) { showToast('습관 최대 10개!', 'normal'); return; }
-  localDash.goals[slot] = { title: v };
-  await saveDash();
-  openUnitSetupSheet(slot);
+  if (!v) { showToast('이름을 입력해주세요', 'normal'); return; }
+  _habitAddName = v;
+  _habitCycle1 = null;
+  _habitCycle2 = null;
+  document.getElementById('bsTitle').textContent = '주기 설정';
+  renderCycleStep();
 };
 
-function openUnitSetupSheet(idx) {
-  document.getElementById('bsTitle').textContent = '단위 설정';
-  const opts = [
-    { label: '매일', val: 'daily' }, { label: '한 번', val: 'once' },
-    { label: '주 1회', val: 'w1' }, { label: '주 2회', val: 'w2' },
-    { label: '주 3회', val: 'w3' }, { label: '주 4회', val: 'w4' },
-    { label: '주 5회', val: 'w5' }, { label: '주 6회', val: 'w6' },
-    { label: '2주 3회', val: 'bw3' }, { label: '2주 5회', val: 'bw5' },
+function renderCycleStep() {
+  const depth1Opts = [
+    { label: '매일', val: 'daily' },
+    { label: '1주에', val: 'w1' },
+    { label: '2주에', val: 'w2' },
+    { label: '3주에', val: 'w3' },
+    { label: '4주에', val: 'w4' },
+    { label: '한 번', val: 'once' },
   ];
-  let h = `<div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--text);">${esc(localDash.goals[idx].title)}</div><div style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">얼마나 자주 수행할 건가요?</div><div class="unit-opts">`;
-  opts.forEach(o => h += `<div class="unit-opt" onclick="selectUnit(${idx},'${o.val}')" id="uopt_${o.val}">${o.label}</div>`);
-  h += `</div><button class="unit-confirm-btn" id="unitConfirmBtn" onclick="confirmUnit(${idx})" disabled>확인</button>`;
-  h += `<div style="margin-top:12px;"><button style="width:100%;background:transparent;border:2px solid var(--danger);border-radius:10px;padding:11px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="deleteGoal(${idx})">🗑 목표 삭제</button></div>`;
+  let h = `<div style="font-size:14px;font-weight:700;margin-bottom:4px;">${esc(_habitAddName)}</div>`;
+  h += `<div style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">얼마나 자주 수행할 건가요?</div>`;
+  // depth 1
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">`;
+  depth1Opts.forEach(o => {
+    const sel = _habitCycle1 === o.val;
+    h += `<div class="unit-opt ${sel?'selected':''}" onclick="selectCycle1('${o.val}')">${o.label}</div>`;
+  });
+  h += `</div>`;
+  // depth 2 (only for w1~w4)
+  h += `<div id="cycle2Area"></div>`;
+  // confirm button
+  const canConfirm = _habitCycle1 === 'daily' || _habitCycle1 === 'once' || (_habitCycle1 && _habitCycle2);
+  h += `<button class="unit-confirm-btn" id="cycleConfirmBtn" onclick="confirmHabitAdd()" ${canConfirm?'':'disabled'}>확인</button>`;
   document.getElementById('bsBody').innerHTML = h;
+  if (_habitCycle1 && _habitCycle1 !== 'daily' && _habitCycle1 !== 'once') {
+    renderCycle2();
+  }
 }
-let _selUnit = null;
-window.selectUnit = function (idx, val) {
-  _selUnit = val;
-  document.querySelectorAll('.unit-opt').forEach(e => e.classList.remove('selected'));
-  document.getElementById(`uopt_${val}`)?.classList.add('selected');
-  document.getElementById('unitConfirmBtn').disabled = false;
+
+window.selectCycle1 = function (val) {
+  _habitCycle1 = val;
+  _habitCycle2 = null;
+  renderCycleStep();
 };
-window.confirmUnit = async function (idx) {
-  if (!_selUnit) return;
+
+function renderCycle2() {
+  const area = document.getElementById('cycle2Area');
+  if (!area) return;
+  const weekNum = parseInt(_habitCycle1.slice(1));
+  const maxDays = weekNum * 7;
+  const quickNums = [1,2,3,4,5,6,7];
+  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">${weekNum}주에 몇 회?</div>`;
+  h += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">`;
+  quickNums.forEach(n => {
+    if (n > maxDays) return;
+    const sel = _habitCycle2 === n;
+    h += `<div class="unit-opt" style="flex:0 0 auto;min-width:44px;text-align:center;${sel?'background:var(--accent);color:#fff;border-color:var(--accent);':''}" onclick="selectCycle2(${n})">${n}회</div>`;
+  });
+  // custom button
+  const isCustom = _habitCycle2 && _habitCycle2 > 7;
+  h += `<div class="unit-opt" style="flex:0 0 auto;min-width:52px;text-align:center;${isCustom?'background:var(--accent);color:#fff;border-color:var(--accent);':''}" onclick="showCycle2Custom()">기타</div>`;
+  h += `</div>`;
+  h += `<div id="cycle2CustomArea"></div>`;
+  area.innerHTML = h;
+}
+
+window.selectCycle2 = function (n) {
+  _habitCycle2 = n;
+  renderCycleStep();
+};
+
+window.showCycle2Custom = function () {
+  const ca = document.getElementById('cycle2CustomArea');
+  if (!ca) return;
+  ca.innerHTML = `<div style="display:flex;gap:8px;align-items:center;">
+    <input type="number" id="cycle2CustomInput" class="proj-edit-input" style="width:80px;" min="1" max="28" placeholder="횟수">
+    <span style="font-size:13px;color:var(--text-dim);">회</span>
+    <button class="btn-sm" style="background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;" onclick="applyCycle2Custom()">적용</button>
+  </div>`;
+  setTimeout(() => document.getElementById('cycle2CustomInput')?.focus(), 100);
+};
+
+window.applyCycle2Custom = function () {
+  const v = parseInt(document.getElementById('cycle2CustomInput')?.value);
+  if (!v || v < 1) { showToast('1 이상 입력', 'normal'); return; }
+  _habitCycle2 = v;
+  renderCycleStep();
+};
+
+window.confirmHabitAdd = async function () {
+  if (!_habitCycle1) return;
+  if (_habitCycle1 !== 'daily' && _habitCycle1 !== 'once' && !_habitCycle2) return;
+
+  // find empty slot
+  let slot = -1;
+  for (let i = 0; i < MAX_HABITS; i++) {
+    if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; }
+  }
+  if (slot === -1) { showToast('습관 최대 10개!', 'normal'); return; }
+
   let unit, freq;
-  if (_selUnit === 'daily') { unit = 'daily'; freq = 0; }
-  else if (_selUnit === 'once') { unit = 'once'; freq = 0; }
-  else if (_selUnit.startsWith('bw')) { unit = 'biweekly'; freq = parseInt(_selUnit.slice(2)); }
-  else { unit = 'weekly'; freq = parseInt(_selUnit.slice(1)); }
-  localDash.goals[idx] = { ...localDash.goals[idx], unit, freq };
-  await saveDash(); _selUnit = null;
+  if (_habitCycle1 === 'daily') { unit = 'daily'; freq = 7; }
+  else if (_habitCycle1 === 'once') { unit = 'once'; freq = 0; }
+  else {
+    const weekNum = parseInt(_habitCycle1.slice(1));
+    if (weekNum === 1) { unit = 'weekly'; }
+    else if (weekNum === 2) { unit = 'biweekly'; }
+    else { unit = 'multiweek'; }
+    freq = _habitCycle2;
+    // store weekNum for multiweek
+    localDash.goals[slot] = { title: _habitAddName, unit, freq, weeks: weekNum };
+    await saveDash();
+    _habitAddName = ''; _habitCycle1 = null; _habitCycle2 = null;
+    closeBottomSheet(); renderHabitCards(); renderAvatar();
+    showToast('✅ 습관 등록 완료!', 'done');
+    return;
+  }
+  localDash.goals[slot] = { title: _habitAddName, unit, freq };
+  await saveDash();
+  _habitAddName = ''; _habitCycle1 = null; _habitCycle2 = null;
   closeBottomSheet(); renderHabitCards(); renderAvatar();
-  showToast('✅ 목표 설정 완료!', 'done');
+  showToast('✅ 습관 등록 완료!', 'done');
 };
+
+// unit setup (for existing goals without unit - backward compat)
+function openUnitSetupSheet(idx) {
+  _habitAddName = localDash.goals[idx].title;
+  _habitCycle1 = null;
+  _habitCycle2 = null;
+  document.getElementById('bsTitle').textContent = '주기 설정';
+  // override confirmHabitAdd to update existing slot
+  const origConfirm = window.confirmHabitAdd;
+  window.confirmHabitAdd = async function () {
+    if (!_habitCycle1) return;
+    if (_habitCycle1 !== 'daily' && _habitCycle1 !== 'once' && !_habitCycle2) return;
+    let unit, freq;
+    if (_habitCycle1 === 'daily') { unit = 'daily'; freq = 7; }
+    else if (_habitCycle1 === 'once') { unit = 'once'; freq = 0; }
+    else {
+      const weekNum = parseInt(_habitCycle1.slice(1));
+      if (weekNum === 1) { unit = 'weekly'; }
+      else if (weekNum === 2) { unit = 'biweekly'; }
+      else { unit = 'multiweek'; }
+      freq = _habitCycle2;
+      localDash.goals[idx] = { ...localDash.goals[idx], unit, freq, weeks: weekNum };
+      await saveDash();
+      closeBottomSheet(); renderHabitCards(); renderAvatar();
+      showToast('✅ 주기 설정 완료!', 'done');
+      window.confirmHabitAdd = origConfirm;
+      return;
+    }
+    localDash.goals[idx] = { ...localDash.goals[idx], unit, freq };
+    await saveDash();
+    closeBottomSheet(); renderHabitCards(); renderAvatar();
+    showToast('✅ 주기 설정 완료!', 'done');
+    window.confirmHabitAdd = origConfirm;
+  };
+  renderCycleStep();
+  // add delete button
+  const body = document.getElementById('bsBody');
+  body.innerHTML += `<div style="margin-top:12px;"><button style="width:100%;background:transparent;border:2px solid var(--danger);border-radius:10px;padding:11px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="deleteGoal(${idx})">🗑 습관 삭제</button></div>`;
+}
+
 window.deleteGoal = async function (idx) {
-  if (!confirm('이 목표를 삭제할까요?')) return;
+  if (!confirm('이 습관을 삭제할까요?')) return;
   localDash.goals[idx] = null; await saveDash();
   closeBottomSheet(); renderHabitCards(); renderAvatar();
   showToast('🗑 삭제됨', 'normal');

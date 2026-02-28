@@ -52,7 +52,8 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .save-login-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .save-login-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
 .save-login-row label{font-size:12px;color:var(--text-dim);cursor:pointer;}
-.btn-primary{width:100%;background:linear-gradient(135deg,#1952f5,#6b8fff);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;font-family:var(--font-main);cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:1px;box-shadow:0 8px 24px rgba(25,82,245,.38);}
+.btn-primary{width:100%;background:linear-gradient(135deg,#1952f5,#6b8fff);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;font-family:var(--font-main);cursor:pointer;margin-top:8px;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),box-shadow .2s;letter-spacing:1px;box-shadow:0 8px 24px rgba(25,82,245,.38);}
+.btn-primary:active{transform:scale(0.96);box-shadow:0 4px 12px rgba(25,82,245,.25);}
 .btn-primary:hover{opacity:.9;transform:translateY(-1px);}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 .login-error{color:var(--danger);font-size:13px;text-align:center;margin-top:12px;display:none;}
@@ -98,7 +99,8 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .hamburger-item:hover{background:#f8fafc;}
 .hamburger-item:not(:last-child){border-bottom:1px solid #f1f5f9;}
 .nav-user{font-size:13px;color:var(--text-dim);font-weight:700;}
-.btn-sm{background:#f1f5f9;border:1.5px solid #e2e8f0;color:#6b7280;border-radius:8px;padding:6px 14px;font-size:12px;font-family:var(--font-main);cursor:pointer;transition:all .2s;font-weight:600;}
+.btn-sm{background:#f1f5f9;border:1.5px solid #e2e8f0;color:#6b7280;border-radius:8px;padding:6px 14px;font-size:12px;font-family:var(--font-main);cursor:pointer;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),background .2s,border-color .2s;font-weight:600;}
+.btn-sm:active{transform:scale(0.96);}
 .btn-sm:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 
 /* DASHBOARD */
@@ -176,10 +178,15 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .habit-card-outer.swiping-left .habit-card-swipe-bg-right{display:flex;}
 .swipe-bg-text{color:#fff;font-size:11px;font-weight:800;letter-spacing:1px;opacity:.9;}
 /* 미완료 카드 - 파란 그라데이션 + 흰색 텍스트 */
-.habit-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:18px;padding:16px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);touch-action:pan-y;user-select:none;box-shadow:0 8px 20px rgba(25,82,245,0.3);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;}
+.habit-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),box-shadow .2s;touch-action:pan-y;user-select:none;box-shadow:0 8px 20px rgba(25,82,245,0.3);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;}
+.habit-card:active:not(.swiping){transform:scale(0.97);box-shadow:0 4px 10px rgba(25,82,245,0.2);}
 .habit-card:active{box-shadow:0 4px 10px rgba(25,82,245,0.4);transform:scale(0.96);}
 .habit-card.swiping{transition:none;}
-.habit-card.snapping{transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.habit-card.snapping{transition:transform .3s cubic-bezier(.15,.9,.3,1);}
+/* 카드 등장 애니메이션 */
+@keyframes cardEntrance{0%{opacity:0;transform:translateY(20px);}100%{opacity:1;transform:translateY(0);}}
+.habit-card-outer{animation:cardEntrance 0.35s cubic-bezier(0.175,0.885,0.32,1.275) both;}
+.challenge-card{animation:cardEntrance 0.35s cubic-bezier(0.175,0.885,0.32,1.275) both;}
 .habit-card-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .habit-card-mid{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .habit-card-unit{font-size:11px;color:#fff;font-weight:700;background:rgba(255,255,255,0.25);padding:4px 8px;border-radius:8px;}
@@ -212,7 +219,8 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .habit-card.completed .habit-card-bot{opacity:.5;}
 
 /* 도전 카드 - 파란 그라데이션 기본 */
-.challenge-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 8px 20px rgba(25,82,245,0.3);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;transition:all .2s;touch-action:pan-y;user-select:none;}
+.challenge-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 8px 20px rgba(25,82,245,0.3);min-height:130px;display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),box-shadow .2s;touch-action:pan-y;user-select:none;}
+.challenge-card:active:not(.swiping){transform:scale(0.97);box-shadow:0 4px 10px rgba(25,82,245,0.2);}
 .challenge-card:active{box-shadow:0 4px 10px rgba(25,82,245,0.4);transform:scale(0.96);}
 .challenge-card.type-bucket{border:none;}
 .challenge-card.type-project{border:none;}
@@ -249,10 +257,11 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .challenge-swipe-bg.todo{background:#1952f5;justify-content:flex-start;padding-left:18px;}
 .challenge-swipe-bg.done{background:#ff5e7d;justify-content:flex-end;padding-right:18px;}
 .challenge-card.swiping{transition:none;position:relative;z-index:2;}
-.challenge-card.snapping{transition:transform .3s cubic-bezier(.4,0,.2,1);position:relative;z-index:2;}
+.challenge-card.snapping{transition:transform .3s cubic-bezier(.15,.9,.3,1);position:relative;z-index:2;}
 
 /* 카드 추가 버튼 (그리드 내) */
-.grid-add-btn{background:#f8fafc;border:2px dashed #cbd5e1;border-radius:18px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;cursor:pointer;transition:all .2s;}
+.grid-add-btn{background:#f8fafc;border:2px dashed #cbd5e1;border-radius:18px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;cursor:pointer;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),background .2s;}
+.grid-add-btn:active{transform:scale(0.96);}
 .grid-add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 .grid-add-btn-icon{font-size:24px;margin-bottom:4px;}
 .grid-add-btn-text{font-size:13px;font-weight:700;}
@@ -423,7 +432,8 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .unit-opt{background:#fff;border:2px solid var(--border);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;font-size:13px;font-weight:700;transition:all .2s;font-family:var(--font-main);color:var(--text);}
 .unit-opt:hover{border-color:var(--accent);background:var(--accent-light);}
 .unit-opt.selected{border-color:var(--accent);background:var(--accent-light);color:var(--accent);}
-.unit-confirm-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font-main);cursor:pointer;box-shadow:0 4px 12px rgba(25,82,245,.28);}
+.unit-confirm-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font-main);cursor:pointer;box-shadow:0 4px 12px rgba(25,82,245,.28);transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275);}
+.unit-confirm-btn:active{transform:scale(0.96);}
 .add-goal-input{width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:var(--font-main);outline:none;margin-bottom:14px;transition:border-color .2s;}
 .add-goal-input:focus{border-color:var(--accent);}
 

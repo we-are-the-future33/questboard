@@ -880,7 +880,12 @@ function renderHabitCards() {
 
   wrapper.innerHTML = html;
   document.getElementById('habitSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
-  filtered.forEach(({ idx }) => initHabitSwipe(idx));
+  // Staggered entrance
+  filtered.forEach(({ idx }, i) => {
+    const outer = document.getElementById(`hcOuter_${idx}`);
+    if (outer) outer.style.animationDelay = `${i * 0.06}s`;
+    initHabitSwipe(idx);
+  });
 }
 
 // ===== HABIT SWIPE (touch only, bidirectional) =====
@@ -1100,7 +1105,12 @@ function renderChallengeCards() {
 
   wrapper.innerHTML = html;
   document.getElementById('challengeSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
-  filtered.forEach(({ c, idx }) => { if (c.type === 'bucket') initBucketSwipe(idx); });
+  // Staggered entrance
+  filtered.forEach(({ c, idx }, i) => {
+    const el = document.getElementById(`cc_${idx}`);
+    if (el) el.style.animationDelay = `${i * 0.06}s`;
+    if (c.type === 'bucket') initBucketSwipe(idx);
+  });
 }
 
 function isChallengeComplete(c) {

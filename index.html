@@ -13,7 +13,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com">
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+@font-face {
+  font-family: 'GmarketSansBold';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+  font-weight: bold;
+}
+</style>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -145,7 +153,7 @@
     <div class="tut-body">
       <div class="tut-step active" id="tutStep1">
         <div class="tut-bubble"><div class="tut-bubble-tag">STEP 1 · 목표 설정</div><div class="tut-bubble-text">먼저 <strong>달성하고 싶은 목표</strong>를 정해볼게요.<br>아래 목표를 탭해서 시작해보세요!</div></div>
-        <button id="tutGoalBtn" onclick="tutStep1Confirm()" style="width:100%;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:18px 16px;color:var(--text);font-size:16px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;text-align:left;margin-bottom:20px;animation:pulse-border 1.2s ease-in-out infinite;">12시 전에 자기</button>
+        <button id="tutGoalBtn" onclick="tutStep1Confirm()" style="width:100%;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:18px 16px;color:var(--text);font-size:16px;font-weight:700;font-family:var(--font-main);cursor:pointer;text-align:left;margin-bottom:20px;animation:pulse-border 1.2s ease-in-out infinite;">12시 전에 자기</button>
       </div>
       <div class="tut-step" id="tutStep2">
         <div class="tut-bubble"><div class="tut-bubble-tag">STEP 2 · 단위 설정</div><div class="tut-bubble-text"><strong>얼마나 자주</strong> 이 목표를 수행할 건가요?<br>주 4~5회를 탭해서 선택해보세요!</div></div>
@@ -154,7 +162,7 @@
       <div class="tut-step" id="tutStep3">
         <div class="tut-bubble"><div class="tut-bubble-tag">STEP 3 · 완료 체크</div><div class="tut-bubble-text">목표를 수행했다면 <strong>날짜를 탭해서</strong> 완료 처리를 해요.<br>이번 주 4일을 체크해보세요!</div></div>
         <div class="tut-preview"><div class="tut-preview-title" id="tutGoalName3">-</div><div class="tut-cal-grid" id="tutCalDayRow"></div><div class="tut-cal-grid" id="tutCalGrid"></div></div>
-        <div id="tutStep3Status" style="text-align:center;font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--text-dim);margin-bottom:8px;">0 / 4 체크</div>
+        <div id="tutStep3Status" style="text-align:center;font-family:var(--font-heading);font-size:14px;color:var(--text-dim);margin-bottom:8px;">0 / 4 체크</div>
       </div>
       <div class="tut-step" id="tutStep4">
         <div class="tut-bubble"><div class="tut-bubble-tag">STEP 4 · 진척률</div><div class="tut-bubble-text">체크한 날짜만큼 <strong>해당 목표의 수행률이 올라가요!</strong></div></div>
@@ -290,7 +298,7 @@
 <div class="notice-modal-overlay" id="noticeModalOverlay">
   <div class="notice-modal">
     <div class="notice-modal-header">
-      <span style="font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--text-dim);">📢 공지사항</span>
+      <span style="font-family:var(--font-heading);font-size:15px;color:var(--text-dim);">📢 공지사항</span>
       <button class="notice-modal-close" onclick="closeNoticeModal()">✕</button>
     </div>
     <div class="notice-modal-body" id="noticeModalBody"></div>

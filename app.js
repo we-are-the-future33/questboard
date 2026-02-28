@@ -403,11 +403,11 @@ window.openAboutMe = function () {
     <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:10px;">내 데이터 미리보기</div>
     <div style="display:flex;gap:12px;margin-bottom:12px;">
       <div style="flex:1;background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid #e2e8f0;">
-        <div style="font-family:'Black Han Sans';font-size:22px;color:var(--accent);">${goalCount}</div>
+        <div style="font-family:var(--font-heading);font-size:22px;color:var(--accent);">${goalCount}</div>
         <div style="font-size:11px;color:#64748b;font-weight:700;">습관</div>
       </div>
       <div style="flex:1;background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid #e2e8f0;">
-        <div style="font-family:'Black Han Sans';font-size:22px;color:var(--accent);">${challengeCount}</div>
+        <div style="font-family:var(--font-heading);font-size:22px;color:var(--accent);">${challengeCount}</div>
         <div style="font-size:11px;color:#64748b;font-weight:700;">도전</div>
       </div>
     </div>
@@ -496,7 +496,7 @@ window.openServiceInfo = function () {
   clearMetaTags();
   let h = `<div style="text-align:center;padding:24px 0 16px;">
     <div style="font-size:48px;margin-bottom:8px;">🐹</div>
-    <div style="font-family:'Black Han Sans';font-size:22px;color:var(--text);margin-bottom:2px;">키웁</div>
+    <div style="font-family:var(--font-logo);font-size:22px;color:var(--text);margin-bottom:2px;">키웁</div>
     <div style="font-size:12px;color:var(--text-dim);">동물 키우기 · 목표 달성 게임</div>
   </div>`;
   h += `<div style="background:#f8fafc;border-radius:14px;padding:16px;margin:8px 0;">
@@ -1384,7 +1384,7 @@ function renderProjectDetail(idx) {
     h += `</div></div>`;
   });
   // Progress summary
-  h += `<div style="display:flex;align-items:center;gap:8px;padding:12px 0;"><div style="flex:1;height:8px;background:#f1f5f9;border-radius:100px;overflow:hidden;"><div style="height:100%;width:${Math.min(pct,100)}%;background:linear-gradient(90deg,#60a5fa,#6366f1);border-radius:100px;"></div></div><span style="font-family:'Black Han Sans';font-size:16px;color:var(--accent);">${pct}%</span></div>`;
+  h += `<div style="display:flex;align-items:center;gap:8px;padding:12px 0;"><div style="flex:1;height:8px;background:#f1f5f9;border-radius:100px;overflow:hidden;"><div style="height:100%;width:${Math.min(pct,100)}%;background:linear-gradient(90deg,#60a5fa,#6366f1);border-radius:100px;"></div></div><span style="font-family:var(--font-heading);font-size:16px;color:var(--accent);">${pct}%</span></div>`;
   // Edit & Delete buttons
   h += `<button class="proj-edit-btn" onclick="openProjectEdit(${idx})">✏️ 수정</button>`;
   h += `<button class="proj-edit-btn" style="color:var(--danger);border-color:var(--danger);margin-top:8px;" onclick="deleteChallenge(${idx})">🗑 삭제</button>`;
@@ -1741,7 +1741,7 @@ function renderBSOnce(idx, body) {
   body.innerHTML = `<div style="text-align:center;padding:40px 0;">
     <div style="font-size:14px;color:var(--text-dim);margin-bottom:24px;">한 번 달성 목표</div>
     <button style="background:#fff;border:3px solid ${done ? 'var(--accent)' : 'var(--border)'};border-radius:50%;width:80px;height:80px;font-size:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;" onclick="bsToggleOnce(${idx})">${done ? '✅' : '⭕'}</button>
-    ${done ? '<div style="margin-top:12px;font-family:Black Han Sans;font-size:15px;color:var(--accent);">달성 완료!</div>' : ''}
+    ${done ? '<div style="margin-top:12px;font-family:var(--font-heading);font-size:15px;color:var(--accent);">달성 완료!</div>' : ''}
   </div>${renderStats6Month(idx, migrateGoal(localDash.goals[idx]))}
   <button class="proj-edit-btn" onclick="openHabitEdit(${idx})">✏️ 수정</button>
   <button class="proj-edit-btn" style="color:var(--danger);border-color:var(--danger);margin-top:8px;" onclick="deleteGoalFromBS(${idx})">🗑 삭제</button>`;
@@ -1972,7 +1972,7 @@ function openUnitSetupSheet(idx) {
   renderCycleStep();
   // add delete button
   const body = document.getElementById('bsBody');
-  body.innerHTML += `<div style="margin-top:12px;"><button style="width:100%;background:transparent;border:2px solid var(--danger);border-radius:10px;padding:11px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="deleteGoal(${idx})">🗑 습관 삭제</button></div>`;
+  body.innerHTML += `<div style="margin-top:12px;"><button style="width:100%;background:transparent;border:2px solid var(--danger);border-radius:10px;padding:11px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer;font-family:var(--font-main);" onclick="deleteGoal(${idx})">🗑 습관 삭제</button></div>`;
 }
 
 window.deleteGoal = async function (idx) {
@@ -2384,16 +2384,16 @@ function renderAdminDetail(uid) {
 
   var panel = document.getElementById('adminDetailPanel');
   var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
-    '<div><div style="font-family:Black Han Sans;font-size:20px;">'+esc(u.name||uid)+'</div><div style="font-size:12px;color:var(--text-dim);">@'+esc(uid)+' · '+lastLogin+'</div></div>' +
+    '<div><div style="font-family:var(--font-heading);font-size:20px;">'+esc(u.name||uid)+'</div><div style="font-size:12px;color:var(--text-dim);">@'+esc(uid)+' · '+lastLogin+'</div></div>' +
     '<button class="btn-sm" onclick="document.getElementById(\'adminDetailOverlay\').style.display=\'none\'">✕</button></div>';
   // meta cards
   var hpCol = habitPct>=70?'var(--accent3)':habitPct>=40?'orange':'var(--danger)';
   var ppCol = projPct>=70?'var(--accent3)':projPct>=40?'orange':'var(--accent)';
   h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px;">' +
-    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">습관</div><div style="font-family:Black Han Sans;font-size:20px;color:var(--accent);">'+habits+'개</div></div>' +
-    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">습관 달성률</div><div style="font-family:Black Han Sans;font-size:20px;color:'+hpCol+';">'+habitPct+'%</div></div>' +
-    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">도전</div><div style="font-family:Black Han Sans;font-size:20px;color:var(--accent2);">'+challenges+'개</div></div>' +
-    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">프로젝트</div><div style="font-family:Black Han Sans;font-size:20px;color:'+ppCol+';">'+projPct+'%</div></div></div>';
+    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">습관</div><div style="font-family:var(--font-heading);font-size:20px;color:var(--accent);">'+habits+'개</div></div>' +
+    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">습관 달성률</div><div style="font-family:var(--font-heading);font-size:20px;color:'+hpCol+';">'+habitPct+'%</div></div>' +
+    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">도전</div><div style="font-family:var(--font-heading);font-size:20px;color:var(--accent2);">'+challenges+'개</div></div>' +
+    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">프로젝트</div><div style="font-family:var(--font-heading);font-size:20px;color:'+ppCol+';">'+projPct+'%</div></div></div>';
   // tabs
   h += '<div style="display:flex;gap:4px;margin-bottom:14px;background:var(--surface);border-radius:10px;padding:3px;">' +
     '<button class="btn-sm" style="flex:1;text-align:center;'+(_adminDetailTab==='habit'?'background:var(--accent-light);color:var(--accent);border-color:var(--accent);':'')+'" onclick="switchAdminDetailTab(\''+uid+'\',\'habit\')">🎯 습관 ('+habits+')</button>' +
@@ -2408,7 +2408,7 @@ function renderAdminDetail(uid) {
       else { var dim=new Date(cy,cm,0).getDate(); mod=freq*Math.ceil(dim/7); var pfx='g'+gi+'_'+cy+'_'+cm+'_'; done=Object.entries(comp).filter(function(e){return e[0].startsWith(pfx)&&e[1]===true;}).length; pct=mod>0?Math.min(100,Math.round(done/mod*100)):0; }
       var col=pct>=70?'var(--accent3)':pct>=40?'orange':'var(--danger)';
       h += '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;">'+esc(g.title)+'</div><div style="font-family:Black Han Sans;font-size:18px;color:'+col+';">'+pct+'%</div></div>' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;">'+esc(g.title)+'</div><div style="font-family:var(--font-heading);font-size:18px;color:'+col+';">'+pct+'%</div></div>' +
         '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px;"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:2px;"></div></div>' +
         '<div style="display:flex;gap:4px;"><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);">'+(ADMIN_UNIT_LABELS[g.unit]||g.unit)+'</span><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);">'+done+'/'+mod+'</span></div></div>';
     });
@@ -2429,7 +2429,7 @@ function renderAdminDetail(uid) {
         var stH='';
         (c.stages||[]).forEach(function(s,si){ var st=s.tasks||[]; var sd=st.filter(function(t){return t.done;}).length; stH+='<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding-left:4px;"><div style="width:18px;height:18px;border-radius:50%;background:'+(sd===st.length&&st.length>0?'rgba(0,185,107,.2)':'var(--border)')+';display:flex;align-items:center;justify-content:center;font-size:9px;color:'+(sd===st.length&&st.length>0?'#00b96b':'var(--text-dim)')+';flex-shrink:0;">'+(si+1)+'</div><div style="font-size:12px;font-weight:700;">'+esc(s.name)+'</div><div style="font-size:11px;color:var(--text-dim);margin-left:auto;">'+sd+'/'+st.length+'</div></div>'; });
         h += '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">' +
-          '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;">'+esc(c.title)+'</div><div style="font-family:Black Han Sans;font-size:18px;color:'+col2+';">'+pp2+'%</div></div>' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;">'+esc(c.title)+'</div><div style="font-family:var(--font-heading);font-size:18px;color:'+col2+';">'+pp2+'%</div></div>' +
           '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px;"><div style="height:100%;width:'+pp2+'%;background:'+col2+';border-radius:2px;"></div></div>' +
           '<div style="display:flex;gap:4px;margin-bottom:4px;"><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(25,82,245,.08);border:1px solid rgba(25,82,245,.15);color:var(--accent);">프로젝트</span><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);">'+td2+'/'+tt2+'</span></div>' +
           stH + '</div>';
@@ -2454,9 +2454,9 @@ function renderAdminGroupList() {
     }).join('');
     var addOpts = nonAdmin.filter(function(e){return !members.some(function(m){return m[1]===e[0];});}).map(function(e){return '<option value="'+e[0]+'">'+esc(e[1].name)+'</option>';}).join('');
     h += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div style="font-family:Black Han Sans;font-size:14px;">📁 '+esc(g.name)+'</div><button class="btn-sm" style="padding:2px 8px;font-size:10px;color:var(--danger);border-color:var(--danger);" onclick="adminDeleteGroup(\''+gid+'\')">삭제</button></div>' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div style="font-family:var(--font-heading);font-size:14px;">📁 '+esc(g.name)+'</div><button class="btn-sm" style="padding:2px 8px;font-size:10px;color:var(--danger);border-color:var(--danger);" onclick="adminDeleteGroup(\''+gid+'\')">삭제</button></div>' +
       '<div style="margin-bottom:8px;">'+(chips||'<span style="color:var(--text-dim);font-size:11px;">멤버 없음</span>')+'</div>' +
-      (addOpts?'<div style="display:flex;gap:6px;"><select id="gsel_'+gid+'" style="flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:6px 8px;color:var(--text);font-size:12px;font-family:Noto Sans KR,sans-serif;outline:none;"><option value="">+ 멤버 추가</option>'+addOpts+'</select><button class="btn-sm" style="padding:4px 10px;font-size:11px;background:var(--accent);color:#fff;border-color:var(--accent);" onclick="adminAddMember(\''+gid+'\')">추가</button></div>':'') +
+      (addOpts?'<div style="display:flex;gap:6px;"><select id="gsel_'+gid+'" style="flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:6px 8px;color:var(--text);font-size:12px;font-family:var(--font-main);outline:none;"><option value="">+ 멤버 추가</option>'+addOpts+'</select><button class="btn-sm" style="padding:4px 10px;font-size:11px;background:var(--accent);color:#fff;border-color:var(--accent);" onclick="adminAddMember(\''+gid+'\')">추가</button></div>':'') +
     '</div>';
   });
   gl.innerHTML = h;

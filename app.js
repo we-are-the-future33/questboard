@@ -1190,73 +1190,232 @@ window.sendCheer = async function (fid, gi) {
 };
 
 // ===== ADMIN =====
+const ADMIN_UNIT_LABELS = { once:'한 번', daily:'매일', w1:'주 1회', w2:'주 2~3회', w4:'주 4~5회', w6:'주 6회' };
+const ADMIN_UNIT_FREQ = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6 };
+let _adminUsers = {}, _adminDash = {}, _adminGroups = {};
+let _adminDetailTab = 'habit';
+
 async function renderAdminList() {
-  const snap = await get(ref(db, 'users'));
-  if (!snap.exists()) return;
-  const users = snap.val();
-  let rows = Object.entries(users).filter(([id, u]) => u.role !== 'admin');
+  try {
+    const [uSnap, dSnap, gSnap] = await Promise.all([
+      get(ref(db, 'users')), get(ref(db, 'dashboards')), get(ref(db, 'groups'))
+    ]);
+    _adminUsers = uSnap.exists() ? uSnap.val() : {};
+    _adminDash = dSnap.exists() ? dSnap.val() : {};
+    _adminGroups = gSnap.exists() ? gSnap.val() : {};
+    renderAdminUserTable();
+    renderAdminGroupList();
+    renderAdminNoticeList();
+  } catch(e) { showToast('❌ 로드 오류: ' + e.message, 'normal'); }
+}
+
+function adminCountData(dash) {
+  const goals = Array.isArray(dash.goals) ? dash.goals.filter(g=>g&&g.title) : [];
+  const challenges = Array.isArray(dash.challenges) ? dash.challenges.filter(c=>c&&c.title) : [];
+  return { habits: goals.length, challenges: challenges.length };
+}
+
+function renderAdminUserTable() {
   const tbl = document.getElementById('adminUserTable');
-  let h = `<table class="user-table"><thead><tr><th>이름</th><th>아이디</th><th>목표</th></tr></thead><tbody>`;
-  for (const [id, u] of rows) {
-    const dSnap = await get(ref(db, `dashboards/${id}`));
-    const d = dSnap.exists() ? dSnap.val() : {};
-    const gCount = (d.goals || []).filter(g => g && g.title).length;
-    h += `<tr class="user-row" onclick="showAdminUserDetail('${id}')"><td><span class="user-tbl-name">${esc(u.name)}</span></td><td><span class="user-tbl-id">${id}</span></td><td>${gCount}개</td></tr>`;
+  const users = Object.entries(_adminUsers).filter(([,u]) => u.role !== 'admin');
+  if (users.length === 0) { tbl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:12px;text-align:center;">등록된 유저 없음</div>'; return; }
+  let h = '<table class="user-table"><thead><tr><th>유저</th><th>습관 / 도전</th><th>튜토리얼</th><th>마지막 접속</th><th>비밀번호</th><th></th></tr></thead><tbody>';
+  for (const [id, u] of users) {
+    const dash = _adminDash[id] || {};
+    const { habits, challenges } = adminCountData(dash);
+    const lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '없음';
+    const tut = dash.tutorialDone ? '<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--accent-light);color:var(--accent);border:1px solid rgba(25,82,245,.2);">완료</span>' : '<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);color:var(--text-dim);border:1px solid var(--border);">미완료</span>';
+    h += '<tr class="user-row" onclick="showAdminUserDetail(\'' + id + '\')">' +
+      '<td><span class="user-tbl-name">' + esc(u.name) + '</span><br><span style="font-size:11px;color:var(--text-dim);">@' + esc(id) + '</span></td>' +
+      '<td><span style="font-size:11px;padding:2px 8px;border-radius:100px;background:rgba(25,82,245,.08);color:var(--accent);border:1px solid rgba(25,82,245,.15);margin-right:4px;">습관 ' + habits + '</span><span style="font-size:11px;padding:2px 8px;border-radius:100px;background:rgba(255,94,125,.08);color:var(--accent2);border:1px solid rgba(255,94,125,.15);">도전 ' + challenges + '</span></td>' +
+      '<td>' + tut + '</td>' +
+      '<td style="font-size:11px;color:var(--text-dim);">' + lastLogin + '</td>' +
+      '<td onclick="event.stopPropagation()">' +
+        '<div id="pwShow_' + id + '" style="display:flex;align-items:center;gap:6px;">' +
+          '<span style="font-size:12px;color:var(--text-dim);font-family:monospace;">' + esc(u.password||'') + '</span>' +
+          '<button class="btn-sm" style="padding:2px 8px;font-size:10px;" onclick="adminStartEditPw(\'' + id + '\')">수정</button>' +
+        '</div>' +
+        '<div id="pwEdit_' + id + '" style="display:none;gap:6px;align-items:center;">' +
+          '<input id="pwInput_' + id + '" type="text" value="' + esc(u.password||'') + '" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:11px;font-family:monospace;width:80px;outline:none;">' +
+          '<button class="btn-sm" style="padding:2px 8px;font-size:10px;background:var(--accent);color:#fff;border-color:var(--accent);" onclick="adminSavePw(\'' + id + '\')">저장</button>' +
+          '<button class="btn-sm" style="padding:2px 8px;font-size:10px;" onclick="adminCancelPw(\'' + id + '\')">취소</button>' +
+        '</div>' +
+      '</td>' +
+      '<td onclick="event.stopPropagation()"><button class="btn-sm" style="padding:2px 8px;font-size:10px;color:var(--danger);border-color:var(--danger);" onclick="adminDeleteUser(\'' + id + '\')">삭제</button></td>' +
+    '</tr>';
   }
-  h += `</tbody></table>`;
+  h += '</tbody></table>';
   tbl.innerHTML = h;
-  // 그룹
-  const grpSnap = await get(ref(db, 'groups'));
-  const gl = document.getElementById('adminGroupList');
-  if (!grpSnap.exists()) { gl.innerHTML = '<div class="admin-empty">그룹 없음</div>'; return; }
-  const groups = grpSnap.val();
-  let gh = '';
-  for (const [gid, g] of Object.entries(groups)) {
-    gh += `<div class="group-card"><div class="group-card-hdr"><div class="group-card-name">${esc(g.name)}</div></div><div class="group-member-list">`;
-    if (g.members) {
-      for (const [mk, mid] of Object.entries(g.members)) {
-        const muSnap = await get(ref(db, `users/${mid}`));
-        const mname = muSnap.exists() ? muSnap.val().name : mid;
-        gh += `<div class="group-member-row"><span class="group-member-name">${esc(mname)}</span><span class="group-member-id">${mid}</span></div>`;
+}
+
+window.adminStartEditPw = function(id) { document.getElementById('pwShow_'+id).style.display='none'; document.getElementById('pwEdit_'+id).style.display='flex'; };
+window.adminCancelPw = function(id) { document.getElementById('pwShow_'+id).style.display='flex'; document.getElementById('pwEdit_'+id).style.display='none'; };
+window.adminSavePw = async function(id) {
+  const pw = document.getElementById('pwInput_'+id).value.trim();
+  if (!pw) return;
+  await set(ref(db, 'users/'+id+'/password'), pw);
+  showToast('✅ 비밀번호 변경', 'done'); renderAdminList();
+};
+window.adminCreateUser = async function() {
+  const name = document.getElementById('adminNewName').value.trim();
+  const id = document.getElementById('adminNewId').value.trim();
+  const pw = document.getElementById('adminNewPw').value.trim();
+  if (!name||!id||!pw) { showToast('모든 항목 입력 필요', 'normal'); return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(id)) { showToast('아이디: 영문/숫자/_만', 'normal'); return; }
+  if (_adminUsers[id]) { showToast('이미 존재하는 아이디', 'normal'); return; }
+  await set(ref(db, 'users/'+id), { name: name, password: pw, role: 'user' });
+  document.getElementById('adminNewName').value=''; document.getElementById('adminNewId').value=''; document.getElementById('adminNewPw').value='';
+  showToast('✅ '+name+' 생성!', 'done'); renderAdminList();
+};
+window.adminDeleteUser = async function(id) {
+  if (!confirm((_adminUsers[id]?.name||id)+' 계정 삭제?')) return;
+  await Promise.all([set(ref(db,'users/'+id),null), set(ref(db,'dashboards/'+id),null)]);
+  showToast('🗑 삭제됨', 'normal'); renderAdminList();
+};
+
+// ===== ADMIN USER DETAIL (overlay) =====
+window.showAdminUserDetail = function(uid) {
+  _adminDetailTab = 'habit';
+  renderAdminDetail(uid);
+  document.getElementById('adminDetailOverlay').style.display = 'block';
+};
+window.switchAdminDetailTab = function(uid, tab) {
+  _adminDetailTab = tab;
+  renderAdminDetail(uid);
+};
+
+function renderAdminDetail(uid) {
+  const u = _adminUsers[uid]||{}, dash = _adminDash[uid]||{}, comp = dash.completions||{};
+  const now = new Date(), cy = now.getFullYear(), cm = now.getMonth()+1;
+  const { habits, challenges } = adminCountData(dash);
+  const goals = Array.isArray(dash.goals)?dash.goals:[];
+  const challengeArr = Array.isArray(dash.challenges)?dash.challenges.filter(function(c){return c&&c.title;}):[];
+  const lastLogin = u.lastLogin?new Date(u.lastLogin).toLocaleString('ko'):'없음';
+
+  // habit pct
+  var tDone=0,tMod=0;
+  goals.forEach(function(g,gi){ if(!g||!g.unit||g.unit==='once') return; var f=ADMIN_UNIT_FREQ[g.unit]||1; var dim=new Date(cy,cm,0).getDate(); var mod=f*Math.ceil(dim/7); var pfx='g'+gi+'_'+cy+'_'+cm+'_'; var d=Object.entries(comp).filter(function(e){return e[0].startsWith(pfx)&&e[1]===true;}).length; tDone+=d; tMod+=mod; });
+  var habitPct = tMod>0?Math.min(100,Math.round(tDone/tMod*100)):0;
+  // project pct
+  var pjD=0,pjT=0;
+  challengeArr.filter(function(c){return c.type==='project';}).forEach(function(c){ (c.stages||[]).forEach(function(s){ (s.tasks||[]).forEach(function(t){ pjT++; if(t.done)pjD++; }); }); });
+  var projPct = pjT>0?Math.round(pjD/pjT*100):0;
+
+  var panel = document.getElementById('adminDetailPanel');
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+    '<div><div style="font-family:Black Han Sans;font-size:20px;">'+esc(u.name||uid)+'</div><div style="font-size:12px;color:var(--text-dim);">@'+esc(uid)+' · '+lastLogin+'</div></div>' +
+    '<button class="btn-sm" onclick="document.getElementById(\'adminDetailOverlay\').style.display=\'none\'">✕</button></div>';
+  // meta cards
+  var hpCol = habitPct>=70?'var(--accent3)':habitPct>=40?'orange':'var(--danger)';
+  var ppCol = projPct>=70?'var(--accent3)':projPct>=40?'orange':'var(--accent)';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px;">' +
+    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">습관</div><div style="font-family:Black Han Sans;font-size:20px;color:var(--accent);">'+habits+'개</div></div>' +
+    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">습관 달성률</div><div style="font-family:Black Han Sans;font-size:20px;color:'+hpCol+';">'+habitPct+'%</div></div>' +
+    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">도전</div><div style="font-family:Black Han Sans;font-size:20px;color:var(--accent2);">'+challenges+'개</div></div>' +
+    '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">프로젝트</div><div style="font-family:Black Han Sans;font-size:20px;color:'+ppCol+';">'+projPct+'%</div></div></div>';
+  // tabs
+  h += '<div style="display:flex;gap:4px;margin-bottom:14px;background:var(--surface);border-radius:10px;padding:3px;">' +
+    '<button class="btn-sm" style="flex:1;text-align:center;'+(_adminDetailTab==='habit'?'background:var(--accent-light);color:var(--accent);border-color:var(--accent);':'')+'" onclick="switchAdminDetailTab(\''+uid+'\',\'habit\')">🎯 습관 ('+habits+')</button>' +
+    '<button class="btn-sm" style="flex:1;text-align:center;'+(_adminDetailTab==='challenge'?'background:var(--accent-light);color:var(--accent);border-color:var(--accent);':'')+'" onclick="switchAdminDetailTab(\''+uid+'\',\'challenge\')">⭐ 도전 ('+challenges+')</button></div>';
+
+  if (_adminDetailTab === 'habit') {
+    var hasGoal = false;
+    goals.forEach(function(g,gi){
+      if(!g||!g.title||!g.unit) return; hasGoal = true;
+      var freq=ADMIN_UNIT_FREQ[g.unit]||1; var pct=0,done=0,mod=0;
+      if(g.unit==='once'){ done=comp['g'+gi+'_once']===true?1:0; mod=1; pct=done*100; }
+      else { var dim=new Date(cy,cm,0).getDate(); mod=freq*Math.ceil(dim/7); var pfx='g'+gi+'_'+cy+'_'+cm+'_'; done=Object.entries(comp).filter(function(e){return e[0].startsWith(pfx)&&e[1]===true;}).length; pct=mod>0?Math.min(100,Math.round(done/mod*100)):0; }
+      var col=pct>=70?'var(--accent3)':pct>=40?'orange':'var(--danger)';
+      h += '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;">'+esc(g.title)+'</div><div style="font-family:Black Han Sans;font-size:18px;color:'+col+';">'+pct+'%</div></div>' +
+        '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px;"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:2px;"></div></div>' +
+        '<div style="display:flex;gap:4px;"><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);">'+(ADMIN_UNIT_LABELS[g.unit]||g.unit)+'</span><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);">'+done+'/'+mod+'</span></div></div>';
+    });
+    if(!hasGoal) h += '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px 0;">등록된 습관 없음</div>';
+  } else {
+    if(challengeArr.length===0) h += '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px 0;">등록된 도전 없음</div>';
+    challengeArr.forEach(function(c){
+      if(c.type==='bucket') {
+        var isDone=c.done===true;
+        h += '<div style="background:var(--surface);border:2px solid '+(isDone?'rgba(0,185,107,.3)':'var(--border)')+';border-radius:10px;padding:12px 14px;margin-bottom:8px;">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><div style="font-size:13px;font-weight:700;">'+(isDone?'✨ ':'')+esc(c.title)+'</div><div style="font-size:13px;font-weight:700;color:'+(isDone?'#00b96b':'var(--text-dim)')+';">'+(isDone?'달성':'진행중')+'</div></div>' +
+          '<div style="display:flex;gap:4px;"><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(255,94,125,.08);border:1px solid rgba(255,94,125,.2);color:var(--accent2);">버킷리스트</span></div></div>';
+      } else if(c.type==='project') {
+        var td2=0,tt2=0;
+        (c.stages||[]).forEach(function(s){(s.tasks||[]).forEach(function(t){tt2++;if(t.done)td2++;});});
+        var pp2=tt2>0?Math.round(td2/tt2*100):0;
+        var col2=pp2>=70?'var(--accent3)':pp2>=40?'orange':'var(--danger)';
+        var stH='';
+        (c.stages||[]).forEach(function(s,si){ var st=s.tasks||[]; var sd=st.filter(function(t){return t.done;}).length; stH+='<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding-left:4px;"><div style="width:18px;height:18px;border-radius:50%;background:'+(sd===st.length&&st.length>0?'rgba(0,185,107,.2)':'var(--border)')+';display:flex;align-items:center;justify-content:center;font-size:9px;color:'+(sd===st.length&&st.length>0?'#00b96b':'var(--text-dim)')+';flex-shrink:0;">'+(si+1)+'</div><div style="font-size:12px;font-weight:700;">'+esc(s.name)+'</div><div style="font-size:11px;color:var(--text-dim);margin-left:auto;">'+sd+'/'+st.length+'</div></div>'; });
+        h += '<div style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;">'+esc(c.title)+'</div><div style="font-family:Black Han Sans;font-size:18px;color:'+col2+';">'+pp2+'%</div></div>' +
+          '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px;"><div style="height:100%;width:'+pp2+'%;background:'+col2+';border-radius:2px;"></div></div>' +
+          '<div style="display:flex;gap:4px;margin-bottom:4px;"><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(25,82,245,.08);border:1px solid rgba(25,82,245,.15);color:var(--accent);">프로젝트</span><span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);">'+td2+'/'+tt2+'</span></div>' +
+          stH + '</div>';
       }
-    }
-    gh += `</div></div>`;
+    });
   }
-  gl.innerHTML = gh;
-  // 공지 목록
-  const nSnap = await get(ref(db, 'notices'));
-  const nl = document.getElementById('adminNoticeList');
+  panel.innerHTML = h;
+}
+
+// ===== ADMIN GROUP =====
+function renderAdminGroupList() {
+  var gl = document.getElementById('adminGroupList');
+  var groups = Object.entries(_adminGroups);
+  var nonAdmin = Object.entries(_adminUsers).filter(function(e){return e[1].role!=='admin';});
+  if (groups.length === 0) { gl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;">그룹 없음</div>'; return; }
+  var h = '';
+  groups.forEach(function(entry) {
+    var gid = entry[0], g = entry[1];
+    var members = g.members ? Object.entries(g.members) : [];
+    var chips = members.map(function(m) {
+      var mk=m[0],uid=m[1]; return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:3px 10px;font-size:11px;margin:2px;">'+esc(_adminUsers[uid]?.name||uid)+' <button style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;padding:0 2px;" onclick="adminRemoveMember(\''+gid+'\',\''+mk+'\')">×</button></span>';
+    }).join('');
+    var addOpts = nonAdmin.filter(function(e){return !members.some(function(m){return m[1]===e[0];});}).map(function(e){return '<option value="'+e[0]+'">'+esc(e[1].name)+'</option>';}).join('');
+    h += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div style="font-family:Black Han Sans;font-size:14px;">📁 '+esc(g.name)+'</div><button class="btn-sm" style="padding:2px 8px;font-size:10px;color:var(--danger);border-color:var(--danger);" onclick="adminDeleteGroup(\''+gid+'\')">삭제</button></div>' +
+      '<div style="margin-bottom:8px;">'+(chips||'<span style="color:var(--text-dim);font-size:11px;">멤버 없음</span>')+'</div>' +
+      (addOpts?'<div style="display:flex;gap:6px;"><select id="gsel_'+gid+'" style="flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:6px 8px;color:var(--text);font-size:12px;font-family:Noto Sans KR,sans-serif;outline:none;"><option value="">+ 멤버 추가</option>'+addOpts+'</select><button class="btn-sm" style="padding:4px 10px;font-size:11px;background:var(--accent);color:#fff;border-color:var(--accent);" onclick="adminAddMember(\''+gid+'\')">추가</button></div>':'') +
+    '</div>';
+  });
+  gl.innerHTML = h;
+}
+
+window.adminCreateGroup = async function() {
+  var name = document.getElementById('adminNewGroupName').value.trim();
+  if (!name) return;
+  await push(ref(db,'groups'), { name: name, members:{} });
+  document.getElementById('adminNewGroupName').value = '';
+  showToast('✅ "'+name+'" 그룹 생성!', 'done'); renderAdminList();
+};
+window.adminDeleteGroup = async function(gid) {
+  if (!confirm('그룹 삭제?')) return;
+  await set(ref(db,'groups/'+gid), null);
+  showToast('🗑 삭제됨', 'normal'); renderAdminList();
+};
+window.adminAddMember = async function(gid) {
+  var sel = document.getElementById('gsel_'+gid);
+  var uid = sel?.value; if (!uid) return;
+  await set(ref(db,'groups/'+gid+'/members/'+uid+'_'+Date.now()), uid);
+  showToast('✅ 멤버 추가!', 'done'); renderAdminList();
+};
+window.adminRemoveMember = async function(gid, mk) {
+  await set(ref(db,'groups/'+gid+'/members/'+mk), null);
+  showToast('✅ 제거됨', 'done'); renderAdminList();
+};
+
+// ===== ADMIN NOTICE LIST =====
+async function renderAdminNoticeList() {
+  var nl = document.getElementById('adminNoticeList');
+  var nSnap = await get(ref(db, 'notices'));
   if (!nSnap.exists()) { nl.innerHTML = ''; return; }
-  let nh = '';
-  Object.entries(nSnap.val()).sort((a, b) => (b[1].createdAt || '').localeCompare(a[1].createdAt || '')).forEach(([nid, n]) => {
-    nh += `<div class="notice-card"><div class="notice-card-info"><div class="notice-card-title">${esc(n.title)}</div><div class="notice-card-meta">${n.target} · ${new Date(n.createdAt).toLocaleDateString('ko')}</div></div><button class="notice-card-del" onclick="deleteNotice('${nid}')">삭제</button></div>`;
+  var nh = '';
+  Object.entries(nSnap.val()).sort(function(a,b){return (b[1].createdAt||'').localeCompare(a[1].createdAt||'');}).forEach(function(entry){
+    var nid=entry[0], n=entry[1];
+    nh += '<div class="notice-card"><div class="notice-card-info"><div class="notice-card-title">'+esc(n.title)+'</div><div class="notice-card-meta">'+n.target+' · '+new Date(n.createdAt).toLocaleDateString('ko')+'</div></div><button class="notice-card-del" onclick="deleteNotice(\''+nid+'\')">삭제</button></div>';
   });
   nl.innerHTML = nh;
 }
-
-window.showAdminUserDetail = async function (uid) {
-  const area = document.getElementById('adminUserDetail');
-  const uSnap = await get(ref(db, `users/${uid}`));
-  const dSnap = await get(ref(db, `dashboards/${uid}`));
-  if (!uSnap.exists()) return;
-  const u = uSnap.val(), d = dSnap.exists() ? dSnap.val() : {};
-  const goals = d.goals || [], comp = d.completions || {};
-  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
-  let h = `<div class="admin-detail"><div class="admin-detail-header"><div><div class="admin-detail-name">${esc(u.name)}</div><div class="admin-detail-id">${uid}</div></div></div>`;
-  h += `<div class="admin-meta-grid"><div class="admin-meta-card"><div class="admin-meta-label">마지막 로그인</div><div class="admin-meta-val">${u.lastLogin ? new Date(u.lastLogin).toLocaleString('ko') : '-'}</div></div><div class="admin-meta-card"><div class="admin-meta-label">마지막 업데이트</div><div class="admin-meta-val">${d.lastUpdate ? new Date(d.lastUpdate).toLocaleString('ko') : '-'}</div></div></div>`;
-  h += `<div class="admin-goal-list">`;
-  for (let i = 0; i < MAX_HABITS; i++) {
-    const g = goals[i]; if (!g || !g.unit) continue;
-    const mg = migrateGoal(g), mod = goalModulus(mg, i, y, m);
-    let done = 0;
-    if (mg.unit === 'once') done = comp[`g${i}_once`] === true ? 1 : 0;
-    else { const pfx = `g${i}_${y}_${m}_`; done = Object.entries(comp).filter(([k, v]) => k.startsWith(pfx) && v === true).length; }
-    const pct = mod > 0 ? Math.round(done / mod * 100) : 0;
-    h += `<div class="admin-goal-card"><div class="admin-goal-top"><div class="admin-goal-title">${esc(g.title)}</div><div class="admin-goal-pct">${pct}%</div></div><div class="admin-goal-bar"><div class="admin-goal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div><div class="admin-goal-meta"><span class="admin-goal-tag highlight">${getUnitLabel(mg)}</span><span class="admin-goal-tag">${done}/${mod}</span></div></div>`;
-  }
-  h += `</div></div>`;
-  area.innerHTML = h;
-};
 
 // ===== NOTICE ADMIN =====
 let _noticeTarget = 'all';

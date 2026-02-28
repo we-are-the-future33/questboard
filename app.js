@@ -483,12 +483,51 @@ window.openSettings = function () {
 
 window.setFontLevel = function (level) {
   applyFontSize(level);
-  // Update UI
   document.querySelectorAll('.font-size-btn').forEach((btn, i) => {
     btn.classList.toggle('selected', i === level);
   });
   document.getElementById('fontLevelLabel').textContent = FONT_SIZES[level].label;
   showToast(`글씨 크기: ${FONT_SIZES[level].label}`, 'normal');
+};
+
+// ===== SERVICE INFO =====
+window.openServiceInfo = function () {
+  document.getElementById('bsTitle').textContent = '📦 서비스 정보';
+  clearMetaTags();
+  let h = `<div style="text-align:center;padding:24px 0 16px;">
+    <div style="font-size:48px;margin-bottom:8px;">🐹</div>
+    <div style="font-family:'Black Han Sans';font-size:22px;color:var(--text);margin-bottom:2px;">키웁</div>
+    <div style="font-size:12px;color:var(--text-dim);">동물 키우기 · 목표 달성 게임</div>
+  </div>`;
+  h += `<div style="background:#f8fafc;border-radius:14px;padding:16px;margin:8px 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:12px;font-weight:700;color:#64748b;">마지막 업데이트</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text);" id="serviceUpdateDate">불러오는 중...</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:12px;font-weight:700;color:#64748b;">개발</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">Jin</span>
+    </div>
+  </div>`;
+  document.getElementById('bsBody').innerHTML = h;
+  openBS();
+  // GitHub API로 마지막 커밋 날짜 조회
+  fetch('https://api.github.com/repos/we-are-the-future33/we-are-the-future33.github.io/commits?per_page=1')
+    .then(r => r.json())
+    .then(data => {
+      const el = document.getElementById('serviceUpdateDate');
+      if (!el) return;
+      if (data && data[0] && data[0].commit) {
+        const d = new Date(data[0].commit.committer.date);
+        el.textContent = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+      } else {
+        el.textContent = '정보 없음';
+      }
+    })
+    .catch(() => {
+      const el = document.getElementById('serviceUpdateDate');
+      if (el) el.textContent = '조회 실패';
+    });
 };
 
 // ===== TAB =====
@@ -553,21 +592,21 @@ window.switchTab = function (tab) {
       isSnapping = true;
       if (target >= snapPoint) {
         // 아래로 스냅: 탭바 숨기기
-        tabBar.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+        tabBar.style.transition = 'none';
         tabBar.style.transform = 'translateY(-100%)';
         tabBar.style.opacity = '0';
         tabBar.style.pointerEvents = 'none';
         snappedDown = true;
       } else {
         // 위로 스냅: 탭바 보이기
-        tabBar.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+        tabBar.style.transition = 'none';
         tabBar.style.transform = 'translateY(0)';
         tabBar.style.opacity = '1';
         tabBar.style.pointerEvents = '';
         snappedDown = false;
       }
-      scroll.scrollTo({ top: target, behavior: 'smooth' });
-      setTimeout(() => { isSnapping = false; lastY = scroll.scrollTop; }, 350);
+      scroll.scrollTo({ top: target, behavior: 'instant' });
+      setTimeout(() => { isSnapping = false; lastY = scroll.scrollTop; }, 100);
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);

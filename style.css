@@ -115,7 +115,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .gb-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.25) 0%,transparent 60%);border-radius:100px;}
 
 /* 아바타 */
-.avatar-section{padding:16px 20px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;border-bottom:none;border-radius:0 0 14px 14px;transition:background 0.5s ease;position:relative;overflow:hidden;}
+.avatar-section{padding:16px 20px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;}
 .avatar-section::before{content:'';position:absolute;top:0;left:0;right:0;height:40px;background:linear-gradient(180deg,rgba(255,255,255,0.25) 0%,transparent 100%);z-index:2;pointer-events:none;}
 .avatar-art{width:320px;height:320px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:3;margin-bottom:-40px;}
 .avatar-art canvas{width:320px!important;height:320px!important;}

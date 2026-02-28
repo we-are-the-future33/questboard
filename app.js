@@ -567,8 +567,9 @@ window.switchTab = function (tab) {
     }, { passive: true });
 
     function doSnap() {
-      // 서브탭바 바로 위쪽으로 스냅 (서브탭 + 섹션헤더 모두 보이도록)
-      const snapPoint = subBar.offsetTop - 8;
+      const avatarSection = document.querySelector('.avatar-section');
+      // 아바타 섹션 끝 = 서브탭 바로 위
+      const snapPoint = avatarSection ? (avatarSection.offsetTop + avatarSection.offsetHeight) : subBar.offsetTop;
       const curY = scroll.scrollTop;
 
       // 이미 스냅된 상태에서 위로 조금 올리면 → 위로 복귀
@@ -589,17 +590,17 @@ window.switchTab = function (tab) {
     }
 
     function snapTo(target) {
-      const snapPoint = subBar.offsetTop - 8;
+      const avatarSection = document.querySelector('.avatar-section');
       isSnapping = true;
-      if (target >= snapPoint) {
-        // 아래로 스냅: 탭바 공간 자체를 제거
+      if (target > 0) {
+        // 아래로 스냅: 탭바 숨기기
         tabBar.style.display = 'none';
-        // 탭바 제거 후 레이아웃 변경됨 → 새 위치로 스냅
-        const newTarget = subBar.offsetTop - 8;
+        // 탭바 제거 후 레이아웃 재계산
+        const newTarget = avatarSection ? (avatarSection.offsetTop + avatarSection.offsetHeight) : subBar.offsetTop;
         snappedDown = true;
         scroll.scrollTo({ top: newTarget, behavior: 'instant' });
       } else {
-        // 위로 스냅: 탭바 다시 표시
+        // 위로 스냅: 탭바 보이기
         tabBar.style.display = '';
         snappedDown = false;
         scroll.scrollTo({ top: 0, behavior: 'instant' });

@@ -211,10 +211,10 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .view-mode-select{background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:100px;padding:6px 10px;font-size:12px;font-weight:700;color:#4b5563;outline:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-right:6px;}
 .view-mode-select:focus{border-color:var(--accent);}
 /* 아코디언 그룹 헤더 */
-.group-header{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:800;color:#64748b;margin:16px 0 8px 0;padding-bottom:6px;border-bottom:2px dashed #e2e8f0;cursor:pointer;user-select:none;transition:color 0.2s;}
+.group-header{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:800;color:#64748b;margin:16px 0 8px 0;padding:0 4px 6px 4px;border-bottom:2px dashed #e2e8f0;cursor:pointer;user-select:none;transition:color 0.2s;overflow:hidden;}
 .group-header:hover{color:var(--accent);}
-.group-header-left{display:flex;align-items:center;gap:8px;}
-.group-toggle-icon{font-size:12px;color:#9ca3af;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
+.group-header-left{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;}
+.group-toggle-icon{font-size:12px;color:#9ca3af;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);flex-shrink:0;}
 .group-toggle-icon.closed{transform:rotate(-90deg);}
 .card-grid.hidden{display:none;}
 

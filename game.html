@@ -15,6 +15,7 @@
   --mobile:480px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
+button{-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent;}
 body{background:#000;color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(135deg,#0a0a0a 0px,#0a0a0a 2px,#000 2px,#000 12px);z-index:0;}
 .screen{display:none;min-height:100vh;position:relative;z-index:1;}
@@ -49,7 +50,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .login-error{color:var(–danger);font-size:13px;text-align:center;margin-top:12px;display:none;}
 
 /* NAV */
-.topnav{height:52px;background:var(–bg);border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.topnav{height:52px;background:var(–bg);border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;backdrop-filter:none;-webkit-backdrop-filter:none;}
 .nav-logo{font-family:‘Black Han Sans’,sans-serif;font-size:18px;color:var(–accent);letter-spacing:3px;}
 .nav-badge{font-size:10px;color:var(–accent2);margin-left:5px;}
 .nav-right{display:flex;align-items:center;gap:8px;}
@@ -139,16 +140,19 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .goals-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .goals-section-title{font-family:‘Black Han Sans’,sans-serif;font-size:15px;letter-spacing:2px;color:var(–text-dim);}
 .goal-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-.goal-btn{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:12px 10px;cursor:pointer;text-align:left;transition:border-color .2s,background .2s;font-family:‘Noto Sans KR’,sans-serif;position:relative;overflow:hidden;height:88px;display:flex;flex-direction:column;justify-content:center;}
+.goal-btn{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:12px 10px;cursor:pointer;text-align:left;transition:border-color .2s,background .2s;font-family:‘Noto Sans KR’,sans-serif;position:relative;overflow:hidden;height:88px;display:flex;flex-direction:column;justify-content:center;color:var(–text);-webkit-appearance:none;appearance:none;}
 .goal-btn:hover:not(.disabled){border-color:var(–accent);}
 .goal-btn.active{border-color:var(–accent);background:rgba(200,241,53,.07);}
-.goal-btn.disabled{border-style:dashed;cursor:default;}
+.goal-btn.disabled{border-style:dashed;cursor:default;background:var(–surface);}
 .goal-btn-title{font-size:11px;font-weight:700;color:var(–text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .goal-btn.disabled .goal-btn-title{color:var(–text-dim);}
 .goal-btn-pct{font-family:‘Black Han Sans’,sans-serif;font-size:17px;color:var(–accent);}
 .goal-btn-bar{height:3px;background:var(–border);border-radius:2px;overflow:hidden;margin-top:6px;}
 .goal-btn-fill{height:100%;background:var(–accent);border-radius:2px;transition:width .4s;}
 .goal-btn-need{font-size:10px;color:var(–text-dim);margin-top:4px;}
+/* 빨간 점 */
+.goal-btn .unread-dot{position:absolute;top:7px;right:7px;width:8px;height:8px;background:#f13535;border-radius:50%;display:none;}
+.goal-btn.has-unread .unread-dot{display:block;}
 
 /* 상세 패널 */
 .detail-section{padding:20px;}
@@ -295,8 +299,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .toast.show{transform:translateX(-50%) translateY(0);}
 
 /* ===== TABS ===== */
-.tab-bar{display:flex;border-bottom:1px solid var(–border);background:var(–bg);position:sticky;top:52px;z-index:40;}
-.tab-btn{flex:1;padding:12px 0;font-size:13px;font-weight:700;font-family:‘Noto Sans KR’,sans-serif;background:transparent;border:none;color:var(–text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;}
+.tab-bar{display:flex;border-bottom:2px solid var(–border);background:var(–bg);position:sticky;top:52px;z-index:40;}
+.tab-btn{flex:1;padding:13px 0;font-size:13px;font-weight:700;font-family:‘Noto Sans KR’,sans-serif;background:var(–bg);border:none;color:var(–text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;margin-bottom:-2px;}
 .tab-btn.active{color:var(–accent);border-bottom-color:var(–accent);}
 .tab-panel{display:none;}
 .tab-panel.active{display:block;}
@@ -415,12 +419,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="admin-hero-title">ADMIN</div>
         <div class="admin-hero-sub">유저 계정을 생성하고 관리하세요</div>
       </div>
-      <div class="create-form">
-        <div class="section-title" style="font-size:15px;margin-bottom:16px;">새 계정 생성</div>
-        <div class="form-row"><label>이름</label><input type="text" id="newUserName" placeholder="유저 이름"></div>
-        <div class="form-row"><label>아이디</label><input type="text" id="newUserId" placeholder="로그인 아이디 (영문/숫자)"></div>
-        <div class="form-row"><label>비밀번호</label><input type="text" id="newUserPw" placeholder="비밀번호"></div>
-        <button class="btn-accent full" onclick="createUser()">계정 생성</button>
+      <div class="create-form" style="margin-bottom:28px;">
+        <div style="font-size:13px;color:var(--text-dim);line-height:2;">
+          🔒 계정 생성 및 그룹 관리는 <strong style="color:var(--accent);">Colab 어드민 스크립트</strong>를 사용하거나<br>
+          <strong style="color:var(--accent);">Firebase 콘솔</strong>에서 직접 처리해주세요.
+        </div>
       </div>
       <div style="margin-top:32px;">
         <div class="section-title" style="font-size:15px;margin-bottom:12px;">등록된 유저</div>
@@ -429,13 +432,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       </div>
       <div style="margin-top:32px;">
         <div class="section-title" style="font-size:15px;margin-bottom:12px;">그룹 관리</div>
-        <div class="create-form" style="margin-bottom:16px;">
-          <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">새 그룹 만들기</div>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="newGroupName" placeholder="그룹 이름" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-            <button class="btn-accent" onclick="createGroup()" style="white-space:nowrap;">그룹 생성</button>
-          </div>
-        </div>
         <div id="adminGroupList"></div>
       </div>
     </div>
@@ -686,8 +682,6 @@ async function init() {
     document.getElementById('loginPw').value = saved.pw || '';
     document.getElementById('saveLoginChk').checked = true;
   }
-  const snap = await get(ref(db,'users/admin'));
-  if (!snap.exists()) await set(ref(db,'users/admin'),{name:'관리자',password:'admin1234',role:'admin'});
   showScreen('loginScreen');
 }
 init();
@@ -1215,15 +1209,17 @@ function renderGoalGrid(){
     const g=goals[i];
     const isActive=activeGoalIdx===i;
     if(!g){
-      html+=`<button class="goal-btn disabled" onclick="selectGoal(${i})"><div class="goal-btn-title" style="color:var(--text-dim);text-align:center;width:100%;">＋</div></button>`;
+      html+=`<button class="goal-btn disabled" data-gi="${i}" onclick="selectGoal(${i})"><div class="goal-btn-title" style="color:var(--text-dim);text-align:center;width:100%;">＋</div></button>`;
     } else if(!g.unit){
-      html+=`<button class="goal-btn ${isActive?'active':''}" onclick="selectGoal(${i})">
+      html+=`<button class="goal-btn ${isActive?'active':''}" data-gi="${i}" onclick="selectGoal(${i})">
+        <div class="unread-dot"></div>
         <div class="goal-btn-title">${esc(g.title||'목표'+(i+1))}</div>
         <div class="goal-btn-need">단위 설정 필요</div>
       </button>`;
     } else {
       const {pct}=goalPct(g,i,y,m);
-      html+=`<button class="goal-btn ${isActive?'active':''}" onclick="selectGoal(${i})">
+      html+=`<button class="goal-btn ${isActive?'active':''}" data-gi="${i}" onclick="selectGoal(${i})">
+        <div class="unread-dot"></div>
         <div class="goal-btn-title">${esc(g.title||'목표'+(i+1))}</div>
         <div class="goal-btn-pct">${pct}%</div>
         <div class="goal-btn-bar"><div class="goal-btn-fill" style="width:${pct}%"></div></div>
@@ -1231,6 +1227,8 @@ function renderGoalGrid(){
     }
   }
   document.getElementById('goalGrid').innerHTML=html;
+  // 렌더 후 unread 체크
+  checkUnreadCheers();
 }
 window.selectGoal=function(idx){
   cancelEditNickname();
@@ -1238,6 +1236,8 @@ window.selectGoal=function(idx){
   activeGoalIdx=idx;
   renderGoalGrid();
   renderDetail(idx);
+  // 읽음 처리 - 해당 목표 응원 확인
+  markCheerRead(idx);
   setTimeout(()=>document.getElementById('detailSection').scrollIntoView({behavior:'smooth',block:'start'}),50);
 };
 
@@ -1793,29 +1793,27 @@ function buildROCal(friendId, gi, g, completions, y, m) {
   </div>`;
 }
 
+function buildCheerItem(c) {
+  const dt = c.at ? new Date(c.at).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+  return `<div class="cheer-item">
+    <div class="cheer-body">
+      <div class="cheer-from">${esc(c.fromName||c.from)}</div>
+      <div class="cheer-text">${esc(c.text||'')}</div>
+      <div class="cheer-time">${dt}</div>
+    </div>
+  </div>`;
+}
+
 function buildCheerBox(targetId, gi) {
   const cheers = window._cheerCache?.[`${targetId}_${gi}`] || [];
   const cheerItems = cheers.length===0
-    ? '<div style="color:var(--text-dim);font-size:12px;text-align:center;padding:8px 0;">아직 응원이 없어요. 첫 응원을 보내보세요! 🎉</div>'
-    : cheers.slice().reverse().map(c=>{
-        const dt = c.at ? new Date(c.at).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
-        return `<div class="cheer-item">
-          <div class="cheer-emoji-big">${esc(c.emoji||'💪')}</div>
-          <div class="cheer-body">
-            <div class="cheer-from">${esc(c.fromName||c.from)}</div>
-            <div class="cheer-text">${esc(c.text||'')}</div>
-            <div class="cheer-time">${dt}</div>
-          </div>
-        </div>`;
-      }).join('');
-  const EMOJIS=['💪','🔥','👏','🎉','😊','🌟'];
-  const emojiRow=EMOJIS.map(e=>`<button class="cheer-emoji-btn ${selectedCheerEmoji===e?'selected':''}" onclick="selectCheerEmoji('${e}')">${e}</button>`).join('');
+    ? '<div style="color:var(--text-dim);font-size:12px;text-align:center;padding:8px 0;">아직 응원이 없어요. 첫 응원을 보내보세요!</div>'
+    : cheers.slice().reverse().map(buildCheerItem).join('');
   return `<div class="cheer-box">
     <div class="cheer-box-title">💬 응원 메시지</div>
     <div class="cheer-list" id="cheerList_${targetId}_${gi}">${cheerItems}</div>
-    <div class="cheer-emoji-row">${emojiRow}</div>
     <div class="cheer-input-row">
-      <input class="cheer-text-input" id="cheerInput_${targetId}_${gi}" placeholder="응원 한마디..." maxlength="40">
+      <input class="cheer-text-input" id="cheerInput_${targetId}_${gi}" placeholder="응원 한마디... (이모지도 가능 😊)" maxlength="60">
       <button class="cheer-send-btn" onclick="sendCheer('${targetId}',${gi})">보내기</button>
     </div>
   </div>`;
@@ -1828,47 +1826,49 @@ window.selectFriendGoal = async function(friendId, gi) {
   renderFriendsTab();
 };
 
-window.selectCheerEmoji = function(e) {
-  selectedCheerEmoji=e;
-  // 이모지 버튼 선택 표시만 업데이트 (re-render 없이)
-  document.querySelectorAll('.cheer-emoji-btn').forEach(btn=>{
-    btn.classList.toggle('selected', btn.textContent===e);
-  });
-};
-
 async function loadCheers(targetId, gi) {
   if(!window._cheerCache) window._cheerCache={};
   const snap = await get(ref(db,`cheers/${targetId}/${gi}`));
   window._cheerCache[`${targetId}_${gi}`] = snap.exists() ? Object.values(snap.val()) : [];
 }
 
+// 읽음 처리 - 내 목표의 응원을 확인했을 때
+async function markCheerRead(goalIdx) {
+  if(!currentUser) return;
+  await set(ref(db,`reads/${currentUser.id}/${goalIdx}`), new Date().toISOString());
+}
+
+// 내 목표에 읽지 않은 응원이 있는지 확인
+async function checkUnreadCheers() {
+  if(!currentUser) return;
+  const goals = localDash.goals || [];
+  const readsSnap = await get(ref(db,`reads/${currentUser.id}`));
+  const reads = readsSnap.exists() ? readsSnap.val() : {};
+  for(let gi=0; gi<goals.length; gi++) {
+    const g = goals[gi];
+    if(!g||!g.title) continue;
+    const cheerSnap = await get(ref(db,`cheers/${currentUser.id}/${gi}`));
+    if(!cheerSnap.exists()) continue;
+    const cheers = Object.values(cheerSnap.val());
+    const lastRead = reads[gi] || '1970-01-01T00:00:00.000Z';
+    const hasUnread = cheers.some(c => c.at && c.at > lastRead);
+    const btn = document.querySelector(`.goal-btn[data-gi="${gi}"]`);
+    if(btn) btn.classList.toggle('has-unread', hasUnread);
+  }
+}
+
 window.sendCheer = async function(targetId, gi) {
   const inputEl = document.getElementById(`cheerInput_${targetId}_${gi}`);
   const text = inputEl ? inputEl.value.trim() : '';
-  const emoji = selectedCheerEmoji || '💪';
   if(!text){ showToast('❌ 응원 메시지를 입력해주세요'); return; }
   const key = Date.now().toString();
-  const cheer = { from:currentUser.id, fromName:currentUser.name||currentUser.id, emoji, text, at:new Date().toISOString() };
+  const cheer = { from:currentUser.id, fromName:currentUser.name||currentUser.id, text, at:new Date().toISOString() };
   await set(ref(db,`cheers/${targetId}/${gi}/${key}`), cheer);
   await loadCheers(targetId, gi);
   showToast('💌 응원을 보냈어요!');
-  // 리스트만 갱신
-  if(!window._cheerCache) window._cheerCache={};
   const cheers = window._cheerCache[`${targetId}_${gi}`];
   const listEl = document.getElementById(`cheerList_${targetId}_${gi}`);
-  if(listEl) {
-    listEl.innerHTML = cheers.slice().reverse().map(c=>{
-      const dt = c.at ? new Date(c.at).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
-      return `<div class="cheer-item">
-        <div class="cheer-emoji-big">${esc(c.emoji||'💪')}</div>
-        <div class="cheer-body">
-          <div class="cheer-from">${esc(c.fromName||c.from)}</div>
-          <div class="cheer-text">${esc(c.text||'')}</div>
-          <div class="cheer-time">${dt}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
+  if(listEl) listEl.innerHTML = cheers.slice().reverse().map(buildCheerItem).join('');
   if(inputEl) inputEl.value='';
 };
 

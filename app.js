@@ -900,7 +900,7 @@ function checkWeekClear(idx) {
   const ws = new Date(now); ws.setDate(now.getDate() - dow);
   let wd = 0;
   for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (localDash.completions[`g${idx}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
-  if (wd === freq) setTimeout(() => { showConfetti(); shakeScreen(); const p = document.getElementById('weekClearPopup'); p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 2800); }, 300);
+  if (wd === freq) setTimeout(() => { showConfetti(); const p = document.getElementById('weekClearPopup'); p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 2800); }, 300);
 }
 
 // ===== BOTTOM SHEET =====
@@ -952,6 +952,8 @@ function renderBSBody(idx) {
   }
   // 6개월 통계
   html += renderStats6Month(idx, g);
+  // 삭제 버튼
+  html += `<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);"><button style="width:100%;background:transparent;border:1.5px solid #e5e7eb;border-radius:12px;padding:13px;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;" onclick="deleteGoalFromBS(${idx})">삭제하기</button></div>`;
   body.innerHTML = html;
 }
 
@@ -990,7 +992,8 @@ function renderBSOnce(idx, body) {
     <div style="font-size:14px;color:var(--text-dim);margin-bottom:24px;">한 번 달성 목표</div>
     <button style="background:#fff;border:3px solid ${done ? 'var(--accent)' : 'var(--border)'};border-radius:50%;width:80px;height:80px;font-size:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;" onclick="bsToggleOnce(${idx})">${done ? '✅' : '⭕'}</button>
     ${done ? '<div style="margin-top:12px;font-family:Black Han Sans;font-size:15px;color:var(--accent);">달성 완료!</div>' : ''}
-  </div>${renderStats6Month(idx, migrateGoal(localDash.goals[idx]))}`;
+  </div>${renderStats6Month(idx, migrateGoal(localDash.goals[idx]))}
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);"><button style="width:100%;background:transparent;border:1.5px solid #e5e7eb;border-radius:12px;padding:13px;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;" onclick="deleteGoalFromBS(${idx})">삭제하기</button></div>`;
 }
 
 window.bsToggleOnce = async function (idx) {
@@ -1195,6 +1198,18 @@ function openUnitSetupSheet(idx) {
 window.deleteGoal = async function (idx) {
   if (!confirm('이 습관을 삭제할까요?')) return;
   localDash.goals[idx] = null; await saveDash();
+  closeBottomSheet(); renderHabitCards(); renderAvatar();
+  showToast('🗑 삭제됨', 'normal');
+};
+
+window.deleteGoalFromBS = async function (idx) {
+  if (!confirm('정말 삭제하시겠습니까?\n\n삭제된 습관과 모든 기록은 복구할 수 없습니다.')) return;
+  localDash.goals[idx] = null;
+  // 관련 completions도 정리
+  Object.keys(localDash.completions).forEach(k => {
+    if (k.startsWith(`g${idx}_`)) delete localDash.completions[k];
+  });
+  await saveDash();
   closeBottomSheet(); renderHabitCards(); renderAvatar();
   showToast('🗑 삭제됨', 'normal');
 };
@@ -1961,31 +1976,53 @@ function showToast(msg, type = 'normal') {
   t.textContent = msg; t.className = `toast toast-${type} show`;
   setTimeout(() => t.classList.remove('show'), 2200);
 }
+// ===== CELEBRATION EFFECTS =====
+function triggerHaptic(style) {
+  if (navigator.vibrate) {
+    if (style === 'heavy') navigator.vibrate([30, 50, 30, 50, 60]);
+    else if (style === 'light') navigator.vibrate(15);
+    else navigator.vibrate(10);
+  }
+}
+
 function showConfetti() {
   const c = document.getElementById('confettiContainer');
-  const colors = ['#1952f5', '#ff5e7d', '#f5c518', '#00b96b', '#a78bfa', '#ff9f43'];
-  for (let i = 0; i < 120; i++) {
+  const colors = ['#1952f5', '#ff5e7d', '#f5c518', '#00b96b', '#a78bfa', '#ff9f43', '#38bdf8', '#e879f9'];
+  const shapes = ['square', 'circle', 'strip'];
+  for (let i = 0; i < 200; i++) {
     const p = document.createElement('div'); p.className = 'confetti-piece';
+    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+    const size = 5 + Math.random() * 10;
     p.style.left = Math.random() * 100 + '%';
     p.style.background = colors[Math.floor(Math.random() * colors.length)];
-    p.style.width = (6 + Math.random() * 8) + 'px'; p.style.height = (6 + Math.random() * 8) + 'px';
-    p.style.animationDuration = (1.5 + Math.random() * 2) + 's';
-    p.style.animationDelay = Math.random() * 0.5 + 's';
-    c.appendChild(p); setTimeout(() => p.remove(), 4000);
+    if (shape === 'circle') { p.style.width = size + 'px'; p.style.height = size + 'px'; p.style.borderRadius = '50%'; }
+    else if (shape === 'strip') { p.style.width = (3 + Math.random() * 4) + 'px'; p.style.height = (12 + Math.random() * 16) + 'px'; p.style.borderRadius = '2px'; }
+    else { p.style.width = size + 'px'; p.style.height = size + 'px'; }
+    p.style.animationDuration = (1.8 + Math.random() * 2.5) + 's';
+    p.style.animationDelay = Math.random() * 0.6 + 's';
+    c.appendChild(p); setTimeout(() => p.remove(), 5000);
   }
+  triggerHaptic('heavy');
+  shakeScreen();
 }
+
 function showConfettiSmall() {
   const c = document.getElementById('confettiContainer');
-  const colors = ['#1952f5', '#a78bfa', '#ff5e7d', '#f5c518'];
-  for (let i = 0; i < 25; i++) {
+  const colors = ['#1952f5', '#a78bfa', '#ff5e7d', '#f5c518', '#00b96b', '#38bdf8'];
+  for (let i = 0; i < 60; i++) {
     const p = document.createElement('div'); p.className = 'confetti-piece';
-    p.style.left = (30 + Math.random() * 40) + '%';
+    const size = 4 + Math.random() * 8;
+    p.style.left = (20 + Math.random() * 60) + '%';
     p.style.background = colors[Math.floor(Math.random() * colors.length)];
-    p.style.width = (4 + Math.random() * 6) + 'px'; p.style.height = (4 + Math.random() * 6) + 'px';
-    p.style.animationDuration = (1 + Math.random() * 1.5) + 's';
-    c.appendChild(p); setTimeout(() => p.remove(), 3000);
+    p.style.width = size + 'px'; p.style.height = size + 'px';
+    if (Math.random() > 0.5) p.style.borderRadius = '50%';
+    p.style.animationDuration = (1.2 + Math.random() * 1.8) + 's';
+    p.style.animationDelay = Math.random() * 0.3 + 's';
+    c.appendChild(p); setTimeout(() => p.remove(), 3500);
   }
+  triggerHaptic('light');
 }
+
 function shakeScreen() {
   const el = document.querySelector('#dashboardScreen .mobile-wrap');
   if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 800); }

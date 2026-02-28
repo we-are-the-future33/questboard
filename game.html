@@ -118,12 +118,13 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 
 /* DASHBOARD */
 #dashboardScreen .mobile-wrap{padding-bottom:32px;}
-.global-bar{padding:12px 20px;background:#fff;border-bottom:2px solid var(--border);}
-.gb-row{display:flex;align-items:center;gap:12px;}
-.gb-label{font-size:11px;letter-spacing:2px;color:var(--text-dim);white-space:nowrap;font-weight:700;text-transform:uppercase;}
-.gb-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
-.gb-fill{height:100%;background:linear-gradient(90deg,var(--accent),#6b8fff);border-radius:4px;transition:width .6s ease;}
-.gb-pct{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);min-width:44px;text-align:right;}
+.global-bar{padding:18px 0 20px;background:transparent;border-radius:0;margin:0 0 4px;box-shadow:none;}
+.gb-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:12px;}
+.gb-label{font-size:11px;letter-spacing:2px;color:var(--text-dim);font-weight:700;text-transform:uppercase;padding-bottom:4px;}
+.gb-pct{font-family:'Black Han Sans',sans-serif;font-size:40px;background:linear-gradient(135deg,#1952f5,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;}
+.gb-track{width:100%;height:20px;background:var(--surface2);border-radius:10px;overflow:hidden;box-shadow:inset 0 2px 6px rgba(25,82,245,.10);}
+.gb-fill{height:100%;background:linear-gradient(90deg,#1952f5 0%,#6b8fff 50%,#a78bfa 80%,#ff5e7d 100%);border-radius:10px;transition:width .9s cubic-bezier(.4,0,.2,1);position:relative;}
+.gb-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.30) 0%,transparent 60%);border-radius:10px;}
 
 /* 아바타 */
 .avatar-section{padding:28px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;border-bottom:2px solid var(--border);}
@@ -526,13 +527,6 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
         <button class="btn-sm" onclick="doLogout()">로그아웃</button>
       </div>
     </nav>
-    <div class="global-bar">
-      <div class="gb-row">
-        <div class="gb-label">이번 달</div>
-        <div class="gb-track"><div class="gb-fill" id="gbFill" style="width:0%"></div></div>
-        <div class="gb-pct" id="gbPct">0%</div>
-      </div>
-    </div>
     <!-- 탭 바 (그룹 있을 때만 친구 탭 노출) -->
     <div class="tab-bar" id="dashTabBar" style="display:none;">
       <button class="tab-btn active" onclick="switchTab('my')" id="tabBtnMy">🎯 나의 목표</button>
@@ -553,7 +547,14 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
         </div>
       </div>
       <div class="goals-section">
-        <div class="goals-section-header">
+        <div class="global-bar">
+          <div class="gb-top">
+            <div class="gb-label">이번 달 달성률</div>
+            <div class="gb-pct" id="gbPct">0%</div>
+          </div>
+          <div class="gb-track"><div class="gb-fill" id="gbFill" style="width:0%"></div></div>
+        </div>
+        <div class="goals-section-header" style="margin-top:20px;">
           <div class="goals-section-title">🎯 목표</div>
         </div>
         <div class="goal-grid" id="goalGrid"></div>
@@ -1219,10 +1220,16 @@ function renderGoalGrid(){
 window.selectGoal=function(idx){
   cancelEditNickname();
   cancelEditMsg();
+  // 이미 활성화된 목표 다시 누르면 닫기
+  if(activeGoalIdx===idx){
+    activeGoalIdx=null;
+    renderGoalGrid();
+    document.getElementById('detailSection').innerHTML='';
+    return;
+  }
   activeGoalIdx=idx;
   renderGoalGrid();
   renderDetail(idx);
-  // 읽음 처리 - 해당 목표 응원 확인
   markCheerRead(idx);
   setTimeout(()=>document.getElementById('detailSection').scrollIntoView({behavior:'smooth',block:'start'}),50);
 };
@@ -1931,6 +1938,7 @@ window.deleteGroup = async function(gid) {
   renderAdminGroups();
 };
 </script>
+<script>
 (function(){
   const canvas = document.getElementById('loginCanvas');
   if(!canvas) return;

@@ -500,6 +500,47 @@ window.switchTab = function (tab) {
   if (tab === 'friends') renderFriends();
 };
 
+// ===== SCROLL SNAP (avatar ↔ sub-tab zone) =====
+(function initScrollSnap() {
+  let ready = false;
+  function setup() {
+    const scroll = document.querySelector('.dash-scroll');
+    const subBar = document.querySelector('.sub-tab-bar');
+    if (!scroll || !subBar) return;
+    if (ready) return;
+    ready = true;
+
+    let snapTimer = null;
+    let lastDir = 0; // 1=down, -1=up
+    let lastY = 0;
+
+    scroll.addEventListener('scroll', function () {
+      const curY = scroll.scrollTop;
+      if (curY > lastY) lastDir = 1;
+      else if (curY < lastY) lastDir = -1;
+      lastY = curY;
+      clearTimeout(snapTimer);
+      snapTimer = setTimeout(() => doSnap(), 120);
+    }, { passive: true });
+
+    function doSnap() {
+      const snapPoint = subBar.offsetTop - 8; // sub-tab-bar가 상단에 붙는 위치
+      const curY = scroll.scrollTop;
+      // 스냅 존: 0 ~ snapPoint 사이에 있을 때만 작동
+      if (curY <= 0 || curY >= snapPoint) return;
+      // 반 이상 내렸거나 아래로 스크롤 중이면 → 서브탭 위치로 스냅
+      if (lastDir > 0 || curY > snapPoint * 0.4) {
+        scroll.scrollTo({ top: snapPoint, behavior: 'smooth' });
+      } else {
+        scroll.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }
+  // DOM ready 후 실행
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
+  else setTimeout(setup, 500);
+})();
+
 // ===== DASHBOARD =====
 function renderDashboard() {
   const now = new Date();

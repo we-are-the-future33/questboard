@@ -111,8 +111,8 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 
 /* 아바타 */
 .avatar-section{padding:0 20px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;border-bottom:2px solid var(--border);}
-.avatar-art{width:220px;height:220px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;}
-.avatar-art canvas{width:220px!important;height:220px!important;}
+.avatar-art{width:280px;height:280px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;}
+.avatar-art canvas{width:280px!important;height:280px!important;}
 .avatar-stage{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:4px 10px;border-radius:8px;}
 .avatar-nickname-row{display:flex;align-items:center;justify-content:center;gap:8px;}
 .avatar-nickname{font-family:'Black Han Sans',sans-serif;font-size:24px;color:#111827;letter-spacing:1px;}

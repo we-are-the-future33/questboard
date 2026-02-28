@@ -928,80 +928,164 @@ function buildHamster(container) {
   const scene = new THREE.Scene();
   scene.background = null;
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-  camera.position.set(0, 0.5, 4);
+  camera.position.set(0, 0.5, 4.2);
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setSize(280, 280); renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
   container.innerHTML = ''; container.appendChild(renderer.domElement);
+
+  // -- Toon gradient map for softer shading --
+  const gradientTex = new THREE.DataTexture(new Uint8Array([180, 230, 255]), 3, 1, THREE.LuminanceFormat);
+  gradientTex.minFilter = THREE.NearestFilter;
+  gradientTex.magFilter = THREE.NearestFilter;
+  gradientTex.needsUpdate = true;
+
   const hamster = new THREE.Group();
-  // Body
+
+  // Body - bright warm cream
   const bodyGeo = new THREE.SphereGeometry(1, 32, 32);
-  bodyGeo.scale(1, 0.85, 0.9);
-  const bodyMat = new THREE.MeshToonMaterial({ color: 0xf5d0a9 });
+  bodyGeo.scale(1, 0.88, 0.85);
+  const bodyMat = new THREE.MeshToonMaterial({ color: 0xfff4d6, gradientMap: gradientTex });
   const body = new THREE.Mesh(bodyGeo, bodyMat);
   hamster.add(body);
+
   // Head
-  const headGeo = new THREE.SphereGeometry(0.7, 32, 32);
+  const headGeo = new THREE.SphereGeometry(0.72, 32, 32);
   const head = new THREE.Mesh(headGeo, bodyMat);
-  head.position.set(0, 0.9, 0.3);
+  head.position.set(0, 0.88, 0.25);
   hamster.add(head);
-  // Eyes
-  const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
+
+  // Ears - small, slightly pink inside
+  const earGeo = new THREE.SphereGeometry(0.18, 16, 16);
+  earGeo.scale(0.9, 1.3, 0.5);
+  const earMat = new THREE.MeshToonMaterial({ color: 0xfce5d0, gradientMap: gradientTex });
+  const earInnerMat = new THREE.MeshToonMaterial({ color: 0xffc4b0, gradientMap: gradientTex });
+  const earL = new THREE.Mesh(earGeo, earMat);
+  earL.position.set(-0.45, 1.48, 0.05);
+  earL.rotation.z = 0.2;
+  const earR = new THREE.Mesh(earGeo, earMat);
+  earR.position.set(0.45, 1.48, 0.05);
+  earR.rotation.z = -0.2;
+  // Inner ear
+  const earInGeo = new THREE.SphereGeometry(0.1, 12, 12);
+  earInGeo.scale(0.8, 1.1, 0.3);
+  const earInL = new THREE.Mesh(earInGeo, earInnerMat);
+  earInL.position.set(-0.45, 1.50, 0.12);
+  earInL.rotation.z = 0.2;
+  const earInR = new THREE.Mesh(earInGeo, earInnerMat);
+  earInR.position.set(0.45, 1.50, 0.12);
+  earInR.rotation.z = -0.2;
+  hamster.add(earL, earR, earInL, earInR);
+
+  // Eyes - slightly larger, rounder
+  const eyeGeo = new THREE.SphereGeometry(0.11, 20, 20);
   const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1a1a });
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.25, 1.0, 0.85);
-  const eyeR = eyeL.clone();
-  eyeR.position.set(0.25, 1.0, 0.85);
+  eyeL.position.set(-0.24, 1.0, 0.82);
+  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeR.position.set(0.24, 1.0, 0.82);
   hamster.add(eyeL, eyeR);
-  // Nose
-  const noseGeo = new THREE.SphereGeometry(0.06, 12, 12);
-  const noseMat = new THREE.MeshBasicMaterial({ color: 0xff8fa3 });
+  // Eye highlights
+  const hlGeo = new THREE.SphereGeometry(0.04, 8, 8);
+  const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const hlL = new THREE.Mesh(hlGeo, hlMat);
+  hlL.position.set(-0.20, 1.04, 0.91);
+  const hlR = new THREE.Mesh(hlGeo, hlMat);
+  hlR.position.set(0.28, 1.04, 0.91);
+  hamster.add(hlL, hlR);
+
+  // Nose - cute pink
+  const noseGeo = new THREE.SphereGeometry(0.055, 12, 12);
+  const noseMat = new THREE.MeshBasicMaterial({ color: 0xffa0b4 });
   const nose = new THREE.Mesh(noseGeo, noseMat);
-  nose.position.set(0, 0.88, 0.98);
+  nose.position.set(0, 0.88, 0.96);
   hamster.add(nose);
-  // Ears
-  const earGeo = new THREE.SphereGeometry(0.2, 16, 16);
-  earGeo.scale(1, 1.2, 0.5);
-  const earMat = new THREE.MeshToonMaterial({ color: 0xe8b090 });
-  const earL = new THREE.Mesh(earGeo, earMat);
-  earL.position.set(-0.5, 1.45, 0.1);
-  const earR = earL.clone();
-  earR.position.set(0.5, 1.45, 0.1);
-  hamster.add(earL, earR);
-  // Cheeks
-  const cheekGeo = new THREE.SphereGeometry(0.25, 16, 16);
-  const cheekMat = new THREE.MeshToonMaterial({ color: 0xffb3b3, transparent: true, opacity: 0.5 });
+
+  // Cheeks - soft pink glow
+  const cheekGeo = new THREE.SphereGeometry(0.22, 16, 16);
+  const cheekMat = new THREE.MeshToonMaterial({ color: 0xffccd5, transparent: true, opacity: 0.35, gradientMap: gradientTex });
   const cheekL = new THREE.Mesh(cheekGeo, cheekMat);
-  cheekL.position.set(-0.5, 0.8, 0.7);
-  const cheekR = cheekL.clone();
-  cheekR.position.set(0.5, 0.8, 0.7);
+  cheekL.position.set(-0.48, 0.82, 0.65);
+  const cheekR = new THREE.Mesh(cheekGeo, cheekMat);
+  cheekR.position.set(0.48, 0.82, 0.65);
   hamster.add(cheekL, cheekR);
-  // Belly
-  const bellyGeo = new THREE.SphereGeometry(0.6, 16, 16);
-  const bellyMat = new THREE.MeshToonMaterial({ color: 0xfff5e6 });
+
+  // Belly - warm white
+  const bellyGeo = new THREE.SphereGeometry(0.55, 20, 20);
+  const bellyMat = new THREE.MeshToonMaterial({ color: 0xfffff0, gradientMap: gradientTex });
   const belly = new THREE.Mesh(bellyGeo, bellyMat);
-  belly.position.set(0, -0.1, 0.5);
-  belly.scale.set(1, 0.9, 0.5);
+  belly.position.set(0, -0.05, 0.48);
+  belly.scale.set(1, 0.85, 0.5);
   hamster.add(belly);
+
+  // Arms - tiny stubby
+  const armGeo = new THREE.SphereGeometry(0.15, 12, 12);
+  armGeo.scale(0.7, 1, 0.7);
+  const armL = new THREE.Mesh(armGeo, bodyMat);
+  armL.position.set(-0.6, 0.1, 0.45);
+  armL.rotation.z = 0.5;
+  const armR = new THREE.Mesh(armGeo, bodyMat);
+  armR.position.set(0.6, 0.1, 0.45);
+  armR.rotation.z = -0.5;
+  hamster.add(armL, armR);
+
+  // Feet
+  const footGeo = new THREE.SphereGeometry(0.18, 12, 12);
+  footGeo.scale(1.2, 0.6, 1);
+  const footMat = new THREE.MeshToonMaterial({ color: 0xfce5d0, gradientMap: gradientTex });
+  const footL = new THREE.Mesh(footGeo, footMat);
+  footL.position.set(-0.35, -0.7, 0.35);
+  const footR = new THREE.Mesh(footGeo, footMat);
+  footR.position.set(0.35, -0.7, 0.35);
+  hamster.add(footL, footR);
+
   hamster.position.y = -0.3;
   scene.add(hamster);
-  // Light
-  const amb = new THREE.AmbientLight(0xffffff, 0.7);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+
+  // Outline effect (fake) - slightly larger dark shell
+  const outlineMat = new THREE.MeshBasicMaterial({ color: 0xd4c9a8, side: THREE.BackSide });
+  const outlineBody = new THREE.Mesh(new THREE.SphereGeometry(1.03, 32, 32), outlineMat);
+  outlineBody.scale.copy(body.scale);
+  outlineBody.position.copy(body.position);
+  const outlineHead = new THREE.Mesh(new THREE.SphereGeometry(0.75, 32, 32), outlineMat);
+  outlineHead.position.copy(head.position);
+  hamster.add(outlineBody, outlineHead);
+
+  // Lighting - warm and bright
+  const amb = new THREE.AmbientLight(0xffffff, 0.85);
+  const dir = new THREE.DirectionalLight(0xfff8e8, 0.9);
   dir.position.set(2, 3, 4);
-  scene.add(amb, dir);
+  const fill = new THREE.DirectionalLight(0xffe8d0, 0.3);
+  fill.position.set(-2, 1, 2);
+  scene.add(amb, dir, fill);
+
   // Animate
   let mouseX = 0;
   container.addEventListener('mousemove', e => { const r = container.getBoundingClientRect(); mouseX = ((e.clientX - r.left) / r.width - 0.5) * 2; });
+  container.addEventListener('touchmove', e => { const r = container.getBoundingClientRect(); const t = e.touches[0]; mouseX = ((t.clientX - r.left) / r.width - 0.5) * 2; });
+
   let t = 0, blinkT = 0;
   function animate() {
     requestAnimationFrame(animate);
-    t += 0.03;
-    hamster.position.y = -0.3 + Math.sin(t) * 0.05;
+    t += 0.025;
+    // Breathing
+    const breathe = Math.sin(t) * 0.04;
+    hamster.position.y = -0.3 + breathe;
+    body.scale.y = 0.88 + Math.sin(t * 1.2) * 0.015;
+    // Mouse tracking
     hamster.rotation.y += (mouseX * 0.3 - hamster.rotation.y) * 0.05;
+    // Blinking
     blinkT++;
-    const blink = (blinkT % 180 < 6);
+    const blink = (blinkT % 200 < 5);
     eyeL.scale.y = blink ? 0.1 : 1;
     eyeR.scale.y = blink ? 0.1 : 1;
+    hlL.visible = !blink;
+    hlR.visible = !blink;
+    // Subtle ear wiggle
+    earL.rotation.z = 0.2 + Math.sin(t * 0.8) * 0.05;
+    earR.rotation.z = -0.2 - Math.sin(t * 0.8) * 0.05;
     renderer.render(scene, camera);
   }
   animate();

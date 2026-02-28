@@ -140,9 +140,10 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .habit-card-bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#60a5fa,#6366f1);transition:width .6s cubic-bezier(.4,0,.2,1);}
 .habit-card-bar-fill.over100{background:linear-gradient(90deg,#6366f1,#a78bfa,#c084fc);box-shadow:0 0 8px rgba(167,139,250,.5);}
 .habit-card-pct{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--accent);min-width:36px;text-align:right;}
-.habit-card.completed{opacity:.5;}
-.habit-card.completed .habit-card-title{color:#9ca3af;}
-.habit-card.today-done{background:rgba(255,255,255,.9);border-color:#e5e7eb;}
+.habit-card.completed{background:rgba(255,255,255,.95);}
+.habit-card.completed .habit-card-title{color:#bbb;}
+.habit-card.completed .habit-card-mid,.habit-card.completed .habit-card-bot{opacity:.4;}
+.habit-card.today-done{background:rgba(245,247,250,.95);}
 .habit-card.today-done .habit-card-title{color:#bbb;}
 .habit-card.today-done .habit-card-mid,.habit-card.today-done .habit-card-bot{opacity:.35;}
 .habit-card.today-done::after{content:'✅';position:absolute;top:10px;right:10px;font-size:18px;}

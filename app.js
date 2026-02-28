@@ -873,27 +873,10 @@ window.openGoalBottomSheet = function (idx) {
 function openBS() {
   document.getElementById('bsOverlay').classList.add('open');
   document.getElementById('bottomSheet').classList.add('open');
-  // 모바일 키보드 대응: visualViewport 사용
-  if (window.visualViewport) {
-    const bs = document.getElementById('bottomSheet');
-    const onResize = () => {
-      const offsetY = window.innerHeight - visualViewport.height - visualViewport.offsetTop;
-      bs.style.bottom = offsetY + 'px';
-    };
-    visualViewport.addEventListener('resize', onResize);
-    visualViewport.addEventListener('scroll', onResize);
-    bs._vpCleanup = () => {
-      visualViewport.removeEventListener('resize', onResize);
-      visualViewport.removeEventListener('scroll', onResize);
-      bs.style.bottom = '0';
-    };
-  }
 }
 window.closeBottomSheet = function () {
-  const bs = document.getElementById('bottomSheet');
-  if (bs._vpCleanup) { bs._vpCleanup(); bs._vpCleanup = null; }
   document.getElementById('bsOverlay').classList.remove('open');
-  bs.classList.remove('open');
+  document.getElementById('bottomSheet').classList.remove('open');
 };
 
 function renderBSBody(idx) {

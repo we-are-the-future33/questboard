@@ -1636,7 +1636,6 @@ function getSelectedGoalSpec(idx){
 function renderUnitOpts(cid, cur, idx, curFreq){
   const c = document.getElementById(cid);
   if(!c) return;
-  // 초기값 세팅
   if(!selectedPeriod[idx]){
     if(cur) { selectedPeriod[idx]=cur; selectedFreq[idx]=curFreq||1; }
   }
@@ -1647,33 +1646,43 @@ function renderUnitOpts(cid, cur, idx, curFreq){
     {key:'biweekly', label:'2주당'},
     {key:'once', label:'한 번'},
   ];
-  const periodHtml = periods.map(({key,label})=>
-    `<div class="unit-opt ${p===key?'selected':''}" onclick="pickPeriod('${key}',${idx},'${cid}')" style="flex:1;">${label}</div>`
-  ).join('');
+  const periodHtml = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px;">
+      ${periods.map(({key,label})=>
+        `<div class="unit-opt ${p===key?'selected':''}" onclick="pickPeriod('${key}',${idx},'${cid}')"
+          style="padding:14px 4px;font-size:14px;text-align:center;">${label}</div>`
+      ).join('')}
+    </div>`;
 
   let freqHtml = '';
   if(p==='weekly'){
-    freqHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
-      ${[1,2,3,4,5,6,7].map(n=>`<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}" onclick="pickFreq(${n},${idx},'${cid}')" style="min-width:38px;padding:10px 4px;">${n}회</div>`).join('')}
-    </div>`;
+    freqHtml = `
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;">
+        ${[1,2,3,4,5,6,7].map(n=>
+          `<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}" onclick="pickFreq(${n},${idx},'${cid}')"
+            style="padding:12px 4px;font-size:13px;text-align:center;">${n}회</div>`
+        ).join('')}
+      </div>`;
   } else if(p==='biweekly'){
-    freqHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
-      ${Array.from({length:14},(_,i)=>i+1).map(n=>`<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}" onclick="pickFreq(${n},${idx},'${cid}')" style="min-width:38px;padding:10px 4px;">${n}회</div>`).join('')}
-    </div>`;
+    freqHtml = `
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;">
+        ${Array.from({length:14},(_,i)=>i+1).map(n=>
+          `<div class="unit-opt ${selectedFreq[idx]===n?'selected':''}" onclick="pickFreq(${n},${idx},'${cid}')"
+            style="padding:12px 4px;font-size:13px;text-align:center;">${n}회</div>`
+        ).join('')}
+      </div>`;
   }
 
   const healthHtml = `
-    <div style="grid-column:1/-1;margin:12px 0 6px;font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:1px;">⌚ 애플워치 자동 연동</div>
-    <div style="display:flex;gap:8px;">
-      <div class="unit-opt ${p==='health_sleep'?'selected':''}" onclick="pickPeriod('health_sleep',${idx},'${cid}')" style="flex:1;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_sleep'?'#ede9fe':'#faf5ff'};">🌙 수면 자동</div>
-      <div class="unit-opt ${p==='health_workout'?'selected':''}" onclick="pickPeriod('health_workout',${idx},'${cid}')" style="flex:1;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_workout'?'#ede9fe':'#faf5ff'};">💪 운동 자동</div>
+    <div style="margin:14px 0 6px;font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:1px;">⌚ 애플워치 자동 연동</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="unit-opt ${p==='health_sleep'?'selected':''}" onclick="pickPeriod('health_sleep',${idx},'${cid}')"
+        style="padding:14px 4px;font-size:14px;text-align:center;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_sleep'?'#ede9fe':'#faf5ff'};">🌙 수면 자동</div>
+      <div class="unit-opt ${p==='health_workout'?'selected':''}" onclick="pickPeriod('health_workout',${idx},'${cid}')"
+        style="padding:14px 4px;font-size:14px;text-align:center;border-color:#c4b5fd;color:#7c3aed;background:${p==='health_workout'?'#ede9fe':'#faf5ff'};">💪 운동 자동</div>
     </div>`;
 
-  c.innerHTML = `
-    <div style="display:flex;gap:8px;margin-bottom:4px;">${periodHtml}</div>
-    ${freqHtml}
-    ${healthHtml}
-  `;
+  c.innerHTML = periodHtml + freqHtml + healthHtml;
 }
 
 window.pickPeriod = function(key, idx, cid){

@@ -23,7 +23,6 @@ const MAX_HABITS = 50;
 const MAX_CHALLENGES = 10;
 const TUT_STEPS = 5;
 const LEGACY_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
-const STAGE_NAMES = ['알','병아리','고양이','강아지','여우','판다','토끼','사자','드래곤','유니콘'];
 const AVATARS = [
   `<svg viewBox="0 0 80 80"><ellipse cx="40" cy="44" rx="22" ry="28" fill="#f0e8d0" stroke="#c8b89a" stroke-width="2"/><ellipse cx="33" cy="36" rx="4" ry="6" fill="rgba(255,255,255,0.3)"/></svg>`,
   `<svg viewBox="0 0 80 80"><circle cx="40" cy="48" r="20" fill="#f5c518"/><circle cx="40" cy="28" r="14" fill="#f5c518"/><circle cx="35" cy="25" r="3" fill="#1a1a1a"/><circle cx="45" cy="25" r="3" fill="#1a1a1a"/><polygon points="40,30 37,34 43,34" fill="#f39c12"/></svg>`,
@@ -45,9 +44,20 @@ let viewMonth = null;
 let habitFilter = 'all'; // 'all' | 'active'
 let challengeFilter = 'all';
 let habitViewMode = 'all'; // 'all' | 'time' | 'category'
+let challengeViewMode = 'all'; // 'all' | 'type' | 'category' | 'month'
+let _createType = 'bucket';
+let _createCat = 'etc';
+let _createMonth = 'someday';
+let _createStages = [];
 
 const TIME_LABELS = { any: '🕒 시간 무관', morning: '🌅 아침 루틴', afternoon: '☀️ 오후 루틴', evening: '🌙 저녁 루틴' };
 const CAT_LABELS = { health: '💪 건강 & 체력', diet: '🥗 식단 & 영양', study: '📚 학습 & 성장', work: '💼 업무 & 커리어', finance: '💰 재무 & 자산', life: '🌱 생활 & 루틴', home: '🧹 집안일 & 정리', hobby: '🎨 취미 & 창작', social: '🤝 관계 & 소셜', mental: '🧘 휴식 & 멘탈', etc: '📦 기타' };
+const TYPE_LABELS = { bucket: '🎯 버킷리스트', project: '📋 프로젝트' };
+function formatTargetMonth(tm) {
+  if (!tm || tm === 'someday') return '☁️ 언젠가';
+  const parts = tm.split('-');
+  return `📅 ${parts[0]}년 ${parseInt(parts[1])}월`;
+}
 let currentSubTab = 'habit';
 
 // ===== UTILITIES =====
@@ -321,7 +331,8 @@ window.changeViewMode = function(mode) {
 
 window.toggleGroupAccordion = function(id) {
   const grid = document.getElementById(id);
-  const icon = document.getElementById(id.replace('hg_', 'hgi_'));
+  const iconId = id.replace(/^(hg_|cg_)/, (m) => m === 'hg_' ? 'hgi_' : 'cgi_');
+  const icon = document.getElementById(iconId);
   if (!grid || !icon) return;
   if (grid.classList.contains('hidden')) {
     grid.classList.remove('hidden');
@@ -553,55 +564,123 @@ async function habitMarkUndo(idx) {
 }
 
 // ===== CHALLENGE CARDS (2-col grid) =====
+window.changeChallengeViewMode = function(mode) { challengeViewMode = mode; renderChallengeCards(); };
+
+function generateChallengeCardHtml(c, idx) {
+  if (c.type === 'bucket') {
+    const done = c.done === true;
+    return `<div class="challenge-card-outer" id="ccOuter_${idx}">
+      <div class="challenge-swipe-bg ${done ? 'done' : 'todo'}">
+        <div class="swipe-bg-text">${done ? '↩ 취소' : '✓ 완료'}</div>
+      </div>
+      <div class="challenge-card type-bucket ${done ? 'bucket-done' : ''}" id="cc_${idx}" data-idx="${idx}">
+        ${done ? '<div class="challenge-card-done-badge">✓</div>' : ''}
+        <div>
+          <div class="challenge-card-title">${esc(c.title)}</div>
+          <span class="challenge-card-type bucket">버킷리스트</span>
+        </div>
+        ${done ? '<div><div class="challenge-card-achieve">달성 완료</div></div>' : '<div></div>'}
+      </div>
+    </div>`;
+  } else {
+    const { done, total, pct } = getProjectProgress(c);
+    const projDone = pct >= 100;
+    return `<div class="challenge-card type-project ${projDone ? 'project-done' : ''}" id="cc_${idx}" data-idx="${idx}" onclick="openProjectDetail(${idx})">
+      ${projDone ? '<div class="challenge-card-done-badge">✓</div>' : ''}
+      <div>
+        <div class="challenge-card-title">${esc(c.title)}</div>
+        <span class="challenge-card-type project">프로젝트</span>
+        <div class="challenge-card-progress">${done}/${total} 단계</div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="challenge-card-bar" style="flex:1;"><div class="challenge-card-bar-fill project" style="width:${Math.min(pct,100)}%"></div></div>
+          <div class="challenge-card-pct project">${pct}%</div>
+        </div>
+      </div>
+    </div>`;
+  }
+}
+
 function renderChallengeCards() {
-  const challenges = localDash.challenges || [];
-  const grid = document.getElementById('challengeCardGrid');
+  const challengesObj = localDash.challenges || {};
+  const wrapper = document.getElementById('challengeListWrapper');
   let valid = [];
-  for (let i = 0; i < challenges.length; i++) { if (challenges[i] && challenges[i].title) valid.push({ c: challenges[i], idx: i }); }
+  Object.keys(challengesObj).forEach(key => {
+    const idx = parseInt(key);
+    const c = challengesObj[key];
+    if (c && c.title) valid.push({ c, idx });
+  });
   let filtered = valid;
   if (challengeFilter === 'active') filtered = valid.filter(({ c }) => !isChallengeComplete(c));
   document.getElementById('challengeCount').textContent = valid.length;
 
   let html = '';
-  filtered.forEach(({ c, idx }) => {
-    if (c.type === 'bucket') {
-      const done = c.done === true;
-      html += `<div class="challenge-card-outer" id="ccOuter_${idx}">
-        <div class="challenge-swipe-bg ${done ? 'done' : 'todo'}">
-          <div class="swipe-bg-text">${done ? '↩ 취소' : '✓ 완료'}</div>
-        </div>
-        <div class="challenge-card type-bucket ${done ? 'bucket-done' : ''}" id="cc_${idx}" data-idx="${idx}">
-          ${done ? '<div class="challenge-card-done-badge">✓</div>' : ''}
-          <div>
-            <div class="challenge-card-title">${esc(c.title)}</div>
-            <span class="challenge-card-type bucket">버킷리스트</span>
-          </div>
-          ${done ? '<div><div class="challenge-card-achieve">달성 완료</div></div>' : '<div></div>'}
-        </div>
-      </div>`;
-    } else {
-      // project
-      const { done, total, pct } = getProjectProgress(c);
-      const projDone = pct >= 100;
-      html += `<div class="challenge-card type-project ${projDone ? 'project-done' : ''}" id="cc_${idx}" data-idx="${idx}" onclick="openProjectDetail(${idx})">
-        ${projDone ? '<div class="challenge-card-done-badge">✓</div>' : ''}
-        <div>
-          <div class="challenge-card-title">${esc(c.title)}</div>
-          <span class="challenge-card-type project">프로젝트</span>
-          <div class="challenge-card-progress">${done}/${total} 단계</div>
-        </div>
-        <div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div class="challenge-card-bar" style="flex:1;"><div class="challenge-card-bar-fill project" style="width:${Math.min(pct,100)}%"></div></div>
-            <div class="challenge-card-pct project">${pct}%</div>
-          </div>
-        </div>
-      </div>`;
-    }
-  });
-  if (valid.length < MAX_CHALLENGES) html += `<div class="grid-add-btn" onclick="openAddChallengeSheet()"><div class="grid-add-btn-icon">＋</div><div class="grid-add-btn-text">도전 추가</div></div>`;
-  grid.innerHTML = html;
-  // init bucket swipe
+
+  if (challengeViewMode === 'type') {
+    const groups = { bucket: [], project: [] };
+    filtered.forEach(v => { const t = v.c.type || 'bucket'; if (groups[t]) groups[t].push(v); else groups['bucket'].push(v); });
+    let gIdx = 0;
+    Object.keys(groups).forEach(key => {
+      if (groups[key].length === 0) return;
+      const label = TYPE_LABELS[key] || key;
+      html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
+        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
+      </div><div class="card-grid" id="cg_${gIdx}">`;
+      groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
+      html += `</div>`;
+      gIdx++;
+    });
+  } else if (challengeViewMode === 'category') {
+    const groups = {};
+    Object.keys(CAT_LABELS).forEach(k => { groups[k] = []; });
+    filtered.forEach(v => { const cat = v.c.category || 'etc'; if (groups[cat]) groups[cat].push(v); else groups['etc'].push(v); });
+    let gIdx = 0;
+    Object.keys(groups).forEach(key => {
+      if (groups[key].length === 0) return;
+      const label = CAT_LABELS[key] || key;
+      html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
+        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
+      </div><div class="card-grid" id="cg_${gIdx}">`;
+      groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
+      html += `</div>`;
+      gIdx++;
+    });
+  } else if (challengeViewMode === 'month') {
+    const groups = {};
+    filtered.forEach(v => { const tm = v.c.targetMonth || 'someday'; if (!groups[tm]) groups[tm] = []; groups[tm].push(v); });
+    const keys = Object.keys(groups).sort((a, b) => {
+      if (a === 'someday') return 1;
+      if (b === 'someday') return -1;
+      return a.localeCompare(b);
+    });
+    let gIdx = 0;
+    keys.forEach(key => {
+      if (groups[key].length === 0) return;
+      const label = formatTargetMonth(key);
+      html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
+        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
+      </div><div class="card-grid" id="cg_${gIdx}">`;
+      groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
+      html += `</div>`;
+      gIdx++;
+    });
+  } else {
+    html += `<div class="card-grid">`;
+    filtered.forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
+    if (valid.length < MAX_CHALLENGES) html += `<div class="grid-add-btn" onclick="openAddChallengeSheet()"><div class="grid-add-btn-icon">＋</div><div class="grid-add-btn-text">도전 추가</div></div>`;
+    html += `</div>`;
+  }
+
+  if (challengeViewMode !== 'all' && valid.length < MAX_CHALLENGES) {
+    html += `<div class="card-grid" style="margin-top:12px;"><div class="grid-add-btn" onclick="openAddChallengeSheet()"><div class="grid-add-btn-icon">＋</div><div class="grid-add-btn-text">도전 추가</div></div></div>`;
+  }
+
+  wrapper.innerHTML = html;
+  document.getElementById('challengeSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
   filtered.forEach(({ c, idx }) => { if (c.type === 'bucket') initBucketSwipe(idx); });
 }
 
@@ -708,7 +787,68 @@ window.saveBucketEdit = async function (idx) {
 };
 
 // ===== ADD CHALLENGE BOTTOM SHEET =====
+// ===== CHIP HELPERS =====
+function getCatChipsHTML() {
+  return `<div class="chip-group">` + Object.keys(CAT_LABELS).map(k => `<div class="chip-opt ${_createCat === k ? 'selected' : ''}" onclick="selectCreateCat('${k}')">${CAT_LABELS[k]}</div>`).join('') + `</div>`;
+}
+function getMonthChipsHTML() {
+  let h = `<div class="chip-group"><div class="chip-opt ${_createMonth === 'someday' ? 'selected' : ''}" onclick="selectCreateMonth('someday')">☁️ 언젠가 할 일</div>`;
+  const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const lbl = `${d.getFullYear()}년 ${d.getMonth()+1}월`;
+    h += `<div class="chip-opt ${_createMonth === val ? 'selected' : ''}" onclick="selectCreateMonth('${val}')">📅 ${lbl}</div>`;
+  }
+  h += `</div>`;
+  return h;
+}
+window.selectCreateCat = function(c) { _createCat = c; document.getElementById('createCatArea').innerHTML = getCatChipsHTML(); };
+window.selectCreateMonth = function(m) { _createMonth = m; document.getElementById('createMonthArea').innerHTML = getMonthChipsHTML(); };
+
+// ===== DYNAMIC STAGE BUILDER =====
+function syncCreateStagesFromDOM() {
+  const stages = [];
+  let si = 0;
+  while (document.getElementById(`pcStageName_${si}`)) {
+    const name = document.getElementById(`pcStageName_${si}`).value;
+    const tasks = [];
+    let ti = 0;
+    while (document.getElementById(`pcTask_${si}_${ti}`)) {
+      tasks.push({ name: document.getElementById(`pcTask_${si}_${ti}`).value, done: false });
+      ti++;
+    }
+    stages.push({ name, tasks });
+    si++;
+  }
+  _createStages = stages;
+}
+function getCreateStagesHTML() {
+  let h = '';
+  _createStages.forEach((s, si) => {
+    h += `<div class="proj-edit-stage-box" id="pcStage_${si}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div class="proj-stage-num">${si + 1}</div>
+        <input class="proj-edit-task-input" id="pcStageName_${si}" value="${esc(s.name)}" placeholder="단계 이름" style="flex:1;">
+        <button class="proj-edit-task-del" onclick="removeCreateStage(${si})" title="단계 삭제">✕</button>
+      </div>`;
+    (s.tasks || []).forEach((t, ti) => {
+      h += `<div class="proj-edit-task-row"><input class="proj-edit-task-input" id="pcTask_${si}_${ti}" value="${esc(t.name)}" placeholder="세부 항목"><button class="proj-edit-task-del" onclick="removeCreateTask(${si},${ti})">✕</button></div>`;
+    });
+    h += `<button class="proj-add-task-btn" onclick="addCreateTask(${si})">+ 세부 항목 추가</button></div>`;
+  });
+  h += `<button class="proj-add-stage-btn" onclick="addCreateStage()">+ 새 단계 추가</button>`;
+  return h;
+}
+window.addCreateTask = function(si) { syncCreateStagesFromDOM(); _createStages[si].tasks.push({name:'', done:false}); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
+window.removeCreateTask = function(si, ti) { syncCreateStagesFromDOM(); _createStages[si].tasks.splice(ti, 1); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
+window.addCreateStage = function() { syncCreateStagesFromDOM(); _createStages.push({name:'', tasks:[]}); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
+window.removeCreateStage = function(si) { syncCreateStagesFromDOM(); _createStages.splice(si, 1); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
+
+// ===== ADD CHALLENGE SHEET =====
 window.openAddChallengeSheet = function () {
+  _createType = 'bucket'; _createCat = 'etc'; _createMonth = 'someday';
+  _createStages = [{ name: '첫 번째 단계', tasks: [] }];
   document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:14px;">유형을 먼저 선택해 주세요</div>`;
   h += `<div class="challenge-type-grid">
@@ -723,73 +863,74 @@ window.openAddChallengeSheet = function () {
       <div class="challenge-type-desc">단계별 로드맵이<br>필요한 목표</div>
     </div>
   </div>`;
-  h += `<div id="challengeFormArea">
-    <div style="margin-top:4px;">
-      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>
-      <input class="proj-edit-input" id="bucketNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
-      <button class="unit-confirm-btn" style="margin-top:12px;" onclick="saveBucket()">도전 시작하기</button>
-    </div>
-  </div>`;
+  h += `<div id="challengeFormArea"></div>`;
   document.getElementById('bsBody').innerHTML = h;
-  _challengeType = 'bucket';
+  selectChallengeType('bucket');
   openBS();
 };
 
-let _challengeType = null;
 window.selectChallengeType = function (type) {
-  _challengeType = type;
+  _createType = type;
   document.getElementById('ctBucket').classList.toggle('selected', type === 'bucket');
   document.getElementById('ctProject').classList.toggle('selected', type === 'project');
   const area = document.getElementById('challengeFormArea');
+  const metaHTML = `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">카테고리</div>
+      <div id="createCatArea">${getCatChipsHTML()}</div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">목표 시기</div>
+      <div id="createMonthArea">${getMonthChipsHTML()}</div>
+    </div>`;
+
   if (type === 'bucket') {
     area.innerHTML = `<div style="margin-top:4px;">
       <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>
-      <input class="proj-edit-input" id="bucketNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
-      <button class="unit-confirm-btn" style="margin-top:12px;" onclick="saveBucket()">도전 시작하기</button>
+      <input class="proj-edit-input" id="chNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
+      ${metaHTML}
+      <button class="unit-confirm-btn" onclick="saveBucket()">도전 시작하기</button>
     </div>`;
-    setTimeout(() => document.getElementById('bucketNameInput')?.focus(), 200);
+    setTimeout(() => document.getElementById('chNameInput')?.focus(), 200);
   } else {
     area.innerHTML = `<div style="margin-top:4px;">
       <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>
-      <input class="proj-edit-input" id="projNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
-      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">나의 궁극적인 목적 (WHY)</div>
-      <textarea class="proj-edit-input proj-edit-textarea" id="projWhyInput" placeholder="이 도전을 완료했을 때의 내 모습을 상상하며 적어보세요." maxlength="100"></textarea>
-      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">첫 번째 단계 설정</div>
-      <div class="proj-edit-stage-box">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <div class="proj-stage-num">1</div>
-          <input class="proj-edit-task-input" id="projStage1Name" placeholder="첫 번째 단계의 이름을 적으세요" style="flex:1;">
-        </div>
-      </div>
-      <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:12px;">세부 계획은 도전 생성 후 상시 추가 가능합니다.</div>
-      <button class="unit-confirm-btn" onclick="saveProject()">도전 시작하기</button>
+      <input class="proj-edit-input" id="chNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
+      ${metaHTML}
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">프로젝트 단계 설정</div>
+      <div id="createStagesArea">${getCreateStagesHTML()}</div>
+      <button class="unit-confirm-btn" style="margin-top:12px;" onclick="saveProject()">도전 시작하기</button>
     </div>`;
-    setTimeout(() => document.getElementById('projNameInput')?.focus(), 200);
+    setTimeout(() => document.getElementById('chNameInput')?.focus(), 200);
   }
 };
 
 window.saveBucket = async function () {
-  const name = document.getElementById('bucketNameInput').value.trim();
-  if (!name) return;
-  if (!localDash.challenges) localDash.challenges = [];
-  localDash.challenges.push({ type: 'bucket', title: name, done: false, createdAt: new Date().toISOString() });
-  await saveDash();
-  closeBottomSheet(); renderChallengeCards();
+  const name = document.getElementById('chNameInput')?.value.trim();
+  if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
+  if (!localDash.challenges) localDash.challenges = {};
+  let slot = -1;
+  for (let i = 0; i < 50; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
+  if (slot === -1) { showToast('최대 50개까지 등록 가능합니다', 'normal'); return; }
+  localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat, targetMonth: _createMonth, createdAt: new Date().toISOString() };
+  await saveDash(); closeBottomSheet(); renderChallengeCards();
   showToast('⭐ 도전 등록!', 'done');
 };
 
 window.saveProject = async function () {
-  const name = document.getElementById('projNameInput').value.trim();
-  if (!name) return;
-  const why = document.getElementById('projWhyInput').value.trim();
-  const stage1 = document.getElementById('projStage1Name').value.trim() || '단계 1';
-  if (!localDash.challenges) localDash.challenges = [];
-  localDash.challenges.push({
-    type: 'project', title: name, why: why, createdAt: new Date().toISOString(),
-    stages: [{ name: stage1, tasks: [] }]
+  const name = document.getElementById('chNameInput')?.value.trim();
+  if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
+  syncCreateStagesFromDOM();
+  _createStages.forEach((s, i) => {
+    s.tasks.forEach(t => { if (!t.name.trim()) t.name = '항목'; });
+    if (!s.name.trim()) s.name = `단계 ${i+1}`;
   });
-  await saveDash();
-  closeBottomSheet(); renderChallengeCards();
+  if (!localDash.challenges) localDash.challenges = {};
+  let slot = -1;
+  for (let i = 0; i < 50; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
+  if (slot === -1) { showToast('최대 50개까지 등록 가능합니다', 'normal'); return; }
+  localDash.challenges[slot] = { type: 'project', title: name, category: _createCat, targetMonth: _createMonth, stages: _createStages, createdAt: new Date().toISOString() };
+  await saveDash(); closeBottomSheet(); renderChallengeCards();
   showToast('🗺️ 프로젝트 시작!', 'done');
 };
 
@@ -1566,7 +1707,7 @@ async function renderFriends() {
     }
     const fpct = ftm > 0 ? Math.round(ftd / ftm * 100) : 0;
     const fstage = Math.min(9, Math.floor(fpct / 10));
-    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${AVATARS[fstage]}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계 · ${STAGE_NAMES[fstage]}</div></div><div class="friend-pct">${fpct}%</div></div>`;
+    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${AVATARS[fstage]}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계</div></div><div class="friend-pct">${fpct}%</div></div>`;
   }
   h += '</div><div id="friendDetailArea"></div>';
   sec.innerHTML = h;

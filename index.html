@@ -222,11 +222,19 @@
               <div class="section-hdr-title">나의 도전</div>
               <div class="section-hdr-count" id="challengeCount">0</div>
             </div>
-            <button class="filter-pill" id="challengeFilterPill" onclick="toggleChallengeFilter()">
-              모든 목표 <span class="filter-dot"></span>
-            </button>
+            <div style="display:flex;align-items:center;">
+              <select id="challengeViewModeSelect" class="view-mode-select" onchange="changeChallengeViewMode(this.value)">
+                <option value="all">기본 보기</option>
+                <option value="type">유형별</option>
+                <option value="category">카테고리별</option>
+                <option value="month">일정별</option>
+              </select>
+              <button class="filter-pill" id="challengeFilterPill" onclick="toggleChallengeFilter()">
+                모든 목표 <span class="filter-dot"></span>
+              </button>
+            </div>
           </div>
-          <div class="card-grid" id="challengeCardGrid"></div>
+          <div id="challengeListWrapper"></div>
           <div class="swipe-hint" id="challengeSwipeHint">프로젝트는 탭, 버킷은 스와이프로 관리</div>
         </div>
         <div style="height:2px;background:var(--border);margin:20px 20px 0;"></div>

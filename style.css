@@ -217,6 +217,11 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .group-toggle-icon{font-size:12px;color:#9ca3af;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);flex-shrink:0;}
 .group-toggle-icon.closed{transform:rotate(-90deg);}
 .card-grid.hidden{display:none;}
+/* 칩 UI */
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip-opt{background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--text-dim);cursor:pointer;transition:all 0.2s;user-select:none;}
+.chip-opt:hover{border-color:var(--accent);color:var(--accent);}
+.chip-opt.selected{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
 
 .swipe-hint{text-align:center;color:var(--text-dim);font-size:12px;margin-top:8px;opacity:.6;padding:0 20px;}
 
@@ -271,7 +276,7 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 /* 바텀시트 */
 .bottomsheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:900;opacity:0;pointer-events:none;transition:opacity .3s;}
 .bottomsheet-overlay.open{opacity:1;pointer-events:auto;}
-.bottomsheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:480px;max-height:85vh;background:#fff;border-radius:24px 24px 0 0;z-index:901;transition:transform .35s cubic-bezier(.4,0,.2,1);overflow:hidden;display:flex;flex-direction:column;}
+.bottomsheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:480px;max-height:95vh;background:#fff;border-radius:24px 24px 0 0;z-index:901;transition:transform .35s cubic-bezier(.4,0,.2,1);overflow:hidden;display:flex;flex-direction:column;}
 .bottomsheet.open{transform:translateX(-50%) translateY(0);}
 .bs-handle{display:flex;justify-content:center;padding:12px 0 4px;flex-shrink:0;}
 .bs-handle-bar{width:40px;height:4px;background:#d1d5db;border-radius:2px;}

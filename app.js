@@ -2071,6 +2071,14 @@ window.openAdminPanel = function () {
   renderAdminList();
 };
 
+window.adminGoBack = function () {
+  if (localDash) {
+    showScreen('dashboardScreen');
+  } else {
+    doLogout();
+  }
+};
+
 async function renderAdminList() {
   try {
     const [uSnap, dSnap, gSnap] = await Promise.all([
@@ -2091,41 +2099,84 @@ function adminCountData(dash) {
   return { habits: goals.length, challenges: challenges.length };
 }
 
+// 어드민 섹션 탭 전환
+window.switchAdminSection = function(sec) {
+  ['user','group','notice'].forEach(s => {
+    document.getElementById('aTab_'+s)?.classList.toggle('active', s===sec);
+    const panel = document.getElementById('aSection_'+s);
+    if(panel) panel.style.display = s===sec ? 'block' : 'none';
+  });
+};
+
+window.toggleAdminCreate = function() {
+  const form = document.getElementById('adminUserCreateForm');
+  const btn = document.getElementById('adminUserCreateToggle');
+  if (form.style.display === 'none') {
+    form.style.display = 'block';
+    btn.style.display = 'none';
+  } else {
+    form.style.display = 'none';
+    btn.style.display = 'block';
+  }
+};
+
 function renderAdminUserTable() {
   const tbl = document.getElementById('adminUserTable');
   const users = Object.entries(_adminUsers).filter(([,u]) => u.role !== 'admin');
   if (users.length === 0) { tbl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:12px;text-align:center;">등록된 유저 없음</div>'; return; }
-  let h = '<table class="user-table"><thead><tr><th>유저</th><th>습관 / 도전</th><th>튜토리얼</th><th>마지막 접속</th><th>비밀번호</th><th></th></tr></thead><tbody>';
+  let h = '';
   for (const [id, u] of users) {
     const dash = _adminDash[id] || {};
     const { habits, challenges } = adminCountData(dash);
     const lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '없음';
-    const tut = dash.tutorialDone ? '<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--accent-light);color:var(--accent);border:1px solid rgba(25,82,245,.2);">완료</span>' : '<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);color:var(--text-dim);border:1px solid var(--border);">미완료</span>';
-    h += '<tr class="user-row" onclick="showAdminUserDetail(\'' + id + '\')">' +
-      '<td><span class="user-tbl-name">' + esc(u.name) + '</span><br><span style="font-size:11px;color:var(--text-dim);">@' + esc(id) + '</span></td>' +
-      '<td><span style="font-size:11px;padding:2px 8px;border-radius:100px;background:rgba(25,82,245,.08);color:var(--accent);border:1px solid rgba(25,82,245,.15);margin-right:4px;">습관 ' + habits + '</span><span style="font-size:11px;padding:2px 8px;border-radius:100px;background:rgba(255,94,125,.08);color:var(--accent2);border:1px solid rgba(255,94,125,.15);">도전 ' + challenges + '</span></td>' +
-      '<td>' + tut + '</td>' +
-      '<td style="font-size:11px;color:var(--text-dim);">' + lastLogin + '</td>' +
-      '<td onclick="event.stopPropagation()">' +
-        '<div id="pwShow_' + id + '" style="display:flex;align-items:center;gap:6px;">' +
-          '<span style="font-size:12px;color:var(--text-dim);font-family:monospace;">' + esc(u.password||'') + '</span>' +
-          '<button class="btn-sm" style="padding:2px 8px;font-size:10px;" onclick="adminStartEditPw(\'' + id + '\')">수정</button>' +
-        '</div>' +
-        '<div id="pwEdit_' + id + '" style="display:none;gap:6px;align-items:center;">' +
-          '<input id="pwInput_' + id + '" type="text" value="' + esc(u.password||'') + '" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:11px;font-family:monospace;width:80px;outline:none;">' +
-          '<button class="btn-sm" style="padding:2px 8px;font-size:10px;background:var(--accent);color:#fff;border-color:var(--accent);" onclick="adminSavePw(\'' + id + '\')">저장</button>' +
-          '<button class="btn-sm" style="padding:2px 8px;font-size:10px;" onclick="adminCancelPw(\'' + id + '\')">취소</button>' +
-        '</div>' +
-      '</td>' +
-      '<td onclick="event.stopPropagation()"><button class="btn-sm" style="padding:2px 8px;font-size:10px;color:var(--danger);border-color:var(--danger);" onclick="adminDeleteUser(\'' + id + '\')">삭제</button></td>' +
-    '</tr>';
+    const tut = dash.tutorialDone;
+    const pwMasked = (u.password||'').length > 0 ? '••••••' : '없음';
+
+    h += `<div class="admin-user-card" onclick="showAdminUserDetail('${id}')">
+      <div class="auc-top">
+        <div><span class="auc-name">${esc(u.name)}</span> <span class="auc-id">@${esc(id)}</span></div>
+        <span style="font-size:11px;color:var(--text-dim);">${lastLogin}</span>
+      </div>
+      <div class="auc-badges">
+        <span class="auc-badge" style="background:rgba(25,82,245,.08);color:var(--accent);border:1px solid rgba(25,82,245,.15);">습관 ${habits}</span>
+        <span class="auc-badge" style="background:rgba(255,94,125,.08);color:var(--accent2);border:1px solid rgba(255,94,125,.15);">도전 ${challenges}</span>
+        <span class="auc-badge" style="background:${tut?'rgba(0,185,107,.08)':'var(--surface2)'};color:${tut?'#00b96b':'var(--text-dim)'};border:1px solid ${tut?'rgba(0,185,107,.2)':'var(--border)'};">${tut?'튜토리얼 ✓':'미완료'}</span>
+      </div>
+      <div class="auc-meta" onclick="event.stopPropagation()">
+        <div class="auc-pw" id="pwArea_${id}">
+          <span id="pwMask_${id}">${pwMasked}</span>
+          <button class="btn-sm" style="padding:1px 6px;font-size:9px;margin-left:4px;" onclick="adminTogglePw('${id}')" id="pwToggleBtn_${id}">보기</button>
+        </div>
+        <div class="auc-actions">
+          <button class="btn-sm" style="padding:2px 8px;font-size:10px;" onclick="adminStartEditPw('${id}')">비번 수정</button>
+          <button class="btn-sm" style="padding:2px 8px;font-size:10px;color:var(--danger);border-color:var(--danger);" onclick="adminDeleteUser('${id}')">삭제</button>
+        </div>
+      </div>
+      <div id="pwEdit_${id}" style="display:none;gap:6px;align-items:center;margin-top:6px;" onclick="event.stopPropagation()">
+        <input id="pwInput_${id}" type="text" value="${esc(u.password||'')}" class="admin-input" style="flex:1;padding:6px 8px;font-size:11px;font-family:monospace;">
+        <button class="btn-sm" style="padding:2px 8px;font-size:10px;background:var(--accent);color:#fff;border-color:var(--accent);" onclick="adminSavePw('${id}')">저장</button>
+        <button class="btn-sm" style="padding:2px 8px;font-size:10px;" onclick="adminCancelPw('${id}')">취소</button>
+      </div>
+    </div>`;
   }
-  h += '</tbody></table>';
   tbl.innerHTML = h;
 }
 
-window.adminStartEditPw = function(id) { document.getElementById('pwShow_'+id).style.display='none'; document.getElementById('pwEdit_'+id).style.display='flex'; };
-window.adminCancelPw = function(id) { document.getElementById('pwShow_'+id).style.display='flex'; document.getElementById('pwEdit_'+id).style.display='none'; };
+window.adminTogglePw = function(id) {
+  const mask = document.getElementById('pwMask_'+id);
+  const btn = document.getElementById('pwToggleBtn_'+id);
+  const u = _adminUsers[id];
+  if (btn.textContent === '보기') {
+    mask.textContent = u?.password || '없음';
+    btn.textContent = '숨김';
+  } else {
+    mask.textContent = (u?.password||'').length > 0 ? '••••••' : '없음';
+    btn.textContent = '보기';
+  }
+};
+
+window.adminStartEditPw = function(id) { document.getElementById('pwArea_'+id).style.display='none'; document.getElementById('pwEdit_'+id).style.display='flex'; };
+window.adminCancelPw = function(id) { document.getElementById('pwArea_'+id).style.display=''; document.getElementById('pwEdit_'+id).style.display='none'; };
 window.adminSavePw = async function(id) {
   const pw = document.getElementById('pwInput_'+id).value.trim();
   if (!pw) return;
@@ -2141,6 +2192,8 @@ window.adminCreateUser = async function() {
   if (_adminUsers[id]) { showToast('이미 존재하는 아이디', 'normal'); return; }
   await set(ref(db, 'users/'+id), { name: name, password: pw, role: 'user' });
   document.getElementById('adminNewName').value=''; document.getElementById('adminNewId').value=''; document.getElementById('adminNewPw').value='';
+  document.getElementById('adminUserCreateForm').style.display='none';
+  document.getElementById('adminUserCreateToggle').style.display='block';
   showToast('✅ '+name+' 생성!', 'done'); renderAdminList();
 };
 window.adminDeleteUser = async function(id) {

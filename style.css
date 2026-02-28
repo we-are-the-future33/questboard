@@ -470,13 +470,24 @@ body{background:#f1f5f9;color:var(--text);font-family:'Noto Sans KR',sans-serif;
 .admin-hero-sub{color:var(--text-dim);font-size:13px;}
 .create-form{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);}
 .btn-accent{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(25,82,245,.28);}
-.user-table{width:100%;border-collapse:collapse;}
-.user-table th{font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);font-weight:700;}
-.user-table td{padding:12px 10px;font-size:13px;border-bottom:1px solid var(--border);}
-.user-table tr.user-row{cursor:pointer;transition:background .15s;}
-.user-table tr.user-row:hover,.user-table tr.user-row.selected{background:var(--accent-light);}
-.user-tbl-name{font-weight:700;}
-.user-tbl-id{font-size:11px;color:var(--text-dim);}
+.admin-input{background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;box-sizing:border-box;}
+.admin-input:focus{border-color:var(--accent);}
+.admin-sec-tab{flex:1;padding:8px 0;border:none;background:none;font-size:13px;font-weight:700;color:var(--text-dim);cursor:pointer;border-radius:10px;transition:all .2s;font-family:'Noto Sans KR',sans-serif;}
+.admin-sec-tab.active{background:var(--accent-light);color:var(--accent);}
+.admin-section{display:none;}
+.admin-section.active{display:block;}
+/* 유저 카드 리스트 */
+.admin-user-card{background:#fff;border:2px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.admin-user-card:hover{border-color:var(--accent);background:var(--accent-light);}
+.admin-user-card .auc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.admin-user-card .auc-name{font-size:14px;font-weight:800;color:var(--text);}
+.admin-user-card .auc-id{font-size:11px;color:var(--text-dim);}
+.admin-user-card .auc-badges{display:flex;gap:4px;flex-wrap:wrap;}
+.admin-user-card .auc-badge{font-size:10px;padding:2px 8px;border-radius:100px;font-weight:700;}
+.admin-user-card .auc-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;font-size:11px;color:var(--text-dim);}
+.admin-user-card .auc-pw{font-family:monospace;font-size:11px;color:var(--text-dim);letter-spacing:1px;display:flex;align-items:center;}
+.admin-user-card .auc-actions{display:flex;gap:4px;}
+
 .admin-detail{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:16px;}
 .admin-detail-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid var(--border);}
 .admin-detail-name{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--text);}

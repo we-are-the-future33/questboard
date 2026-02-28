@@ -78,6 +78,12 @@ function clearMetaTags() {
   const el = document.getElementById('bsMetaTags');
   if (el) el.innerHTML = '';
 }
+function groupLabel(label) {
+  // Split emoji prefix from text: "💪 건강 & 체력" → <span emoji>💪</span> 건강 & 체력
+  const m = label.match(/^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F?)\s*/u);
+  if (m) return `<span class="group-header-emoji">${m[1]}</span>${label.slice(m[0].length)}`;
+  return label;
+}
 let currentSubTab = 'habit';
 
 // ===== UTILITIES =====
@@ -293,6 +299,144 @@ window.doLogout = function () {
   showScreen('loginScreen');
 };
 
+// ===== HAMBURGER MENU =====
+window.toggleHamburger = function () {
+  const menu = document.getElementById('hamburgerMenu');
+  menu.classList.toggle('open');
+};
+document.addEventListener('click', function(e) {
+  const wrap = document.querySelector('.hamburger-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('hamburgerMenu')?.classList.remove('open');
+  }
+});
+
+// ===== 나 알아보기 =====
+function summarizeMyData() {
+  const goals = localDash?.goals || {};
+  const challenges = localDash?.challenges || {};
+  const completions = localDash?.completions || {};
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth() + 1;
+
+  // 습관 요약
+  let habitLines = [];
+  Object.keys(goals).forEach(key => {
+    const g = goals[key];
+    if (!g || !g.title) return;
+    const mg = migrateGoal(g);
+    const unitLbl = getUnitLabel(mg);
+    const streak = calcStreak(mg, parseInt(key));
+    const { pct } = goalPct(mg, parseInt(key), y, m);
+    const timeLbl = (TIME_LABELS[g.time || 'any'] || '시간 무관').replace(/[^\w가-힣\s&]/g, '').trim();
+    const catLbl = (CAT_LABELS[g.category || 'etc'] || '기타').replace(/[^\w가-힣\s&]/g, '').trim();
+    habitLines.push(`- "${g.title}" (${unitLbl}, ${timeLbl}, ${catLbl}) — 이번달 달성률 ${pct}%, 연속 ${streak}일`);
+  });
+
+  // 도전 요약
+  let bucketLines = [], projectLines = [];
+  Object.keys(challenges).forEach(key => {
+    const c = challenges[key];
+    if (!c || !c.title) return;
+    const catLbl = (CAT_LABELS[c.category || 'etc'] || '기타').replace(/[^\w가-힣\s&]/g, '').trim();
+    const monthLbl = (!c.targetMonth || c.targetMonth === 'someday') ? '기한 미정' : c.targetMonth;
+    if (c.type === 'bucket') {
+      bucketLines.push(`- "${c.title}" (${catLbl}, ${monthLbl}) — ${c.done ? '달성 완료 ✅' : '진행 중'}`);
+    } else if (c.type === 'project') {
+      const { done, total, pct } = getProjectProgress(c);
+      const stageNames = (c.stages || []).map(s => s.name).join(' → ');
+      projectLines.push(`- "${c.title}" (${catLbl}, ${monthLbl}) — ${done}/${total} 완료(${pct}%) | 단계: ${stageNames}`);
+    }
+  });
+
+  let summary = `[사용자 습관/도전 데이터 요약]\n`;
+  summary += `분석 기준일: ${y}년 ${m}월 ${now.getDate()}일\n\n`;
+
+  if (habitLines.length > 0) {
+    summary += `📌 습관 (총 ${habitLines.length}개)\n${habitLines.join('\n')}\n\n`;
+  } else {
+    summary += `📌 습관: 아직 등록된 습관이 없음\n\n`;
+  }
+  if (bucketLines.length > 0) {
+    summary += `🎯 버킷리스트 (총 ${bucketLines.length}개)\n${bucketLines.join('\n')}\n\n`;
+  }
+  if (projectLines.length > 0) {
+    summary += `📋 프로젝트 (총 ${projectLines.length}개)\n${projectLines.join('\n')}\n\n`;
+  }
+  if (bucketLines.length === 0 && projectLines.length === 0) {
+    summary += `🎯 도전: 아직 등록된 도전이 없음\n\n`;
+  }
+  return summary;
+}
+
+function buildAnalysisPrompt() {
+  const summary = summarizeMyData();
+  return `당신은 습관/목표 분석 전문가입니다. 아래는 한 사용자가 '목표 달성 앱'에 등록한 습관과 도전 데이터 요약입니다.
+
+${summary}
+위 데이터를 바탕으로 아래 항목들을 상세하게 분석하고 조언해 주세요:
+
+1. **성향 분석**: 이 사람은 어떤 유형의 사람인지 (예: 자기계발형, 건강관리형, 탐험가형 등)
+2. **강점 발견**: 데이터에서 보이는 긍정적 패턴과 잘하고 있는 점
+3. **개선 포인트**: 달성률이 낮거나 연속일수가 끊긴 습관에 대한 원인 분석
+4. **균형 진단**: 건강/학습/업무/관계/재무 등 영역별 균형이 잘 잡혀 있는지
+5. **맞춤 조언**: 이 사람에게 가장 도움이 될 구체적이고 실행 가능한 3가지 제안
+6. **응원 메시지**: 이 사람의 노력을 인정하고 동기부여할 수 있는 따뜻한 한마디
+
+한국어로 친근하고 구체적으로 답변해 주세요.`;
+}
+
+window.openAboutMe = function () {
+  document.getElementById('bsTitle').textContent = '🔍 나 알아보기';
+  clearMetaTags();
+  const summary = summarizeMyData();
+  // Count stats
+  const goalCount = Object.keys(localDash?.goals || {}).filter(k => localDash.goals[k]?.title).length;
+  const challengeCount = Object.keys(localDash?.challenges || {}).filter(k => localDash.challenges[k]?.title).length;
+
+  let h = `<div style="text-align:center;padding:20px 0 10px;">
+    <div style="font-size:48px;margin-bottom:8px;">🪞</div>
+    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">AI에게 나를 분석받기</div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.6;">내 습관과 도전 데이터를 AI가 분석해서<br>성향, 강점, 맞춤 조언을 받아보세요</div>
+  </div>`;
+  h += `<div style="background:#f8fafc;border-radius:14px;padding:16px;margin:16px 0;">
+    <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:10px;">내 데이터 미리보기</div>
+    <div style="display:flex;gap:12px;margin-bottom:12px;">
+      <div style="flex:1;background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid #e2e8f0;">
+        <div style="font-family:'Black Han Sans';font-size:22px;color:var(--accent);">${goalCount}</div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;">습관</div>
+      </div>
+      <div style="flex:1;background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid #e2e8f0;">
+        <div style="font-family:'Black Han Sans';font-size:22px;color:var(--accent);">${challengeCount}</div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;">도전</div>
+      </div>
+    </div>
+    <details style="cursor:pointer;">
+      <summary style="font-size:11px;color:var(--accent);font-weight:700;">데이터 요약 펼쳐보기</summary>
+      <pre style="font-size:10px;color:#64748b;white-space:pre-wrap;word-break:break-all;margin-top:8px;max-height:200px;overflow-y:auto;background:#fff;padding:10px;border-radius:8px;border:1px solid #e2e8f0;">${esc(summary)}</pre>
+    </details>
+  </div>`;
+  h += `<div style="font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:12px;line-height:1.5;">아래 버튼을 누르면 분석 프롬프트가 클립보드에 복사됩니다.<br>ChatGPT에 붙여넣기하세요!</div>`;
+  h += `<button class="unit-confirm-btn" id="copyPromptBtn" onclick="copyAnalysisPrompt()">📋 프롬프트 복사하기</button>`;
+  document.getElementById('bsBody').innerHTML = h;
+  openBS();
+};
+
+window.copyAnalysisPrompt = async function () {
+  const prompt = buildAnalysisPrompt();
+  try {
+    await navigator.clipboard.writeText(prompt);
+    showToast('📋 클립보드에 복사됨! ChatGPT에 붙여넣기하세요', 'done');
+    const btn = document.getElementById('copyPromptBtn');
+    if (btn) { btn.textContent = '✅ 복사 완료!'; btn.style.background = '#10b981'; setTimeout(() => { btn.textContent = '📋 프롬프트 복사하기'; btn.style.background = ''; }, 2000); }
+  } catch (e) {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = prompt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('📋 복사 완료!', 'done');
+  }
+};
+
 // ===== TAB =====
 window.switchTab = function (tab) {
   document.getElementById('tabBtnMy').classList.toggle('active', tab === 'my');
@@ -449,7 +593,7 @@ function renderHabitCards() {
       if (groups[key].length === 0) return;
       const label = TIME_LABELS[key] || key;
       html += `<div class="group-header" onclick="toggleGroupAccordion('hg_${gIdx}')">
-        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
         <div class="group-toggle-icon" id="hgi_${gIdx}">▼</div>
       </div><div class="card-grid" id="hg_${gIdx}">`;
       groups[key].forEach(({ g, idx }) => { html += generateHabitCardHtml(g, idx, y, m); });
@@ -465,7 +609,7 @@ function renderHabitCards() {
       if (groups[key].length === 0) return;
       const label = CAT_LABELS[key] || key;
       html += `<div class="group-header" onclick="toggleGroupAccordion('hg_${gIdx}')">
-        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
         <div class="group-toggle-icon" id="hgi_${gIdx}">▼</div>
       </div><div class="card-grid" id="hg_${gIdx}">`;
       groups[key].forEach(({ g, idx }) => { html += generateHabitCardHtml(g, idx, y, m); });
@@ -645,7 +789,7 @@ function renderChallengeCards() {
       if (groups[key].length === 0) return;
       const label = TYPE_LABELS[key] || key;
       html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
-        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
         <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
       </div><div class="card-grid" id="cg_${gIdx}">`;
       groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
@@ -661,7 +805,7 @@ function renderChallengeCards() {
       if (groups[key].length === 0) return;
       const label = CAT_LABELS[key] || key;
       html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
-        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
         <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
       </div><div class="card-grid" id="cg_${gIdx}">`;
       groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
@@ -681,7 +825,7 @@ function renderChallengeCards() {
       if (groups[key].length === 0) return;
       const label = formatTargetMonth(key);
       html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
-        <div class="group-header-left">${label} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
         <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
       </div><div class="card-grid" id="cg_${gIdx}">`;
       groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
@@ -814,13 +958,18 @@ function getCatChipsHTML() {
   return `<div class="chip-group">` + Object.keys(CAT_LABELS).map(k => `<div class="chip-opt ${_createCat === k ? 'selected' : ''}" onclick="selectCreateCat('${k}')">${CAT_LABELS[k]}</div>`).join('') + `</div>`;
 }
 function getMonthChipsHTML() {
-  let h = `<div class="chip-group"><div class="chip-opt ${_createMonth === 'someday' ? 'selected' : ''}" onclick="selectCreateMonth('someday')">☁️ 언젠가 할 일</div>`;
   const now = new Date();
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const lbl = `${d.getFullYear()}년 ${d.getMonth()+1}월`;
-    h += `<div class="chip-opt ${_createMonth === val ? 'selected' : ''}" onclick="selectCreateMonth('${val}')">📅 ${lbl}</div>`;
+  const curY = now.getFullYear(), curM = now.getMonth(); // 0-indexed
+  let h = `<div class="chip-group"><div class="chip-opt ${_createMonth === 'someday' ? 'selected' : ''}" onclick="selectCreateMonth('someday')">☁️ 언젠가 할 일</div>`;
+  for (let m = 0; m < 12; m++) {
+    const val = `${curY}-${String(m+1).padStart(2,'0')}`;
+    const lbl = `${curY}년 ${m+1}월`;
+    const isPast = m < curM;
+    if (isPast) {
+      h += `<div class="chip-opt" style="opacity:0.35;cursor:not-allowed;pointer-events:none;">📅 ${lbl}</div>`;
+    } else {
+      h += `<div class="chip-opt ${_createMonth === val ? 'selected' : ''}" onclick="selectCreateMonth('${val}')">📅 ${lbl}</div>`;
+    }
   }
   h += `</div>`;
   return h;

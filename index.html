@@ -166,7 +166,15 @@
       <div class="nav-logo">동물 키우기</div>
       <div class="nav-right">
         <span class="nav-user" id="navUserName"></span>
-        <button class="btn-sm" onclick="doLogout()">로그아웃</button>
+        <div class="hamburger-wrap">
+          <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleHamburger()">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="hamburger-menu" id="hamburgerMenu">
+            <button class="hamburger-item" onclick="openAboutMe(); toggleHamburger();">🔍 나 알아보기</button>
+            <button class="hamburger-item" onclick="doLogout()">🚪 로그아웃</button>
+          </div>
+        </div>
       </div>
     </nav>
     <div class="tab-bar" id="dashTabBar" style="display:none;">

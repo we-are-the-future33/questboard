@@ -329,8 +329,43 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 .stats-cheer strong{color:var(--accent2);}
 
 /* TOAST */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#fff;padding:11px 24px;border-radius:100px;font-weight:700;font-size:14px;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(25,82,245,.35);}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:14px 32px;border-radius:100px;font-weight:700;font-size:15px;transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:9998;pointer-events:none;white-space:nowrap;box-shadow:0 6px 24px rgba(0,0,0,.18);min-width:140px;text-align:center;}
 .toast.show{transform:translateX(-50%) translateY(0);}
+.toast.toast-done{background:var(--accent);color:#fff;}
+.toast.toast-undo{background:#ff5e7d;color:#fff;}
+.toast.toast-normal{background:var(--text);color:#fff;}
+
+/* 주간 클리어 팝업 */
+.week-clear-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:#fff;border:3px solid var(--accent);border-radius:24px;padding:28px 36px;text-align:center;z-index:9999;box-shadow:0 20px 60px rgba(25,82,245,.25);transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
+.week-clear-popup.show{transform:translate(-50%,-50%) scale(1);}
+.week-clear-emoji{font-size:48px;margin-bottom:8px;display:block;animation:week-spin .6s ease-out;}
+@keyframes week-spin{0%{transform:rotate(-15deg) scale(0.5);}60%{transform:rotate(10deg) scale(1.1);}100%{transform:rotate(0deg) scale(1);}}
+.week-clear-title{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--accent);letter-spacing:1px;margin-bottom:4px;}
+.week-clear-sub{font-size:13px;color:var(--text-dim);}
+
+/* 주간 정보 카드 */
+.week-info-card{background:linear-gradient(135deg,var(--accent-light),#fff0f8);border:2px solid rgba(25,82,245,.18);border-radius:16px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;gap:14px;}
+.week-info-icon{font-size:28px;flex-shrink:0;}
+.week-info-body{flex:1;}
+.week-info-main{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--accent);margin-bottom:3px;}
+.week-info-cheer{font-size:13px;color:var(--text-dim);line-height:1.5;}
+.week-info-clear{background:linear-gradient(135deg,#e8fff4,#e8eeff);border-color:rgba(0,185,107,.3);}
+.week-info-clear .week-info-main{background:linear-gradient(90deg,#00b96b,#1952f5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* 화면 흔들기 */
+@keyframes screen-shake{
+  0%,100%{transform:translateX(0);}
+  10%{transform:translateX(-8px) rotate(-1deg);}
+  20%{transform:translateX(8px) rotate(1deg);}
+  30%{transform:translateX(-6px) rotate(-.5deg);}
+  40%{transform:translateX(6px) rotate(.5deg);}
+  50%{transform:translateX(-4px);}
+  60%{transform:translateX(4px);}
+  70%{transform:translateX(-2px);}
+  80%{transform:translateX(2px);}
+  90%{transform:translateX(-1px);}
+}
+.shake{animation:screen-shake .7s ease-out;}
 
 /* TABS */
 .tab-bar{display:flex;border-bottom:2px solid var(--border);background:#fff;position:sticky;top:56px;z-index:40;box-shadow:0 2px 8px rgba(25,82,245,.06);}
@@ -604,6 +639,11 @@ body{background:#e8eeff;color:var(--text);font-family:'LINESeedKR',sans-serif;mi
 </div>
 
 <div class="confetti-container" id="confettiContainer"></div>
+<div class="week-clear-popup" id="weekClearPopup">
+  <span class="week-clear-emoji">🏆</span>
+  <div class="week-clear-title">이번 주 목표 달성!</div>
+  <div class="week-clear-sub">대단해요! 이번 주도 완벽했어요 🎉</div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -1124,21 +1164,40 @@ function showConfetti() {
   const container = document.getElementById('confettiContainer');
   const colors = ['#1952f5','#6b8fff','#ff5e7d','#a78bfa','#34d399','#fbbf24'];
   container.innerHTML = '';
-  for(let i=0;i<120;i++) {
+  for(let i=0;i<140;i++) {
     const el = document.createElement('div');
     el.className = 'confetti-piece';
     el.style.cssText = `
       left:${Math.random()*100}%;
       background:${colors[Math.floor(Math.random()*colors.length)]};
-      width:${6+Math.random()*8}px;
-      height:${6+Math.random()*8}px;
+      width:${6+Math.random()*10}px;
+      height:${6+Math.random()*10}px;
       border-radius:${Math.random()>0.5?'50%':'2px'};
-      animation-duration:${2+Math.random()*2}s;
-      animation-delay:${Math.random()*0.8}s;
+      animation-duration:${1.8+Math.random()*2}s;
+      animation-delay:${Math.random()*0.6}s;
     `;
     container.appendChild(el);
   }
   setTimeout(()=>{ container.innerHTML=''; }, 4000);
+}
+function showConfettiSmall() {
+  const container = document.getElementById('confettiContainer');
+  const colors = ['#1952f5','#6b8fff','#ff5e7d','#a78bfa','#34d399','#fbbf24'];
+  for(let i=0;i<30;i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${30+Math.random()*40}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${5+Math.random()*7}px;
+      height:${5+Math.random()*7}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation-duration:${1.2+Math.random()*1}s;
+      animation-delay:${Math.random()*0.3}s;
+    `;
+    container.appendChild(el);
+  }
+  setTimeout(()=>{ container.innerHTML=''; }, 2500);
 }
 
 // ===== 진척 계산 =====
@@ -1433,6 +1492,43 @@ function renderCalendar(panel,g,idx){
     });
   });
   calHtml+='</div>';
+
+  // 이번주 현황 계산 (이번 달 보고 있을 때만)
+  let weekInfoHtml = '';
+  if(isCur && g.unit !== 'once') {
+    const today = now;
+    const dow = today.getDay();
+    const weekStartDate = new Date(today); weekStartDate.setDate(today.getDate()-dow);
+    const weekEndDate = new Date(weekStartDate); weekEndDate.setDate(weekStartDate.getDate()+6);
+    let wdone=0, wTotal=0;
+    for(let dd=weekStartDate.getDate(); dd<=Math.min(weekEndDate.getDate(), getMonthDays(year,month)); dd++){
+      const dt2=new Date(year,month-1,dd);
+      if(dt2>today) break;
+      wTotal++;
+      if(localDash.completions[`g${idx}_${year}_${month}_${dd}`]===true) wdone++;
+    }
+    const wRemain = Math.max(0, freq-wdone);
+    const isWeekClear = wdone>=freq;
+    const CHEER_MSGS = [
+      ['이번 주 거의 다 왔어요!','마지막 한 번만 더!'],
+      ['잘하고 있어요 💪','이 기세 유지해요!'],
+      ['좋은 습관이 쌓이고 있어요 🌱','꾸준함이 최고예요!'],
+      ['오늘도 파이팅! ✨','하루하루가 쌓여요!'],
+    ];
+    const cheer = isWeekClear
+      ? ['완벽한 한 주!🏆','이번 주 목표를 모두 달성했어요!']
+      : wRemain===1
+        ? ['거의 다 왔어요! 🔥','한 번만 더 하면 이번 주 클리어!']
+        : CHEER_MSGS[Math.min(wRemain-1, CHEER_MSGS.length-1)];
+    weekInfoHtml = `
+      <div class="week-info-card ${isWeekClear?'week-info-clear':''}">
+        <div class="week-info-icon">${isWeekClear?'🏆':wRemain===0?'✅':wRemain===1?'🔥':'💪'}</div>
+        <div class="week-info-body">
+          <div class="week-info-main">${isWeekClear?'이번 주 목표 달성!':`이번 주 ${wRemain}번 남았어요`}</div>
+          <div class="week-info-cheer">${cheer[0]} ${cheer[1]}</div>
+        </div>
+      </div>`;
+  }
   const isCur=year===now.getFullYear()&&month===now.getMonth()+1;
   const lockBanner = !isEditableMonth
     ? `<div style="display:flex;align-items:center;gap:8px;background:rgba(241,53,53,.08);border:1px solid rgba(241,53,53,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text-dim);">
@@ -1459,6 +1555,7 @@ function renderCalendar(panel,g,idx){
     </div>
     ${lockBanner}
     ${calHtml}
+    ${weekInfoHtml}
     ${renderStats(g,idx)}`;
 }
 // ===== STATS =====
@@ -1606,11 +1703,44 @@ window.toggleDay=async function(idx,day){
   const curY=now.getFullYear(), curM=now.getMonth()+1;
   const isEditableMonth=(year===curY&&month===curM)||
     (year===(curM===1?curY-1:curY)&&month===(curM===1?12:curM-1));
-  if(!isEditableMonth){ showToast('🔒 전전월 이전은 수정할 수 없어요'); return; }
+  if(!isEditableMonth){ showToast('🔒 전전월 이전은 수정할 수 없어요','normal'); return; }
+
   const k=`g${idx}_${year}_${month}_${day}`;
-  localDash.completions[k]=!(localDash.completions[k]===true);
+  const wasDone = localDash.completions[k]===true;
+  localDash.completions[k] = !wasDone;
   await saveDash();
-  showToast(localDash.completions[k]?'✅ 완료!':'↩️ 해제');
+
+  const g = localDash.goals[idx];
+  const freq = UNIT_FREQ[g?.unit]||1;
+
+  // 완료/해제 토스트
+  if(!wasDone){
+    showToast('🎉 완료!','done');
+    // 콘페티 소량
+    showConfettiSmall();
+
+    // 이번 주 클리어 체크
+    const dt=new Date(year,month-1,day);
+    const dow=dt.getDay();
+    const weekStart=new Date(dt); weekStart.setDate(dt.getDate()-dow);
+    const weekEnd=new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
+    let wdone=0;
+    for(let d=weekStart.getDate(); d<=Math.min(weekEnd.getDate(), getMonthDays(year,month)); d++){
+      if(new Date(year,month-1,d)>now) break;
+      if(localDash.completions[`g${idx}_${year}_${month}_${d}`]===true) wdone++;
+    }
+    if(wdone===freq){
+      // 이번 주 막 클리어!
+      setTimeout(()=>{
+        showConfetti();
+        shakeScreen();
+        showWeekClear();
+      }, 300);
+    }
+  } else {
+    showToast('↩️ 해제','undo');
+  }
+
   renderDetail(idx); renderGoalGrid(); renderGlobal(); renderAvatar();
 };
 
@@ -1661,12 +1791,30 @@ window.saveNickname=async function(){
 window.renderDetail=renderDetail;
 function escAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-function showToast(msg){
+function showToast(msg, type='normal'){
   const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
+  t.textContent=msg;
+  t.className='toast toast-'+type;
+  t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2000);
 }
 window.showToast=showToast;
+
+function shakeScreen(){
+  const wrap=document.querySelector('#dashboardScreen .mobile-wrap');
+  if(!wrap) return;
+  wrap.classList.remove('shake');
+  void wrap.offsetWidth; // reflow
+  wrap.classList.add('shake');
+  wrap.addEventListener('animationend',()=>wrap.classList.remove('shake'),{once:true});
+}
+
+function showWeekClear(){
+  const popup=document.getElementById('weekClearPopup');
+  popup.classList.add('show');
+  setTimeout(()=>popup.classList.remove('show'), 2800);
+}
+window.showWeekClear=showWeekClear;
 
 // ===== TAB =====
 let currentTab = 'my';

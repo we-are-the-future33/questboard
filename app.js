@@ -506,37 +506,70 @@ window.switchTab = function (tab) {
   function setup() {
     const scroll = document.querySelector('.dash-scroll');
     const subBar = document.querySelector('.sub-tab-bar');
-    if (!scroll || !subBar) return;
+    const tabBar = document.getElementById('dashTabBar');
+    if (!scroll || !subBar || !tabBar) return;
     if (ready) return;
     ready = true;
 
     let snapTimer = null;
-    let lastDir = 0; // 1=down, -1=up
+    let lastDir = 0;
     let lastY = 0;
+    let snappedDown = false;
+    let isSnapping = false;
 
     scroll.addEventListener('scroll', function () {
+      if (isSnapping) return;
       const curY = scroll.scrollTop;
-      if (curY > lastY) lastDir = 1;
-      else if (curY < lastY) lastDir = -1;
+      if (curY > lastY + 2) lastDir = 1;
+      else if (curY < lastY - 2) lastDir = -1;
       lastY = curY;
       clearTimeout(snapTimer);
-      snapTimer = setTimeout(() => doSnap(), 120);
+      snapTimer = setTimeout(() => doSnap(), 100);
     }, { passive: true });
 
     function doSnap() {
-      const snapPoint = subBar.offsetTop - 8; // sub-tab-bar가 상단에 붙는 위치
+      const snapPoint = subBar.offsetTop;
       const curY = scroll.scrollTop;
-      // 스냅 존: 0 ~ snapPoint 사이에 있을 때만 작동
-      if (curY <= 0 || curY >= snapPoint) return;
-      // 반 이상 내렸거나 아래로 스크롤 중이면 → 서브탭 위치로 스냅
-      if (lastDir > 0 || curY > snapPoint * 0.4) {
-        scroll.scrollTo({ top: snapPoint, behavior: 'smooth' });
-      } else {
-        scroll.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // 이미 스냅된 상태에서 위로 조금 올리면 → 위로 복귀
+      if (snappedDown && lastDir < 0 && curY < snapPoint - 5) {
+        snapTo(0);
+        return;
+      }
+      // 위에 있는 상태에서 아래로 조금 내리면 → 서브탭으로 스냅
+      if (!snappedDown && lastDir > 0 && curY > 30) {
+        snapTo(snapPoint);
+        return;
+      }
+      // 중간 위치에 멈춘 경우
+      if (curY > 0 && curY < snapPoint) {
+        if (curY > snapPoint * 0.35) snapTo(snapPoint);
+        else snapTo(0);
       }
     }
+
+    function snapTo(target) {
+      const snapPoint = subBar.offsetTop;
+      isSnapping = true;
+      if (target >= snapPoint) {
+        // 아래로 스냅: 탭바 숨기기
+        tabBar.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+        tabBar.style.transform = 'translateY(-100%)';
+        tabBar.style.opacity = '0';
+        tabBar.style.pointerEvents = 'none';
+        snappedDown = true;
+      } else {
+        // 위로 스냅: 탭바 보이기
+        tabBar.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+        tabBar.style.transform = 'translateY(0)';
+        tabBar.style.opacity = '1';
+        tabBar.style.pointerEvents = '';
+        snappedDown = false;
+      }
+      scroll.scrollTo({ top: target, behavior: 'smooth' });
+      setTimeout(() => { isSnapping = false; lastY = scroll.scrollTop; }, 350);
+    }
   }
-  // DOM ready 후 실행
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
   else setTimeout(setup, 500);
 })();

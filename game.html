@@ -826,8 +826,9 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // ===== 상수 =====
-const UNIT_LABELS = { once:'한 번', daily:'매일', w1:'주 1회', w2:'주 2~3회', w4:'주 4~5회', w6:'주 6회' };
-const UNIT_FREQ   = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6 };
+const UNIT_LABELS = { once:'한 번', daily:'매일', w1:'주 1회', w2:'주 2~3회', w4:'주 4~5회', w6:'주 6회', health_sleep:'🌙 수면 자동', health_workout:'💪 운동 자동' };
+const UNIT_FREQ   = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6, health_sleep:7, health_workout:2 };
+const HEALTH_UNITS = ['health_sleep','health_workout'];
 const MAX_GOALS   = 9;
 const TUT_STEPS   = 5;
 
@@ -1576,6 +1577,7 @@ function renderDetail(idx){
     return;
   }
   if(g.unit==='once') renderOnce(panel,g,idx);
+  else if(HEALTH_UNITS.includes(g.unit)) renderHealthGoal(panel,g,idx);
   else renderCalendar(panel,g,idx);
 }
 
@@ -1583,9 +1585,19 @@ function renderUnitOpts(cid,cur,idx){
   const c=document.getElementById(cid);
   if(!c) return;
   if(!selectedUnit[idx]) selectedUnit[idx]=cur||null;
-  c.innerHTML=Object.entries(UNIT_LABELS).map(([u,l])=>
-    `<div class="unit-opt ${selectedUnit[idx]===u?'selected':''}" onclick="pickUnit('${u}',${idx},'${cid}')">${l}</div>`
+  const manualUnits = ['once','daily','w1','w2','w4','w6'];
+  const healthUnits = ['health_sleep','health_workout'];
+  const manualHtml = manualUnits.map(u=>
+    `<div class="unit-opt ${selectedUnit[idx]===u?'selected':''}" onclick="pickUnit('${u}',${idx},'${cid}')">${UNIT_LABELS[u]}</div>`
   ).join('');
+  const healthHtml = healthUnits.map(u=>
+    `<div class="unit-opt ${selectedUnit[idx]===u?'selected':''}" onclick="pickUnit('${u}',${idx},'${cid}')" style="${selectedUnit[idx]===u?'':'border-color:#a78bfa;color:#7c3aed;background:#faf5ff;'}">${UNIT_LABELS[u]}</div>`
+  ).join('');
+  c.innerHTML=`
+    ${manualHtml}
+    <div style="grid-column:1/-1;margin:8px 0 4px;font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:1px;">⌚ 애플워치 자동 연동</div>
+    ${healthHtml}
+  `;
 }
 window.pickUnit=function(u,idx,cid){ selectedUnit[idx]=u; renderUnitOpts(cid,u,idx); };
 
@@ -1650,6 +1662,31 @@ window.closeDetailPanel=function(){
   document.getElementById('detailSection').innerHTML='<div class="detail-empty">목표를 선택하면<br>상세 내용이 펼쳐집니다</div>';
 };
 
+function renderHealthGoal(panel,g,idx){
+  const isSleep = g.unit==='health_sleep';
+  const icon = isSleep ? '🌙' : '💪';
+  const typeLabel = isSleep ? '수면 자동 연동' : '운동 자동 연동';
+  const condLabel = isSleep ? '하루 7시간 이상 수면' : '운동 기록 감지';
+  const bannerHtml = `
+    <div style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border:1.5px solid #c4b5fd;border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:18px;">${icon}</span>
+        <span style="font-size:13px;font-weight:700;color:#7c3aed;">${typeLabel}</span>
+        <span style="margin-left:auto;font-size:11px;background:#7c3aed;color:#fff;padding:2px 8px;border-radius:100px;">⌚ 자동</span>
+      </div>
+      <div style="font-size:12px;color:#6d28d9;line-height:1.6;">
+        조건: <strong>${condLabel}</strong><br>
+        iPhone 단축어 앱이 매일 자동으로 체크해줘요.<br>
+        <span style="color:#9ca3af;font-size:11px;">아직 단축어 설정 전이면 수동으로도 체크 가능해요</span>
+      </div>
+    </div>
+    <div id="healthCalWrap${idx}"></div>`;
+  panel.innerHTML = bannerHtml;
+  const wrap = document.getElementById(`healthCalWrap${idx}`);
+  renderCalendar(panel, g, idx, wrap);
+}
+
+// renderCalendar에 wrap 파라미터 추가 버전 처리를 위해 기존 함수 시작에 분기 추가
 function renderOnce(panel,g,idx){
   const done=localDash.completions[`g${idx}_once`]===true;
   panel.innerHTML=`<div class="once-card">
@@ -1673,7 +1710,8 @@ window.toggleOnce=async function(idx){
   renderDetail(idx); renderGoalGrid(); renderGlobal(); renderAvatar();
 };
 
-function renderCalendar(panel,g,idx){
+function renderCalendar(panel,g,idx,wrap){
+  const target = wrap || panel;
   const now=new Date();
   const {year,month}=viewMonth;
   const {done,mod,pct}=goalPct(g,idx,year,month);
@@ -1718,7 +1756,7 @@ function renderCalendar(panel,g,idx){
 
   // 이번주 현황 계산 (이번 달 보고 있을 때만)
   let weekInfoHtml = '';
-  if(isCur && g.unit !== 'once') {
+  if(isCur && g.unit !== 'once' && !HEALTH_UNITS.includes(g.unit)) {
     const today = now;
     const dow = today.getDay();
     const weekStartDate = new Date(today); weekStartDate.setDate(today.getDate()-dow);
@@ -1757,7 +1795,7 @@ function renderCalendar(panel,g,idx){
         <span>🔒</span><span>전전월 이전 데이터는 조회만 가능해요</span>
        </div>`
     : '';
-  panel.innerHTML=`
+  target.innerHTML=`
     <div class="cal-header">
       <div class="cal-goal-name">${esc(g.title)}</div>
       <div class="cal-meta">
@@ -1774,7 +1812,7 @@ function renderCalendar(panel,g,idx){
     ${calHtml}
     ${renderStats(g,idx)}`;
   // 댓글 영역 비동기 로드 및 삽입
-  renderMyCheers(panel, idx);
+  renderMyCheers(target, idx);
 }
 // ===== STATS =====
 function renderStats(g, idx) {
@@ -2199,7 +2237,7 @@ function updateFloatFab(){
     return;
   }
   const g = getAllGoals()[activeGoalIdx];
-  if(!g || g.unit==='once') { fab.style.display='none'; document.querySelector('.dash-scroll')?.classList.remove('has-float-scroll'); return; }
+  if(!g || g.unit==='once' || HEALTH_UNITS.includes(g.unit)) { fab.style.display='none'; document.querySelector('.dash-scroll')?.classList.remove('has-float-scroll'); return; }
 
   const now = new Date();
   const todayKey = `g${activeGoalIdx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;

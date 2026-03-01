@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303g';
+const APP_VERSION = '20260303h';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4839,7 +4839,7 @@ function renderMilestoneBar() {
     { ms: 75,  emoji: '✨', label: '스페셜' },
     { ms: 100, emoji: '👑', label: '완료' }
   ];
-  let h = `<div class="ms-bar-wrap">`;
+  let h = `<div class="ms-bar-wrap"><div class="ms-bar-pill">`;
   h += `<div class="ms-bar-track"><div class="ms-bar-fill" style="width:${Math.min(pct, 100)}%"></div></div>`;
   h += `<div class="ms-bar-icons">`;
   icons.forEach(ic => {
@@ -4849,7 +4849,7 @@ function renderMilestoneBar() {
     h += `<span class="ms-bar-emoji">${ic.emoji}</span>`;
     h += `</div>`;
   });
-  h += `</div></div>`;
+  h += `</div></div></div>`;
   el.innerHTML = h;
 }
 

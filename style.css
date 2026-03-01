@@ -704,3 +704,11 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 @keyframes vhap-heavy-shake{0%,100%{transform:translateX(0) scale(1);}15%{transform:translateX(-3px) scale(1.003);}30%{transform:translateX(3px);}45%{transform:translateX(-2px);}60%{transform:translateX(2px) scale(1);}75%{transform:translateX(-1px);}}
 body.vhap-light{animation:vhap-light-shake .15s ease-out;}
 body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
+
+/* Progressive disclosure */
+.pdisc-step{margin-bottom:20px;}
+.pdisc-hidden{display:none;}
+.pdisc-reveal{animation:pdiscFadeIn .3s ease-out;}
+.pdisc-label{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;}
+.pdisc-desc{font-size:12px;color:var(--text-dim);margin-bottom:12px;}
+@keyframes pdiscFadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}

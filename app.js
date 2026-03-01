@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301u';
+const APP_VERSION = '20260301v';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -34,6 +34,7 @@ async function checkAppUpdate() {
 }
 setTimeout(checkAppUpdate, 5000);
 setInterval(checkAppUpdate, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkAppUpdate(); });
 
 const firebaseConfig = {
   apiKey: "AIzaSyAbEbLdJuWVai_NKTHuo1XtC8p76dmVPE0",
@@ -1345,12 +1346,12 @@ function initHabitSwipe(idx) {
       triggerHaptic('light');
       const cardW = card.offsetWidth || 200;
       card.style.transform = `translateX(${cardW + 20}px)`;
-      setTimeout(() => habitMarkDone(idx), 250);
+      setTimeout(() => habitMarkDone(idx), 350);
     } else if (dx <= -TH && isDone) {
       triggerHaptic('light');
       const cardW = card.offsetWidth || 200;
       card.style.transform = `translateX(${-(cardW + 20)}px)`;
-      setTimeout(() => habitMarkUndo(idx), 250);
+      setTimeout(() => habitMarkUndo(idx), 350);
     } else {
       card.style.transform = 'translateX(0)';
     }
@@ -1560,7 +1561,7 @@ function initBucketSwipe(idx) {
   function onE() {
     card.classList.remove('swiping'); card.classList.add('snapping');
     const elapsed = Date.now() - tapStart;
-    if (Math.abs(dx) >= TH) { triggerHaptic('light'); const cW = card.offsetWidth || 200; card.style.transform = `translateX(${dx > 0 ? cW + 20 : -(cW + 20)}px)`; setTimeout(() => swipeBucket(idx), 250); }
+    if (Math.abs(dx) >= TH) { triggerHaptic('light'); const cW = card.offsetWidth || 200; card.style.transform = `translateX(${dx > 0 ? cW + 20 : -(cW + 20)}px)`; setTimeout(() => swipeBucket(idx), 350); }
     else {
       card.style.transform = 'translateX(0)';
       const totalMove = Math.abs(sx - (dx + sx));
@@ -1755,92 +1756,146 @@ window.removeCreateStage = function(si) { syncCreateStagesFromDOM(); _createStag
 window.openAddChallengeSheet = function () {
   const count = Object.values(localDash.challenges || {}).filter(c => c && c.title).length;
   if (count >= MAX_CHALLENGES) { showToast(`도전은 최대 ${MAX_CHALLENGES}개까지 만들 수 있어요`, 'normal'); return; }
-  _createType = 'bucket'; _createCat = 'etc'; _createMonth = 'someday';
+  _createType = null; _createCat = 'etc'; _createMonth = 'someday';
   _createStages = [{ name: '첫 번째 단계', tasks: [] }];
   document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
   clearMetaTags();
-  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:14px;">유형을 먼저 선택해 주세요</div>`;
-  h += `<div class="challenge-type-grid">
-    <div class="challenge-type-card selected" id="ctBucket" onclick="selectChallengeType('bucket')">
-      <span class="challenge-type-icon">⭐</span>
-      <div class="challenge-type-name">버킷리스트</div>
-      <div class="challenge-type-desc">한 번의 실천으로<br>완료되는 꿈</div>
-    </div>
-    <div class="challenge-type-card" id="ctProject" onclick="selectChallengeType('project')">
-      <span class="challenge-type-icon">🗺️</span>
-      <div class="challenge-type-name">프로젝트</div>
-      <div class="challenge-type-desc">단계별 로드맵이<br>필요한 목표</div>
+
+  let h = '';
+  // Step 1: Type
+  h += `<div class="pdisc-step" id="cAddStep1">
+    <div class="pdisc-label">유형</div>
+    <div class="challenge-type-grid">
+      <div class="challenge-type-card" id="ctBucket2" onclick="cAddSelectType('bucket')">
+        <span class="challenge-type-icon">⭐</span>
+        <div class="challenge-type-name">버킷리스트</div>
+        <div class="challenge-type-desc">한 번의 실천으로<br>완료되는 꿈</div>
+      </div>
+      <div class="challenge-type-card" id="ctProject2" onclick="cAddSelectType('project')">
+        <span class="challenge-type-icon">🗺️</span>
+        <div class="challenge-type-name">프로젝트</div>
+        <div class="challenge-type-desc">단계별 로드맵이<br>필요한 목표</div>
+      </div>
     </div>
   </div>`;
-  h += `<div id="challengeFormArea"></div>`;
+
+  // Step 2: Name
+  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep2">
+    <div class="pdisc-label">도전의 이름</div>
+    <input class="proj-edit-input" id="cAddName" placeholder="어떤 도전을 시작하시나요?" maxlength="30" oninput="cAddCheckName()">
+  </div>`;
+
+  // Step 3: Category
+  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep3">
+    <div class="pdisc-label">카테고리</div>
+    <div id="cAddCatArea"></div>
+  </div>`;
+
+  // Step 4: Target month
+  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep4">
+    <div class="pdisc-label">목표 시기</div>
+    <div id="cAddMonthArea"></div>
+  </div>`;
+
+  // Step 5: Stages (project only)
+  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep5">
+    <div class="pdisc-label">프로젝트 단계 설정</div>
+    <div id="createStagesArea"></div>
+  </div>`;
+
+  // Step 6: Confirm
+  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep6">
+    <button class="unit-confirm-btn" id="cAddConfirmBtn" onclick="cAddSave()">도전 시작하기</button>
+  </div>`;
+
   document.getElementById('bsBody').innerHTML = h;
-  selectChallengeType('bucket');
   openBS();
+  renderCAddCat();
+  renderCAddMonth();
 };
 
-window.selectChallengeType = function (type) {
+window.cAddSelectType = function (type) {
   _createType = type;
-  document.getElementById('ctBucket').classList.toggle('selected', type === 'bucket');
-  document.getElementById('ctProject').classList.toggle('selected', type === 'project');
-  const area = document.getElementById('challengeFormArea');
-  const metaHTML = `
-    <div style="margin-bottom:14px;">
-      <div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">카테고리</div>
-      <div id="createCatArea">${getCatChipsHTML()}</div>
-    </div>
-    <div style="margin-bottom:20px;">
-      <div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">목표 시기</div>
-      <div id="createMonthArea">${getMonthChipsHTML()}</div>
-    </div>`;
-
-  if (type === 'bucket') {
-    area.innerHTML = `<div style="margin-top:4px;">
-      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>
-      <input class="proj-edit-input" id="chNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
-      ${metaHTML}
-      <button class="unit-confirm-btn" onclick="saveBucket()">도전 시작하기</button>
-    </div>`;
-    setTimeout(() => document.getElementById('chNameInput')?.focus(), 200);
-  } else {
-    area.innerHTML = `<div style="margin-top:4px;">
-      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>
-      <input class="proj-edit-input" id="chNameInput" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
-      ${metaHTML}
-      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">프로젝트 단계 설정</div>
-      <div id="createStagesArea">${getCreateStagesHTML()}</div>
-      <button class="unit-confirm-btn" style="margin-top:12px;" onclick="saveProject()">도전 시작하기</button>
-    </div>`;
-    setTimeout(() => document.getElementById('chNameInput')?.focus(), 200);
-  }
+  document.getElementById('ctBucket2').classList.toggle('selected', type === 'bucket');
+  document.getElementById('ctProject2').classList.toggle('selected', type === 'project');
+  pdiscReveal('cAddStep2');
+  setTimeout(() => document.getElementById('cAddName')?.focus(), 200);
 };
 
-window.saveBucket = async function () {
-  const name = document.getElementById('chNameInput')?.value.trim();
-  if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
-  if (!localDash.challenges) localDash.challenges = {};
-  let slot = -1;
-  for (let i = 0; i < MAX_CHALLENGES; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
-  if (slot === -1) { showToast('최대 25개까지 등록 가능합니다', 'normal'); return; }
-  localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat, targetMonth: _createMonth, createdAt: new Date().toISOString() };
-  await saveDash(); closeBottomSheet(); renderChallengeCards();
-  showToast('⭐ 도전 등록!', 'done');
+window.cAddCheckName = function () {
+  const v = document.getElementById('cAddName').value.trim();
+  if (v.length > 0) pdiscReveal('cAddStep3');
 };
 
-window.saveProject = async function () {
-  const name = document.getElementById('chNameInput')?.value.trim();
-  if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
-  syncCreateStagesFromDOM();
-  _createStages.forEach((s, i) => {
-    s.tasks.forEach(t => { if (!t.name.trim()) t.name = '항목'; });
-    if (!s.name.trim()) s.name = `단계 ${i+1}`;
+function renderCAddCat() {
+  const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
+  let h = `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+  catOpts.forEach(([val, lbl]) => {
+    const sel = _createCat === val;
+    h += `<div class="unit-opt" style="font-size:11px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="cAddSelectCat('${val}')">${lbl}</div>`;
   });
+  h += `</div>`;
+  const el = document.getElementById('cAddCatArea');
+  if (el) el.innerHTML = h;
+}
+
+window.cAddSelectCat = function (val) {
+  _createCat = val;
+  renderCAddCat();
+  pdiscReveal('cAddStep4');
+};
+
+function renderCAddMonth() {
+  const now = new Date();
+  const months = [['someday', '언젠가']];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    months.push([key, `${d.getFullYear()}년 ${d.getMonth()+1}월`]);
+  }
+  let h = `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+  months.forEach(([val, lbl]) => {
+    const sel = _createMonth === val;
+    h += `<div class="unit-opt" style="font-size:11px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="cAddSelectMonth('${val}')">${lbl}</div>`;
+  });
+  h += `</div>`;
+  const el = document.getElementById('cAddMonthArea');
+  if (el) el.innerHTML = h;
+}
+
+window.cAddSelectMonth = function (val) {
+  _createMonth = val;
+  renderCAddMonth();
+  if (_createType === 'project') {
+    pdiscReveal('cAddStep5');
+    const stArea = document.getElementById('createStagesArea');
+    if (stArea) stArea.innerHTML = getCreateStagesHTML();
+  }
+  pdiscReveal('cAddStep6');
+};
+
+window.cAddSave = async function () {
+  const name = document.getElementById('cAddName')?.value.trim();
+  if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
+  if (!_createType) { showToast('유형을 선택해주세요', 'normal'); return; }
   if (!localDash.challenges) localDash.challenges = {};
   let slot = -1;
   for (let i = 0; i < MAX_CHALLENGES; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
   if (slot === -1) { showToast('최대 25개까지 등록 가능합니다', 'normal'); return; }
-  localDash.challenges[slot] = { type: 'project', title: name, category: _createCat, targetMonth: _createMonth, stages: _createStages, createdAt: new Date().toISOString() };
-  await saveDash(); closeBottomSheet(); renderChallengeCards();
-  showToast('🗺️ 프로젝트 시작!', 'done');
+
+  if (_createType === 'bucket') {
+    localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat, targetMonth: _createMonth, createdAt: new Date().toISOString() };
+  } else {
+    syncCreateStagesFromDOM();
+    _createStages.forEach((s, i) => {
+      s.tasks.forEach(t => { if (!t.name.trim()) t.name = '항목'; });
+      if (!s.name.trim()) s.name = `단계 ${i+1}`;
+    });
+    localDash.challenges[slot] = { type: 'project', title: name, category: _createCat, targetMonth: _createMonth, stages: _createStages, createdAt: new Date().toISOString() };
+  }
+  closeBottomSheet(); renderChallengeCards();
+  showToast(_createType === 'bucket' ? '⭐ 도전 등록!' : '🗺️ 프로젝트 시작!', 'done');
+  saveDash();
 };
 
 // ===== PROJECT DETAIL BOTTOM SHEET =====
@@ -2057,14 +2112,235 @@ window.deleteChallenge = async function (idx) {
 window.openAddHabitSheet = function () {
   const count = getAllGoals().filter(g => g && g.title).length;
   if (count >= MAX_HABITS) { showToast(`습관은 최대 ${MAX_HABITS}개까지 만들 수 있어요`, 'normal'); return; }
+  _habitAddName = '';
+  _habitCycle1 = null;
+  _habitCycle2 = null;
+  _workoutType = null;
+  _habitTime = 'any';
+  _habitCat = 'etc';
   document.getElementById('bsTitle').textContent = '습관 추가';
   clearMetaTags();
-  document.getElementById('bsBody').innerHTML = `
-    <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">습관 이름</div>
-    <input class="proj-edit-input" id="newGoalInput" placeholder="예: 매일 독서 20분" maxlength="20">
-    <button class="unit-confirm-btn" style="margin-top:12px;" onclick="habitAddStep2()">다음 →</button>`;
+
+  let h = '';
+  // Step 1: Name
+  h += `<div class="pdisc-step" id="hAddStep1">
+    <div class="pdisc-label">습관 이름</div>
+    <input class="proj-edit-input" id="hAddName" placeholder="예: 매일 독서 20분" maxlength="20" oninput="hAddCheckName()">
+  </div>`;
+
+  // Step 2: Cycle (hidden)
+  h += `<div class="pdisc-step pdisc-hidden" id="hAddStep2">
+    <div class="pdisc-label">주기</div>
+    <div class="pdisc-desc">얼마나 자주 수행할 건가요?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;" id="hAddCycle1Area"></div>
+    <div id="hAddCycle2Area"></div>
+  </div>`;
+
+  // Step 3: Time (hidden)
+  h += `<div class="pdisc-step pdisc-hidden" id="hAddStep3">
+    <div class="pdisc-label">시간대</div>
+    <div id="hAddTimeArea"></div>
+  </div>`;
+
+  // Step 4: Category (hidden)
+  h += `<div class="pdisc-step pdisc-hidden" id="hAddStep4">
+    <div class="pdisc-label">카테고리</div>
+    <div id="hAddCatArea"></div>
+  </div>`;
+
+  // Step 5: Confirm (hidden)
+  h += `<div class="pdisc-step pdisc-hidden" id="hAddStep5">
+    <button class="unit-confirm-btn" onclick="habitAddSave()">습관 등록하기</button>
+  </div>`;
+
+  document.getElementById('bsBody').innerHTML = h;
   openBS();
-  setTimeout(() => document.getElementById('newGoalInput')?.focus(), 400);
+  setTimeout(() => document.getElementById('hAddName')?.focus(), 400);
+  renderHAddCycle1();
+  renderHAddTime();
+  renderHAddCat();
+};
+
+function pdiscReveal(stepId) {
+  const el = document.getElementById(stepId);
+  if (!el || !el.classList.contains('pdisc-hidden')) return;
+  el.classList.remove('pdisc-hidden');
+  el.classList.add('pdisc-reveal');
+  setTimeout(() => {
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+window.hAddCheckName = function () {
+  const v = document.getElementById('hAddName').value.trim();
+  if (v.length > 0) pdiscReveal('hAddStep2');
+};
+
+function renderHAddCycle1() {
+  const opts = [
+    { label: '매일', val: 'daily' },
+    { label: '1주에', val: 'w1' },
+    { label: '2주에', val: 'w2' },
+    { label: '3주에', val: 'w3' },
+    { label: '4주에', val: 'w4' },
+    { label: '자동', val: 'auto' },
+  ];
+  let h = '';
+  opts.forEach(o => {
+    const sel = _habitCycle1 === o.val;
+    h += `<div class="unit-opt ${sel ? 'selected' : ''}" onclick="hAddSelectCycle1('${o.val}')">${o.label}</div>`;
+  });
+  document.getElementById('hAddCycle1Area').innerHTML = h;
+}
+
+window.hAddSelectCycle1 = function (val) {
+  _habitCycle1 = val;
+  _habitCycle2 = null;
+  _workoutType = null;
+  renderHAddCycle1();
+  renderHAddCycle2();
+
+  if (val === 'daily' || val === 'auto') {
+    pdiscReveal('hAddStep3');
+  }
+};
+
+function renderHAddCycle2() {
+  const area = document.getElementById('hAddCycle2Area');
+  if (!_habitCycle1) { area.innerHTML = ''; return; }
+
+  let h = '';
+
+  // Auto → show health options
+  if (_habitCycle1 === 'auto') {
+    const healthOpts = [
+      { label: '🌙 수면', val: 'health_sleep' },
+      { label: '💪 운동', val: 'health_workout' },
+    ];
+    h += `<div style="font-size:11px;color:var(--text-dim);font-weight:700;margin:8px 0;">⌚ 애플 헬스 연동 (단축어 자동 기록)</div>`;
+    h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">`;
+    healthOpts.forEach(o => {
+      const sel = _habitCycle2 === o.val;
+      h += `<div class="unit-opt ${sel ? 'selected' : ''}" onclick="hAddSelectHealth('${o.val}')">${o.label}</div>`;
+    });
+    h += `</div>`;
+
+    // Workout type
+    if (_habitCycle2 === 'health_workout') {
+      const workoutTypes = [
+        ['🏃 달리기','달리기'],['🚴 자전거','자전거'],['🏊 수영','수영'],['🧘 요가','요가'],
+        ['🏋️ 웨이트','웨이트'],['🥾 등산','등산'],['🚶 걷기','걷기'],['⚽ 구기','구기'],
+        ['🏸 라켓','라켓'],['🤸 기타','기타']
+      ];
+      h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:8px 0;">운동 종류</div>`;
+      h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">`;
+      workoutTypes.forEach(([lbl, val]) => {
+        const sel = _workoutType === val;
+        h += `<div class="unit-opt" style="font-size:12px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="_workoutType='${val}';renderHAddCycle2();pdiscReveal('hAddStep3');">${lbl}</div>`;
+      });
+      h += `</div>`;
+    }
+    area.innerHTML = h;
+    return;
+  }
+
+  // Weekly options (w1~w4)
+  if (_habitCycle1.startsWith('w')) {
+    const weekNum = parseInt(_habitCycle1[1]);
+    const max = weekNum * 7;
+    h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:8px 0;">횟수</div>`;
+    h += `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+    for (let i = 1; i <= Math.min(max, 14); i++) {
+      const sel = _habitCycle2 === i;
+      h += `<div class="unit-opt" style="min-width:36px;text-align:center;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="hAddSelectFreq(${i})">${i}회</div>`;
+    }
+    h += `</div>`;
+  }
+
+  area.innerHTML = h;
+}
+
+window.hAddSelectHealth = function (val) {
+  _habitCycle2 = val;
+  renderHAddCycle2();
+  if (val === 'health_sleep') {
+    pdiscReveal('hAddStep3');
+  }
+};
+
+window.hAddSelectFreq = function (n) {
+  _habitCycle2 = n;
+  renderHAddCycle2();
+  pdiscReveal('hAddStep3');
+};
+
+function renderHAddTime() {
+  const timeOpts = [['any','🔄 언제나'],['dawn','🌅 새벽'],['morning','🌤 아침'],['midday','🏞 낮'],['afternoon','🌇 오후'],['evening','🌟 저녁'],['night','🦉 밤']];
+  let h = `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+  timeOpts.forEach(([val, lbl]) => {
+    const sel = _habitTime === val;
+    h += `<div class="unit-opt" style="font-size:12px;padding:6px 12px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="hAddSelectTime('${val}')">${lbl}</div>`;
+  });
+  h += `</div>`;
+  document.getElementById('hAddTimeArea').innerHTML = h;
+}
+
+window.hAddSelectTime = function (val) {
+  _habitTime = val;
+  renderHAddTime();
+  pdiscReveal('hAddStep4');
+};
+
+function renderHAddCat() {
+  const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
+  let h = `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+  catOpts.forEach(([val, lbl]) => {
+    const sel = _habitCat === val;
+    h += `<div class="unit-opt" style="font-size:11px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="hAddSelectCat('${val}')">${lbl}</div>`;
+  });
+  h += `</div>`;
+  document.getElementById('hAddCatArea').innerHTML = h;
+}
+
+window.hAddSelectCat = function (val) {
+  _habitCat = val;
+  renderHAddCat();
+  pdiscReveal('hAddStep5');
+};
+
+window.habitAddSave = async function () {
+  const name = document.getElementById('hAddName')?.value.trim();
+  if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
+
+  let unit, freq = 1;
+  if (_habitCycle1 === 'auto') {
+    unit = _habitCycle2 || 'health_sleep';
+  } else if (_habitCycle1 === 'daily') {
+    unit = 'daily';
+  } else if (_habitCycle1 && _habitCycle1.startsWith('w')) {
+    const wn = parseInt(_habitCycle1[1]);
+    unit = wn === 1 ? 'weekly' : wn === 2 ? 'biweekly' : 'weekly';
+    freq = _habitCycle2 || 1;
+  } else {
+    showToast('주기를 선택해주세요', 'normal'); return;
+  }
+
+  const time = _habitTime || 'any';
+  const cat = _habitCat || 'etc';
+
+  if (!localDash.goals) localDash.goals = [];
+  let slot = -1;
+  for (let i = 0; i < MAX_HABITS; i++) { if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; } }
+  if (slot === -1) { showToast('최대 개수 도달', 'normal'); return; }
+
+  const goal = { title: name, unit, freq, time, category: cat };
+  if (unit === 'health_workout' && _workoutType) goal.workoutType = _workoutType;
+  localDash.goals[slot] = goal;
+
+  closeBottomSheet();
+  renderHabitCards(); renderAvatar();
+  showToast('🎯 습관 등록!', 'done');
+  saveDash();
 };
 
 // ===== NICKNAME / MSG EDIT =====

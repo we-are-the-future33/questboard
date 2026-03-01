@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302a';
+const APP_VERSION = '20260302b';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -2356,7 +2356,6 @@ window.openAddHabitSheet = function () {
   // Slide 4: Confirm
   h += `<div class="wiz-slide" id="hWiz4">
     <div style="text-align:center;padding:16px 0;">
-      <div style="font-size:36px;margin-bottom:12px;">🎯</div>
       <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;" id="hWizConfirmName"></div>
       <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px;" id="hWizConfirmTags"></div>
     </div>

@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303o';
+const APP_VERSION = '20260303p';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4942,7 +4942,14 @@ function renderStageMessage() {
   const { total, done } = getMyTodayProgress();
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const sm = STAGE_MESSAGES.find(s => pct >= s.min && pct <= s.max) || STAGE_MESSAGES[0];
-  el.innerHTML = `<div class="stage-msg-wrap"><div class="stage-msg">${sm.msg}</div></div>`;
+  // Build progress overlay (me + top friend)
+  let progHTML = `<div class="progress-overlay"><span class="prog-me">🐹 ${pct}%</span>`;
+  if (_friendActivityCache.length > 0) {
+    const top = _friendActivityCache[0];
+    progHTML += `<span class="prog-sep">·</span><span class="prog-friend">${top.emoji} ${top.todayCount}개 완료</span>`;
+  }
+  progHTML += `</div>`;
+  el.innerHTML = progHTML + `<div class="stage-msg-wrap"><div class="stage-msg">${sm.msg}</div></div>`;
 }
 
 // --- Cooking Modal ---

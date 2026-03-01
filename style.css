@@ -739,6 +739,16 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 
 /* ===== COOKING SYSTEM ===== */
 
+/* Progress Overlay (between house and message) */
+.progress-overlay {
+  text-align: center; padding: 2px 0; position: relative; z-index: 5;
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.65);
+  letter-spacing: -0.01em;
+}
+.prog-me { color: rgba(255,255,255,.85); }
+.prog-sep { margin: 0 6px; opacity: .4; }
+.prog-friend { color: rgba(255,255,255,.55); }
+
 /* Stage Message */
 .stage-msg-wrap { text-align: center; padding: 0; margin-bottom: 0; position: relative; z-index: 5; }
 .stage-msg {

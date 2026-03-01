@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302n';
+const APP_VERSION = '20260302o';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -2429,6 +2429,7 @@ window.openAddHabitSheet = function () {
   _habitTime = null;
   _habitCat = null;
   _wizStep = 0;
+  console.log('[KIWUP] openAddHabitSheet: _habitTime=', _habitTime, '_habitCat=', _habitCat);
   document.getElementById('bsTitle').textContent = '습관 추가';
   clearMetaTags();
 
@@ -2588,7 +2589,7 @@ function renderHAddTime() {
   const timeOpts = [['any','🔄 언제나'],['dawn','🌅 새벽'],['morning','🌤 아침'],['midday','🏞 낮'],['afternoon','🌇 오후'],['evening','🌟 저녁'],['night','🦉 밤']];
   let h = `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
   timeOpts.forEach(([val, lbl]) => {
-    const sel = _habitTime === val;
+    const sel = _habitTime !== null && _habitTime === val;
     h += `<div class="unit-opt" style="font-size:12px;padding:6px 12px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="hAddSelectTime('${val}')">${lbl}</div>`;
   });
   h += `</div>`;
@@ -2606,7 +2607,7 @@ function renderHAddCat() {
   const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
   let h = `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
   catOpts.forEach(([val, lbl]) => {
-    const sel = _habitCat === val;
+    const sel = _habitCat !== null && _habitCat === val;
     h += `<div class="unit-opt" style="font-size:11px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="hAddSelectCat('${val}')">${lbl}</div>`;
   });
   h += `</div>`;

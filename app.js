@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301t';
+const APP_VERSION = '20260301u';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1377,11 +1377,11 @@ async function habitMarkDone(idx) {
   const isOnce = g && g.unit === 'once';
   const k = isOnce ? `g${idx}_once` : `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
   localDash.completions[k] = true;
-  await saveDash();
   triggerHaptic('heavy');
   showToast('🎉 완료!', 'done'); showConfettiSmall();
   if (!isOnce) checkWeekClear(idx);
   renderHabitCards(); renderAvatar();
+  saveDash();
 }
 
 async function habitMarkUndo(idx) {
@@ -1390,10 +1390,10 @@ async function habitMarkUndo(idx) {
   const isOnce = g && g.unit === 'once';
   const k = isOnce ? `g${idx}_once` : `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
   localDash.completions[k] = false;
-  await saveDash();
   triggerHaptic('light');
   showToast('↩️ 취소', 'undo');
   renderHabitCards(); renderAvatar();
+  saveDash();
 }
 
 // ===== CHALLENGE CARDS (2-col grid) =====
@@ -1586,10 +1586,10 @@ async function swipeBucket(idx) {
   if (!c) return;
   const wasDone = c.done === true;
   localDash.challenges[idx].done = !wasDone;
-  await saveDash();
   if (!wasDone) { triggerHaptic('heavy'); showToast('🎉 버킷리스트 달성!', 'done'); showConfetti(); }
   else { triggerHaptic('light'); showToast('↩️ 취소', 'undo'); }
   renderChallengeCards();
+  saveDash();
 }
 
 // ===== BUCKET DETAIL (bottom sheet) =====

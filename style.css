@@ -478,6 +478,8 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .fgoal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
 .fgoal-btn{background:#fff;border:2px solid var(--border);border-radius:12px;padding:11px 10px;cursor:pointer;text-align:left;transition:all .15s;height:72px;display:flex;flex-direction:column;justify-content:center;box-shadow:var(--shadow-sm);}
 .fgoal-btn:hover,.fgoal-btn.fg-active{border-color:var(--accent);background:var(--accent-light);}
+.fgoal-btn.fgoal-today-done{border-color:#6ee7b7;background:#f0fdf4;}
+.fgoal-btn.fgoal-today-done.fg-active{border-color:#10b981;background:#d1fae5;}
 .fgoal-name{font-size:11px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
 .fgoal-pct{font-family:var(--font-heading);letter-spacing:-0.02em;font-size:16px;color:var(--accent);}
 .fgoal-bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:4px;}
@@ -488,7 +490,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .rocal-day{text-align:center;font-size:9px;color:var(--text-dim);padding:2px 0;font-weight:700;}
 .rocal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
 .rocal-cell{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;background:transparent;border:1.5px solid transparent;color:var(--text-dim);font-weight:600;}
-.rocal-cell.done{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800;}
+.rocal-cell.done{background:#d1fae5;border-color:#6ee7b7;color:#065f46;font-weight:800;}
 .rocal-cell.empty{background:transparent;border-color:transparent;}
 .rocal-cell.today{border-color:var(--accent);color:var(--accent);font-weight:800;}
 .cheer-box{border-top:2px solid var(--border);padding-top:14px;padding-bottom:20px;}

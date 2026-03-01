@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301s';
+const APP_VERSION = '20260301t';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -2861,20 +2861,25 @@ async function renderFriends() {
     const nick = d.nickname || u.name;
     // calc friend global pct
     const fGoals = d.goals || [], fComp = d.completions || {};
-    const now = new Date(), fy = now.getFullYear(), fm = now.getMonth() + 1;
-    let ftd = 0, ftm = 0;
+    const now = new Date(), fy = now.getFullYear(), fm = now.getMonth() + 1, fd = now.getDate();
+    let ftd = 0, ftm = 0, todayDone = 0, totalHabits = 0;
     for (let i = 0; i < MAX_HABITS; i++) {
       const fg = fGoals[i]; if (!fg || !fg.unit) continue;
+      totalHabits++;
       const mg = migrateGoal(fg);
       const mod = goalModulus(mg, i, fy, fm);
       let done = 0;
       if (mg.unit === 'once') done = fComp[`g${i}_once`] === true ? 1 : 0;
       else { const pfx = `g${i}_${fy}_${fm}_`; done = Object.entries(fComp).filter(([k, v]) => k.startsWith(pfx) && v === true).length; }
       ftd += done; ftm += mod;
+      // today check
+      const todayK = `g${i}_${fy}_${fm}_${fd}`;
+      if (fComp[todayK] === true || (mg.unit === 'once' && fComp[`g${i}_once`] === true)) todayDone++;
     }
     const fpct = ftm > 0 ? Math.round(ftd / ftm * 100) : 0;
     const fstage = Math.min(9, Math.floor(fpct / 10));
-    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${getFriendEmoji(fid)}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계</div></div><div class="friend-pct">${fpct}%</div></div>`;
+    const todayLabel = totalHabits > 0 ? ` · 오늘 ${todayDone}/${totalHabits} ${todayDone > 0 ? '🔥' : '😴'}` : '';
+    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${getFriendEmoji(fid)}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계${todayLabel}</div></div><div class="friend-pct">${fpct}%</div></div>`;
   }
   h += '</div><div id="friendDetailArea"></div>';
   sec.innerHTML = h;
@@ -2893,7 +2898,7 @@ window.openFriendDetail = async function (fid) {
   const d = dSnap.exists() ? dSnap.val() : {}, u = uSnap.exists() ? uSnap.val() : {};
   const nick = d.nickname || u.name || fid;
   const goals = d.goals || [], comp = d.completions || {};
-  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1, day = now.getDate();
   let h = `<div class="friend-detail"><div class="fgoal-grid">`;
   for (let i = 0; i < MAX_HABITS; i++) {
     const g = goals[i]; if (!g || !g.unit) continue;
@@ -2903,10 +2908,20 @@ window.openFriendDetail = async function (fid) {
     if (mg.unit === 'once') done = comp[`g${i}_once`] === true ? 1 : 0;
     else { const pfx = `g${i}_${y}_${m}_`; done = Object.entries(comp).filter(([k, v]) => k.startsWith(pfx) && v === true).length; }
     const pct = mod > 0 ? Math.round(done / mod * 100) : 0;
-    h += `<button class="fgoal-btn" onclick="showFriendGoalCal('${fid}',${i})"><div class="fgoal-name">${esc(g.title)}</div><div class="fgoal-pct">${pct}%</div><div class="fgoal-bar"><div class="fgoal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div></button>`;
+    const todayK = `g${i}_${y}_${m}_${day}`;
+    const todayDone = comp[todayK] === true || (mg.unit === 'once' && comp[`g${i}_once`] === true);
+    h += `<button class="fgoal-btn ${todayDone ? 'fgoal-today-done' : ''}" id="fgoal_${i}" onclick="selectFriendGoal('${fid}',${i})"><div class="fgoal-name">${todayDone ? '✅ ' : ''}${esc(g.title)}</div><div class="fgoal-pct">${pct}%</div><div class="fgoal-bar"><div class="fgoal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div></button>`;
   }
   h += `</div><div id="friendGoalCal"></div></div>`;
   area.innerHTML = h;
+};
+
+window.selectFriendGoal = function (fid, gi) {
+  // Remove active from all, add to selected
+  document.querySelectorAll('.fgoal-btn').forEach(b => b.classList.remove('fg-active'));
+  const btn = document.getElementById(`fgoal_${gi}`);
+  if (btn) btn.classList.add('fg-active');
+  showFriendGoalCal(fid, gi);
 };
 
 window.showFriendGoalCal = async function (fid, gi) {

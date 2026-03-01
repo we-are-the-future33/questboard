@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303n';
+const APP_VERSION = '20260303o';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4114,37 +4114,25 @@ function buildHamsterHouse(container) {
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(220, 220);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = false;
   container.innerHTML = '';
   container.appendChild(renderer.domElement);
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.7));
   const dl = new THREE.DirectionalLight(0xffffff, 0.8);
   dl.position.set(3, 10, 8);
-  dl.castShadow = true;
-  dl.shadow.mapSize.set(1024, 1024);
   scene.add(dl);
 
   const houseGroup = new THREE.Group();
 
-  // Floor
-  const floor = new THREE.Mesh(
-    new THREE.CircleGeometry(8, 64),
-    new THREE.MeshStandardMaterial({ color: 0xcccccc, transparent: true, opacity: 0.1 })
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  scene.add(floor);
-
+  // Floor removed - no background circle
+  
   // House body
   const base = new THREE.Mesh(
     new THREE.BoxGeometry(4.5, 3.5, 4),
     new THREE.MeshStandardMaterial({ color: creamColor, roughness: 0.8 })
   );
   base.position.y = 1.75;
-  base.castShadow = true;
-  base.receiveShadow = true;
   houseGroup.add(base);
 
   // Door (arch)
@@ -4222,10 +4210,10 @@ function buildHamsterHouse(container) {
   gableShape.lineTo(0, gH); gableShape.lineTo(-gW, 0);
   const gableMat = new THREE.MeshStandardMaterial({ color: creamColor, roughness: 0.8 });
   const fg = new THREE.Mesh(new THREE.ShapeGeometry(gableShape), gableMat);
-  fg.position.set(0, 3.5, 2); fg.castShadow = true; fg.receiveShadow = true;
+  fg.position.set(0, 3.5, 2);
   houseGroup.add(fg);
   const bg = new THREE.Mesh(new THREE.ShapeGeometry(gableShape), gableMat);
-  bg.position.set(0, 3.5, -2); bg.rotation.y = Math.PI; bg.castShadow = true;
+  bg.position.set(0, 3.5, -2); bg.rotation.y = Math.PI;
   houseGroup.add(bg);
 
   // Roof
@@ -4233,10 +4221,10 @@ function buildHamsterHouse(container) {
   const roofGeo = new THREE.BoxGeometry(2.9, 0.3, 5.5);
   const roofAngle = Math.PI / 5.8;
   const lr = new THREE.Mesh(roofGeo, roofMat);
-  lr.position.set(-1.23, 4.25, 0); lr.rotation.z = roofAngle; lr.castShadow = true;
+  lr.position.set(-1.23, 4.25, 0); lr.rotation.z = roofAngle;
   houseGroup.add(lr);
   const rr = new THREE.Mesh(roofGeo, roofMat);
-  rr.position.set(1.23, 4.25, 0); rr.rotation.z = -roofAngle; rr.castShadow = true;
+  rr.position.set(1.23, 4.25, 0); rr.rotation.z = -roofAngle;
   houseGroup.add(rr);
 
   scene.add(houseGroup);

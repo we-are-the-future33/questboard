@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302c';
+const APP_VERSION = '20260302d';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -28,14 +28,10 @@ async function checkAppUpdate() {
     const match = text.match(/app\.js\?v=(\w+)/);
     if (match && match[1] !== APP_VERSION) {
       _updateBannerShown = true;
-      // 배너
       const banner = document.createElement('div');
       banner.className = 'update-banner';
       banner.innerHTML = `<span>🔄 새 버전이 있어요!</span><button onclick="location.reload(true)">업데이트</button>`;
       document.body.appendChild(banner);
-      // 토스트도 같이
-      const t = document.getElementById('toast');
-      if (t) { t.textContent = '🔄 새 버전이 있어요! 아래 배너를 눌러주세요'; t.className = 'toast toast-done show'; setTimeout(() => t.classList.remove('show'), 4000); }
     }
   } catch (e) {}
 }

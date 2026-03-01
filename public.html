@@ -12,8 +12,10 @@ body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
 .pub-mobile-wrap{max-width:440px;width:100%;background:var(--bg,#fff);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
 .pub-global-bar{padding:18px 20px 4px;display:flex;align-items:center;justify-content:space-between;}
 .pub-global-bar .logo{font-family:var(--font-main);font-size:22px;font-weight:800;color:var(--accent);}
-.pub-badge{font-size:10px;font-weight:700;background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;}
-.pub-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:40px;}
+/* Floating bottom banner */
+.pub-float-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);max-width:400px;width:calc(100% - 40px);background:rgba(30,41,59,.92);backdrop-filter:blur(8px);color:#e2e8f0;padding:10px 16px;border-radius:14px;font-size:12px;font-weight:600;text-align:center;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.25);line-height:1.5;}
+.pub-float-banner .pub-float-dot{display:inline;color:#64748b;margin:0 2px;}
+.pub-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:70px;}
 /* Override sub-tab-bar for public context */
 .pub-scroll .sub-tab-bar{margin:8px 20px 0;position:sticky;top:0;z-index:30;}
 /* Tab bar - reuse style.css .tab-bar but sticky inside pub-mobile-wrap */
@@ -43,7 +45,7 @@ body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
 <div class="pub-mobile-wrap" id="appWrap">
   <div class="pub-global-bar">
     <div class="logo">키웁</div>
-    <div class="pub-badge">👀 공개 프로필</div>
+    <div style="font-size:10px;font-weight:700;background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;">👀 공개 프로필</div>
   </div>
   <div id="content">
     <div class="pub-loading">불러오는 중...</div>
@@ -200,6 +202,15 @@ function render(user,dash,cheersData,uid){
   renderChallenges();
   applyTimeBackground();
   renderPubFriendBanner(uid);
+
+  // Floating bottom banner
+  const existingBanner=document.getElementById('pubFloatBanner');
+  if(existingBanner)existingBanner.remove();
+  const banner=document.createElement('div');
+  banner.className='pub-float-banner';
+  banner.id='pubFloatBanner';
+  banner.innerHTML=`🐹 ${esc(nick)}의 공개 대시보드 <span class="pub-float-dot">·</span> 체험만 가능해요 <span class="pub-float-dot">·</span> 가입은 별도 문의`;
+  document.body.appendChild(banner);
 
   // 3D hamster
   const artEl=document.getElementById('avatarArt');

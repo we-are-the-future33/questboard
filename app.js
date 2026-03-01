@@ -16,12 +16,15 @@ setTimeout(() => {
 }, 3000);
 
 // Update check — fetch index.html and compare version
+let _updateBannerShown = false;
 async function checkAppUpdate() {
+  if (_updateBannerShown) return;
   try {
     const res = await fetch('index.html?_t=' + Date.now(), { cache: 'no-store' });
     const text = await res.text();
     const match = text.match(/app\.js\?v=(\w+)/);
     if (match && match[1] !== APP_VERSION) {
+      _updateBannerShown = true;
       const banner = document.createElement('div');
       banner.className = 'update-banner';
       banner.innerHTML = `<span>🔄 새 버전이 있어요!</span><button onclick="location.reload(true)">업데이트</button>`;
@@ -30,6 +33,7 @@ async function checkAppUpdate() {
   } catch (e) {}
 }
 setTimeout(checkAppUpdate, 5000);
+setInterval(checkAppUpdate, 5 * 60 * 1000);
 
 const firebaseConfig = {
   apiKey: "AIzaSyAbEbLdJuWVai_NKTHuo1XtC8p76dmVPE0",

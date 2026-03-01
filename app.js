@@ -564,8 +564,12 @@ window.openServiceInfo = function () {
   </div>`;
   h += `<div style="background:#f8fafc;border-radius:14px;padding:16px;margin:8px 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:12px;font-weight:700;color:#64748b;">앱 버전</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text);">${APP_VERSION}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <span style="font-size:12px;font-weight:700;color:#64748b;">마지막 업데이트</span>
-      <span style="font-size:13px;font-weight:800;color:var(--text);" id="serviceUpdateDate">불러오는 중...</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text);">${APP_VERSION.slice(0,4)}년 ${parseInt(APP_VERSION.slice(4,6))}월 ${parseInt(APP_VERSION.slice(6,8))}일</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:12px;font-weight:700;color:#64748b;">개발</span>
@@ -574,23 +578,6 @@ window.openServiceInfo = function () {
   </div>`;
   document.getElementById('bsBody').innerHTML = h;
   openBS();
-  // GitHub API로 마지막 커밋 날짜 조회 (questboard 폴더)
-  fetch('https://api.github.com/repos/we-are-the-future33/we-are-the-future33.github.io/commits?per_page=1&path=questboard')
-    .then(r => r.json())
-    .then(data => {
-      const el = document.getElementById('serviceUpdateDate');
-      if (!el) return;
-      if (data && data[0] && data[0].commit) {
-        const d = new Date(data[0].commit.committer.date);
-        el.textContent = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
-      } else {
-        el.textContent = '정보 없음';
-      }
-    })
-    .catch(() => {
-      const el = document.getElementById('serviceUpdateDate');
-      if (el) el.textContent = '조회 실패';
-    });
 };
 
 window.openAndroidGuide = function () {

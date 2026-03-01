@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>키웁 — 공개 프로필</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#1952f5;--accent2:#ff5e7d;--accent3:#00b96b;--text:#111827;--text-dim:#64748b;--border:#e2e8f0;--surface:#f8fafc;--bg:#ffffff;--font-main:'IBM Plex Sans KR',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-main);background:#f1f5f9;color:var(--text);min-height:100vh;display:flex;justify-content:center;}
+.wrap{max-width:440px;width:100%;background:var(--bg);min-height:100vh;position:relative;overflow-x:hidden;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;position:sticky;top:0;z-index:50;background:var(--bg);}
+.top-bar .logo{font-size:22px;font-weight:800;color:var(--accent);}
+.public-badge{font-size:10px;font-weight:700;background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;}
+.avatar-section{text-align:center;padding:10px 20px 20px;position:relative;}
+.avatar-art{width:280px;height:280px;margin:0 auto;position:relative;}
+.nickname{font-size:20px;font-weight:800;margin-top:4px;}
+.stage-badge{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);background:rgba(25,82,245,.08);padding:4px 12px;border-radius:20px;margin-bottom:4px;}
+.sub-tab-bar{display:flex;background:#f1f5f9;border-radius:14px;padding:4px;margin:0 20px;gap:4px;position:sticky;top:52px;z-index:30;box-shadow:0 2px 6px rgba(0,0,0,0.04);}
+.sub-tab-bar::before{content:'';position:absolute;top:-8px;left:-20px;right:-20px;bottom:-6px;background:#fff;z-index:-1;}
+.sub-tab-btn{flex:1;padding:12px 0;border:none;border-radius:11px;font-size:14px;font-weight:700;font-family:var(--font-main);cursor:pointer;color:#9ca3af;background:transparent;transition:all .2s;}
+.sub-tab-btn.active{background:#fff;color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,.1);}
+.panel{display:none;padding:16px 20px;}
+.panel.active{display:block;}
+.section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.section-title{font-size:15px;font-weight:800;}
+.section-count{font-size:15px;font-weight:800;color:var(--accent);}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.h-card{border-radius:14px;padding:14px;position:relative;min-height:90px;}
+.h-card.done{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:1.5px solid #a5d6a7;}
+.h-card.undone{background:linear-gradient(135deg,#1952f5,#3b6ff5);color:#fff;}
+.h-card .title{font-size:14px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.h-card .meta{font-size:11px;opacity:0.75;}
+.h-card .done-badge{position:absolute;top:10px;right:10px;width:28px;height:28px;background:var(--accent3);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;}
+.h-card .pct{text-align:right;font-size:13px;font-weight:800;margin-top:6px;}
+.h-card .bar{height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-top:4px;overflow:hidden;}
+.h-card .bar-fill{height:100%;border-radius:2px;transition:width .3s;}
+.h-card.undone .bar-fill{background:#fff;}
+.h-card.done .bar{background:rgba(0,0,0,.08);}
+.h-card.done .bar-fill{background:var(--accent3);}
+.c-card{border-radius:14px;padding:14px;background:linear-gradient(135deg,#1952f5,#3b6ff5);color:#fff;min-height:90px;position:relative;}
+.c-card.done{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);color:var(--text);border:1.5px solid #a5d6a7;}
+.c-card .title{font-size:14px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c-card .type-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.2);margin-bottom:6px;}
+.c-card.done .type-badge{background:rgba(0,0,0,.06);}
+.c-card .pct{text-align:right;font-size:13px;font-weight:800;margin-top:6px;}
+.c-card .bar{height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-top:4px;overflow:hidden;}
+.c-card .bar-fill{height:100%;background:#fff;border-radius:2px;}
+.c-card.done .bar{background:rgba(0,0,0,.08);}
+.c-card.done .bar-fill{background:var(--accent3);}
+.c-card .done-badge{position:absolute;top:10px;right:10px;width:28px;height:28px;background:var(--accent3);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;}
+.cheers-section{padding:20px;border-top:2px solid var(--border);margin-top:10px;}
+.cheers-title{font-size:15px;font-weight:800;margin-bottom:14px;}
+.cheer-card{background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);}
+.cheer-from{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:2px;}
+.cheer-text{font-size:14px;font-weight:600;}
+.cheer-time{font-size:11px;color:var(--text-dim);margin-top:4px;}
+.cheer-empty{text-align:center;color:var(--text-dim);font-size:13px;padding:20px 0;}
+.loading{text-align:center;padding:80px 20px;font-size:14px;color:var(--text-dim);}
+.error-msg{text-align:center;padding:80px 20px;font-size:14px;color:var(--accent2);}
+.public-footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:20px;}
+.public-footer a{color:var(--accent);text-decoration:none;font-weight:700;}
+.pub-alert{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:999;}
+.pub-alert-box{background:#fff;border-radius:16px;padding:24px;max-width:300px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.pub-alert-box p{font-size:14px;font-weight:700;margin-bottom:16px;line-height:1.5;}
+.pub-alert-box button{background:var(--accent);color:#fff;border:none;padding:10px 28px;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-bar">
+    <div class="logo">키웁</div>
+    <div class="public-badge">👀 공개 프로필</div>
+  </div>
+  <div id="content">
+    <div class="loading">불러오는 중...</div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyAbEbLdJuWVai_NKTHuo1XtC8p76dmVPE0",
+  authDomain: "grow-goal.firebaseapp.com",
+  databaseURL: "https://grow-goal-default-rtdb.firebaseio.com",
+  projectId: "grow-goal",
+  storageBucket: "grow-goal.firebasestorage.app",
+  messagingSenderId: "587441793315",
+  appId: "1:587441793315:web:8ae5325a2af90953ce4496"
+});
+const db = getDatabase(app);
+
+const MAX_HABITS = 25;
+const LEGACY_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function migrateGoal(g) { if (!g) return g; if (LEGACY_MAP[g.unit]) return Object.assign({}, g, LEGACY_MAP[g.unit]); return g; }
+function getUnitLabel(g) {
+  if (!g) return ''; g = migrateGoal(g);
+  if (g.unit==='once') return '한 번'; if (g.unit==='daily') return '매일';
+  if (g.unit==='health_sleep') return '🌙 수면'; if (g.unit==='health_workout') return '💪 운동';
+  if (g.unit==='weekly') return `주 ${g.freq}회`; return g.unit;
+}
+function getMonthDays(y,m){return new Date(y,m,0).getDate();}
+function getMonthWeeks(y,m){return Math.ceil(getMonthDays(y,m)/7);}
+function goalModulus(g,gi,y,m){
+  if(!g||!g.unit||g.unit==='once') return 1; g=migrateGoal(g);
+  if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout') return getMonthDays(y,m);
+  if(g.unit==='weekly') return (g.freq||1)*getMonthWeeks(y,m);
+  if(g.unit==='biweekly') return (g.freq||1)*Math.ceil(getMonthDays(y,m)/14);
+  if(g.unit==='multiweek') return (g.freq||1)*Math.ceil(getMonthDays(y,m)/((g.weeks||3)*7));
+  return 1;
+}
+function goalDone(g,gi,y,m,comp){
+  if(!g||!g.unit) return 0;
+  if(g.unit==='once') return comp[`g${gi}_once`]===true?1:0;
+  return Object.entries(comp).filter(([k,v])=>k.startsWith(`g${gi}_${y}_${m}_`)&&v===true).length;
+}
+function goalPct(g,gi,y,m,comp){
+  const mod=goalModulus(g,gi,y,m),done=goalDone(g,gi,y,m,comp);
+  return {done,mod,pct:mod>0?Math.round(done/mod*100):0};
+}
+function calcStreak(g,gi,comp){
+  if(!g||!g.unit||g.unit==='once') return 0; g=migrateGoal(g);
+  if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout'){
+    const now=new Date(); let streak=0;
+    const todayK=`g${gi}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
+    if(comp[todayK]) streak++;
+    for(let d=1;d<=365;d++){
+      const dt=new Date(now); dt.setDate(dt.getDate()-d);
+      if(comp[`g${gi}_${dt.getFullYear()}_${dt.getMonth()+1}_${dt.getDate()}`]) streak++; else break;
+    }
+    return streak;
+  }
+  return 0;
+}
+
+// ===== INIT =====
+const hash = new URLSearchParams(location.search).get('id');
+if (!hash) { document.getElementById('content').innerHTML = '<div class="error-msg">잘못된 링크예요.</div>'; }
+else { loadProfile(hash); }
+
+async function loadProfile(hash) {
+  try {
+    const linkSnap = await get(ref(db, `publicLinks/${hash}`));
+    if (!linkSnap.exists()) { document.getElementById('content').innerHTML = '<div class="error-msg">존재하지 않는 프로필이에요.</div>'; return; }
+    const uid = linkSnap.val();
+    const [uSnap, dSnap, cSnap] = await Promise.all([
+      get(ref(db, `users/${uid}`)), get(ref(db, `dashboards/${uid}`)), get(ref(db, `cheers/${uid}`))
+    ]);
+    if (!uSnap.exists()||!dSnap.exists()) { document.getElementById('content').innerHTML = '<div class="error-msg">프로필 데이터를 찾을 수 없어요.</div>'; return; }
+    renderProfile(uSnap.val(), dSnap.val(), cSnap.exists()?cSnap.val():{});
+  } catch(e) { console.error(e); document.getElementById('content').innerHTML = '<div class="error-msg">데이터를 불러오지 못했어요.</div>'; }
+}
+
+function renderProfile(user, dash, cheersData) {
+  // Normalize goals
+  const src = dash.goals||{};
+  if (!Array.isArray(src)) { const a=[]; Object.keys(src).forEach(k=>{a[parseInt(k)]=src[k];}); dash.goals=a; }
+  const goals = []; for(let i=0;i<MAX_HABITS;i++) goals.push((dash.goals||[])[i]||null);
+  const comp = dash.completions||{};
+  const challenges = Array.isArray(dash.challenges)?dash.challenges:Object.values(dash.challenges||{});
+  const nick = dash.nickname||user.name||'익명';
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth()+1;
+
+  // Global pct & stage
+  let td=0,tm=0;
+  goals.forEach((g,i)=>{if(!g||!g.unit)return; const r=goalPct(g,i,y,m,comp); td+=r.done; tm+=r.mod;});
+  const gPct=tm>0?Math.round(td/tm*100):0;
+  const stage=Math.min(9,Math.floor(gPct/10));
+
+  let h='';
+  h+=`<div class="avatar-section"><div class="avatar-art" id="avatarArt"></div>`;
+  h+=`<div class="stage-badge">${stage+1}단계</div>`;
+  h+=`<div class="nickname">${esc(nick)}</div></div>`;
+
+  h+=`<div class="sub-tab-bar"><button class="sub-tab-btn active" onclick="switchPubTab('habit')">습관</button>`;
+  h+=`<button class="sub-tab-btn" onclick="switchPubTab('challenge')">도전</button></div>`;
+
+  // === Habit panel ===
+  const activeGoals=goals.filter(g=>g&&g.unit);
+  h+=`<div class="panel active" id="panelHabit">`;
+  h+=`<div class="section-hdr"><span class="section-title">습관</span><span class="section-count">${activeGoals.length}</span></div>`;
+  if(activeGoals.length===0){ h+=`<div style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:13px;">등록된 습관이 없어요</div>`; }
+  else {
+    h+=`<div class="card-grid">`;
+    goals.forEach((g,i)=>{
+      if(!g||!g.unit) return; g=migrateGoal(g);
+      const {pct}=goalPct(g,i,y,m,comp);
+      const todayK=`g${i}_${y}_${m}_${now.getDate()}`;
+      const isDone=g.unit==='once'?comp[`g${i}_once`]:comp[todayK];
+      const streak=calcStreak(g,i,comp);
+      h+=`<div class="h-card ${isDone?'done':'undone'}">`;
+      h+=`<div class="title">${esc(g.title||'습관')}</div>`;
+      h+=`<div class="meta">${getUnitLabel(g)}${streak>0?' · '+streak+'일째':''}</div>`;
+      if(isDone) h+=`<div class="done-badge">✓</div>`;
+      h+=`<div class="pct">${pct}%</div>`;
+      h+=`<div class="bar"><div class="bar-fill" style="width:${Math.min(100,pct)}%"></div></div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  // === Challenge panel ===
+  const activeC=challenges.filter(c=>c);
+  h+=`<div class="panel" id="panelChallenge">`;
+  h+=`<div class="section-hdr"><span class="section-title">도전</span><span class="section-count">${activeC.length}</span></div>`;
+  if(activeC.length===0){ h+=`<div style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:13px;">등록된 도전이 없어요</div>`; }
+  else {
+    h+=`<div class="card-grid">`;
+    activeC.forEach(c=>{
+      const type=c.type||'bucket';
+      const typeLbl=type==='project'?'프로젝트':'버킷리스트';
+      let pct=0,info='';
+      if(type==='project'&&c.stages){
+        const all=c.stages.flatMap(s=>s.tasks||[]);
+        const dn=all.filter(t=>t.done);
+        pct=all.length>0?Math.round(dn.length/all.length*100):0;
+        info=`${dn.length}/${all.length} 단계`;
+      } else { pct=c.done?100:0; }
+      const isDone=pct>=100;
+      h+=`<div class="c-card ${isDone?'done':''}">`;
+      h+=`<div class="title">${esc(c.title)}</div>`;
+      h+=`<div class="type-badge">${typeLbl}${info?' · '+info:''}</div>`;
+      if(isDone) h+=`<div class="done-badge">✓</div>`;
+      h+=`<div class="pct">${pct}%</div>`;
+      h+=`<div class="bar"><div class="bar-fill" style="width:${Math.min(100,pct)}%"></div></div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  // === Cheers ===
+  let allCheers=[];
+  Object.entries(cheersData).forEach(([gi,msgs])=>{
+    Object.entries(msgs).forEach(([ts,msg])=>{
+      const gIdx=parseInt(gi);
+      const gt=(dash.goals&&dash.goals[gIdx])?dash.goals[gIdx].title:`목표 ${gIdx+1}`;
+      allCheers.push({...msg,ts:parseInt(ts),goalTitle:gt});
+    });
+  });
+  allCheers.sort((a,b)=>b.ts-a.ts);
+  h+=`<div class="cheers-section"><div class="cheers-title">💬 받은 응원 (${allCheers.length})</div>`;
+  if(allCheers.length===0){ h+=`<div class="cheer-empty">아직 받은 응원이 없어요</div>`; }
+  else { allCheers.slice(0,10).forEach(c=>{
+    const d=new Date(c.ts);
+    h+=`<div class="cheer-card"><div class="cheer-from">${esc(c.from)}</div><div class="cheer-text">${esc(c.text)}</div>`;
+    h+=`<div class="cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
+  }); }
+  h+=`</div>`;
+
+  h+=`<div class="public-footer">🐹 <a href="./">키웁</a>에서 나만의 목표를 키워보세요</div>`;
+  document.getElementById('content').innerHTML = h;
+
+  // 3D hamster
+  const artEl=document.getElementById('avatarArt');
+  if(artEl){ const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js'; s.onload=()=>buildHamster(artEl); document.head.appendChild(s); }
+}
+
+window.switchPubTab = function(tab){
+  document.querySelectorAll('.sub-tab-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()===(tab==='habit'?'습관':'도전')));
+  document.getElementById('panelHabit').classList.toggle('active',tab==='habit');
+  document.getElementById('panelChallenge').classList.toggle('active',tab==='challenge');
+};
+
+// ===== 3D HAMSTER =====
+function buildHamster(container){
+  if(typeof THREE==='undefined'){container.innerHTML='🐹';return;}
+  let scene,camera,renderer,hamster,handsGroup,seed,clock=new THREE.Clock(),mouse=new THREE.Vector2(),targetRotation=new THREE.Vector2(),eyes=[],isBlinking=false;
+  function outline(g,t=0.03,c=0x332211){const m=new THREE.MeshBasicMaterial({color:c,side:THREE.BackSide}),o=new THREE.Mesh(g,m);o.scale.multiplyScalar(1+t);return o;}
+  const emojis=['❤️','⭐','🌟','✨','💖','🎉','💕','🌈','🍀','👏'];
+  function spawnEmoji(cx,cy){for(let i=0;i<6;i++){const e=document.createElement('div');e.textContent=emojis[Math.floor(Math.random()*emojis.length)];e.style.cssText=`position:absolute;font-size:${18+Math.random()*14}px;pointer-events:none;z-index:10;left:${cx-10+(Math.random()-0.5)*80}px;top:${cy-10}px;opacity:1;transition:none;`;container.style.position='relative';container.appendChild(e);const dx=(Math.random()-0.5)*120,dy=-(40+Math.random()*80),rot=(Math.random()-0.5)*60;requestAnimationFrame(()=>{e.style.transition='all 1.6s cubic-bezier(.15,.9,.3,1)';e.style.transform=`translate(${dx}px,${dy}px) rotate(${rot}deg)`;e.style.opacity='0';});setTimeout(()=>e.remove(),1800);}}
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1,0.1,1000);camera.position.set(0,0,8.5);
+  renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setSize(280,280);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));container.innerHTML='';container.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff,1.0));const dl=new THREE.DirectionalLight(0xfff5e6,0.9);dl.position.set(2,5,4);scene.add(dl);
+  const oM=new THREE.MeshToonMaterial({color:0xfdd5a0}),cM=new THREE.MeshToonMaterial({color:0xfffdf5}),pM=new THREE.MeshToonMaterial({color:0xffc4d0}),dM=new THREE.MeshBasicMaterial({color:0x332a26});
+  hamster=new THREE.Group();scene.add(hamster);
+  const bG=new THREE.SphereGeometry(1.2,64,64),b=new THREE.Mesh(bG,oM);b.scale.set(1.05,0.95,0.95);b.add(outline(bG,0.025,0x5a3e2b));hamster.add(b);
+  const blG=new THREE.SphereGeometry(1.05,64,64),bl=new THREE.Mesh(blG,cM);bl.position.set(0,-0.2,0.2);bl.scale.set(1.05,0.95,1.0);bl.add(outline(blG,0.02,0x5a3e2b));hamster.add(bl);
+  const ckG=new THREE.SphereGeometry(0.5,32,32);
+  const lC=new THREE.Mesh(ckG,cM);lC.position.set(-0.55,-0.25,0.7);lC.scale.set(1.1,0.9,0.8);lC.add(outline(ckG,0.03,0x5a3e2b));hamster.add(lC);
+  const rC=new THREE.Mesh(ckG,cM);rC.position.set(0.55,-0.25,0.7);rC.scale.set(1.1,0.9,0.8);rC.add(outline(ckG,0.03,0x5a3e2b));hamster.add(rC);
+  const mzG=new THREE.SphereGeometry(0.35,32,32),mz=new THREE.Mesh(mzG,cM);mz.scale.set(1.2,0.8,0.8);mz.position.set(0,-0.15,0.95);mz.add(outline(mzG,0.025,0x5a3e2b));hamster.add(mz);
+  const ns=new THREE.Mesh(new THREE.SphereGeometry(0.06,16,16),pM);ns.position.set(0,0.02,1.22);hamster.add(ns);
+  const mt=new THREE.Mesh(new THREE.SphereGeometry(0.035,16,16),dM);mt.scale.set(1,0.8,0.5);mt.position.set(0,-0.06,1.25);hamster.add(mt);
+  function mkEye(x){const g=new THREE.Group(),eG=new THREE.SphereGeometry(0.12,32,32),e=new THREE.Mesh(eG,dM);e.scale.set(1,1.25,0.5);const hl=new THREE.Mesh(new THREE.SphereGeometry(0.035,16,16),new THREE.MeshBasicMaterial({color:0xffffff}));hl.position.set(0.03,0.05,0.06);g.add(e,hl);g.position.set(x,0.35,1.02);eyes.push(g);return g;}
+  hamster.add(mkEye(-0.33));hamster.add(mkEye(0.33));
+  function mkEar(x,rz){const g=new THREE.Group(),eG=new THREE.SphereGeometry(0.25,32,16),eo=new THREE.Mesh(eG,oM);eo.scale.set(1,1,0.3);eo.add(outline(eG,0.05,0x5a3e2b));const ei=new THREE.Mesh(new THREE.SphereGeometry(0.15,32,16),pM);ei.scale.set(1,1,0.3);ei.position.z=0.05;g.add(eo,ei);g.position.set(x,0.85,0.2);g.rotation.z=rz;return g;}
+  hamster.add(mkEar(-0.65,0.3));hamster.add(mkEar(0.65,-0.3));
+  handsGroup=new THREE.Group();handsGroup.position.set(0,-0.35,1.35);hamster.add(handsGroup);
+  const hG=new THREE.SphereGeometry(0.1,16,16);
+  const lH=new THREE.Mesh(hG,pM);lH.position.set(-0.16,0,0);lH.add(outline(hG,0.08,0x5a3e2b));handsGroup.add(lH);
+  const rH=new THREE.Mesh(hG,pM);rH.position.set(0.16,0,0);rH.add(outline(hG,0.08,0x5a3e2b));handsGroup.add(rH);
+  const sG=new THREE.SphereGeometry(0.08,16,16);sG.scale(1,2.2,0.6);seed=new THREE.Mesh(sG,dM);seed.position.set(0,0.05,0.05);seed.rotation.x=-0.1;
+  const stG=new THREE.SphereGeometry(0.02,16,16);stG.scale(1,2.3,0.7);const st=new THREE.Mesh(stG,cM);st.position.z=0.03;seed.add(st);handsGroup.add(seed);
+  const fG=new THREE.SphereGeometry(0.12,16,16);
+  const lF=new THREE.Mesh(fG,pM);lF.scale.set(1,0.6,1.3);lF.position.set(-0.35,-1.05,0.6);lF.add(outline(fG,0.08,0x5a3e2b));hamster.add(lF);
+  const rF=new THREE.Mesh(fG,pM);rF.scale.set(1,0.6,1.3);rF.position.set(0.35,-1.05,0.6);rF.add(outline(fG,0.08,0x5a3e2b));hamster.add(rF);
+  container.addEventListener('mousemove',e=>{const r=container.getBoundingClientRect();targetRotation.y=((e.clientX-r.left)/r.width*2-1)*0.25;targetRotation.x=-(((e.clientY-r.top)/r.height)*2-1)*0.15;});
+  container.addEventListener('touchmove',e=>{const r=container.getBoundingClientRect(),t=e.touches[0];targetRotation.y=((t.clientX-r.left)/r.width*2-1)*0.25;targetRotation.x=-(((t.clientY-r.top)/r.height)*2-1)*0.15;});
+  function onTap(e){const r=container.getBoundingClientRect();const cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left,cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;spawnEmoji(cx,cy);hamster._jt=clock.getElapsedTime();}
+  container.addEventListener('click',onTap);container.addEventListener('touchstart',e=>{if(e.touches.length===1)onTap(e);},{passive:true});
+  (function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();
+    if(Math.random()>0.995&&!isBlinking){isBlinking=true;eyes.forEach(e=>e.scale.y=0.1);setTimeout(()=>{eyes.forEach(e=>e.scale.y=1);isBlinking=false;},120);}
+    const br=1+Math.sin(t*3)*0.015;hamster.scale.set(br,br,br);
+    if(hamster._jt){const d=t-hamster._jt;if(d<0.4)hamster.position.y=Math.sin(d/0.4*Math.PI)*0.3;else{hamster.position.y=0;hamster._jt=null;}}
+    handsGroup.position.y=-0.35+Math.sin(t*40)*0.015;seed.rotation.z=Math.sin(t*30)*0.05;
+    hamster.rotation.y+=(targetRotation.y-hamster.rotation.y)*0.08;hamster.rotation.x+=(targetRotation.x-hamster.rotation.x)*0.08;
+    renderer.render(scene,camera);})();
+}
+</script>
+</body>
+</html>

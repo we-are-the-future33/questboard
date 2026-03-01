@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301i';
+const APP_VERSION = '20260301k';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -511,6 +511,12 @@ window.openSettings = function () {
   h += `</div>`;
   h += `<div style="text-align:center;font-size:13px;color:var(--text-dim);font-weight:700;" id="fontLevelLabel">${FONT_SIZES[curLevel].label}</div>`;
   h += `</div>`;
+  // Public profile link
+  h += `<div style="border-top:1px solid var(--border);margin-top:20px;padding-top:20px;">`;
+  h += `<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">🔗 공개 프로필</div>`;
+  h += `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">링크를 공유하면 누구나 나의 목표 현황을 볼 수 있어요</div>`;
+  h += `<button onclick="copyPublicLink()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;">📋 공개 링크 복사</button>`;
+  h += `</div>`;
   document.getElementById('bsBody').innerHTML = h;
   openBS();
 };
@@ -522,6 +528,29 @@ window.setFontLevel = function (level) {
   });
   document.getElementById('fontLevelLabel').textContent = FONT_SIZES[level].label;
   showToast(`글씨 크기: ${FONT_SIZES[level].label}`, 'normal');
+};
+
+// Simple hash for public profile URL
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return (h >>> 0).toString(36);
+}
+
+window.copyPublicLink = async function () {
+  if (!currentUser) return;
+  const hash = simpleHash(currentUser.id);
+  // Save hash→id mapping in Firebase so public.html can resolve it
+  await set(ref(db, `publicLinks/${hash}`), currentUser.id);
+  const url = `${location.origin}${location.pathname.replace(/index\.html$/, '')}public.html?id=${hash}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('📋 링크가 복사되었어요!', 'done');
+  } catch (e) {
+    prompt('링크를 복사하세요:', url);
+  }
 };
 
 // ===== SERVICE INFO =====
@@ -1073,11 +1102,12 @@ window.switchSubTab = function (tab) {
   document.getElementById('subTabChallenge').classList.toggle('active', tab === 'challenge');
   document.getElementById('panelHabit').classList.toggle('active', tab === 'habit');
   document.getElementById('panelChallenge').classList.toggle('active', tab === 'challenge');
-  // Scroll so sub-tab-bar sticks at top
+  // Scroll so sub-tab-bar sticks at top and content is visible
   const scroll = document.querySelector('.dash-scroll');
   const subBar = document.querySelector('.sub-tab-bar');
   if (scroll && subBar) {
-    const target = subBar.offsetTop;
+    // subBar height + margin so content starts right below sticky bar
+    const target = subBar.offsetTop - 4;
     scroll.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
   }
 };

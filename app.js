@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301o';
+const APP_VERSION = '20260301p';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1102,15 +1102,21 @@ window.switchSubTab = function (tab) {
   document.getElementById('subTabChallenge').classList.toggle('active', tab === 'challenge');
   document.getElementById('panelHabit').classList.toggle('active', tab === 'habit');
   document.getElementById('panelChallenge').classList.toggle('active', tab === 'challenge');
-  // Wait one frame for layout, then scroll so section-hdr is visible
+  // Scroll so "나의 습관/도전" header is visible right below sticky sub-tab-bar
   requestAnimationFrame(() => {
     const scroll = document.querySelector('.dash-scroll');
-    const panel = document.getElementById(tab === 'habit' ? 'panelHabit' : 'panelChallenge');
     const subBar = document.querySelector('.sub-tab-bar');
-    if (scroll && panel && subBar) {
-      const subBarH = subBar.offsetHeight + 12;
-      scroll.scrollTo({ top: panel.offsetTop - subBarH, behavior: 'smooth' });
-    }
+    const panel = document.getElementById(tab === 'habit' ? 'panelHabit' : 'panelChallenge');
+    if (!scroll || !subBar || !panel) return;
+    const sectionHdr = panel.querySelector('.section-hdr');
+    if (!sectionHdr) return;
+    // Get position relative to scroll container
+    const scrollRect = scroll.getBoundingClientRect();
+    const hdrRect = sectionHdr.getBoundingClientRect();
+    const subBarH = subBar.offsetHeight + 8;
+    // Current offset of hdr from scroll viewport top, then adjust
+    const targetScroll = scroll.scrollTop + (hdrRect.top - scrollRect.top) - subBarH;
+    scroll.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
   });
 };
 

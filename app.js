@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303i';
+const APP_VERSION = '20260303j';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -329,9 +329,10 @@ async function loadDash() {
   INGREDIENT_ORDER.forEach(k => { if (ck.inventory[k] === undefined) ck.inventory[k] = 0; });
   if (!ck.milestoneToday) ck.milestoneToday = '';
   if (!Array.isArray(ck.milestoneReached)) ck.milestoneReached = [];
+  if (!ck.milestoneDrops) ck.milestoneDrops = {};
   // Reset milestone if day changed
   const todayStr = new Date().toISOString().slice(0, 10);
-  if (ck.milestoneToday !== todayStr) { ck.milestoneToday = todayStr; ck.milestoneReached = []; }
+  if (ck.milestoneToday !== todayStr) { ck.milestoneToday = todayStr; ck.milestoneReached = []; ck.milestoneDrops = {}; }
 }
 async function saveDash() { localDash.lastUpdate = new Date().toISOString(); await set(ref(db, `dashboards/${currentUser.id}`), localDash); }
 
@@ -1586,6 +1587,7 @@ async function habitMarkUndo(idx) {
   triggerHaptic('light');
   showToast('↩️ 취소', 'undo');
   renderHabitCards(); renderAvatar();
+  checkMilestoneUndo();
   saveDash();
   renderStageMessage();
 }
@@ -3013,9 +3015,11 @@ function renderBSOnce(idx, body) {
 }
 
 window.bsToggleOnce = async function (idx) {
-  const k = `g${idx}_once`; localDash.completions[k] = localDash.completions[k] !== true;
+  const k = `g${idx}_once`;
+  const wasDone = localDash.completions[k] === true;
+  localDash.completions[k] = !wasDone;
   await saveDash(); renderBSBody(idx); renderHabitCards(); renderAvatar();
-  checkMilestone();
+  if (wasDone) { checkMilestoneUndo(); } else { checkMilestone(); }
 };
 
 // ===== 6개월 통계 =====
@@ -4715,7 +4719,7 @@ let _milestoneToastRunning = false;
 function checkMilestone() {
   const ck = localDash.cooking; if (!ck) return;
   const todayStr = new Date().toISOString().slice(0, 10);
-  if (ck.milestoneToday !== todayStr) { ck.milestoneToday = todayStr; ck.milestoneReached = []; }
+  if (ck.milestoneToday !== todayStr) { ck.milestoneToday = todayStr; ck.milestoneReached = []; ck.milestoneDrops = {}; }
   // All recipes cleared? Skip drops but still update message
   const allCleared = ck.currentScenarioId >= 12;
   const { total, done } = getMyTodayProgress();
@@ -4730,21 +4734,104 @@ function checkMilestone() {
   });
   // Process rewards
   newMilestones.forEach(ms => {
+    if (!ck.milestoneDrops) ck.milestoneDrops = {};
     if (allCleared) {
       _milestoneToastQueue.push({ ms, ingredient: null, allCleared: true });
     } else if (ms === 25) {
       _milestoneToastQueue.push({ ms, ingredient: null });
     } else if (ms === 50) {
       const ing = dropIngredient('normal');
+      if (ing) ck.milestoneDrops[ms] = ing;
       _milestoneToastQueue.push({ ms, ingredient: ing });
     } else if (ms === 75 || ms === 100) {
       const ing = dropIngredient('special');
+      if (ing) ck.milestoneDrops[ms] = ing;
       _milestoneToastQueue.push({ ms, ingredient: ing });
     }
   });
   if (newMilestones.length > 0) saveDash();
   renderStageMessage();
   runMilestoneToastQueue();
+}
+
+// --- Milestone Undo: reclaim ingredients when progress drops ---
+function checkMilestoneUndo() {
+  const ck = localDash.cooking; if (!ck) return;
+  const { total, done } = getMyTodayProgress();
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const reached = ck.milestoneReached || [];
+  const drops = ck.milestoneDrops || {};
+
+  // Find milestones that were reached but now we're below
+  const lostMilestones = [];
+  MILESTONE_STAGES.forEach(ms => {
+    if (pct < ms && reached.includes(ms)) {
+      lostMilestones.push(ms);
+    }
+  });
+  if (lostMilestones.length === 0) { renderStageMessage(); return; }
+
+  // Process reclaims
+  const reclaimedIngredients = [];
+  lostMilestones.forEach(ms => {
+    // Remove from reached
+    ck.milestoneReached = ck.milestoneReached.filter(m => m !== ms);
+    // Reclaim ingredient if exists
+    if (drops[ms]) {
+      const ingKey = drops[ms];
+      const current = ck.inventory[ingKey] || 0;
+      if (current > 0) {
+        ck.inventory[ingKey] = current - 1;
+        reclaimedIngredients.push(ingKey);
+      }
+      delete drops[ms];
+    }
+  });
+
+  saveDash();
+  renderStageMessage();
+
+  // Show reclaim notification
+  const fell25 = lostMilestones.includes(25);
+  if (reclaimedIngredients.length > 0) {
+    const emojis = reclaimedIngredients.map(k => INGREDIENTS[k]?.emoji || '❓').join('');
+    const names = reclaimedIngredients.map(k => INGREDIENTS[k]?.name || k).join(', ');
+    showReclaimModal(emojis, names);
+  } else if (fell25) {
+    showReclaimModal(null, null, true);
+  }
+}
+
+function showReclaimModal(emojis, names, isSleepOnly) {
+  // Remove existing
+  document.querySelectorAll('.reclaim-modal-overlay').forEach(e => e.remove());
+
+  const overlay = document.createElement('div');
+  overlay.className = 'reclaim-modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease;';
+
+  let title, body;
+  if (isSleepOnly) {
+    title = '햄스터가 다시 잠들었어요 💤';
+    body = '25% 이상 달성하면 다시 깨울 수 있어요!';
+  } else {
+    title = '앗, 재료가 돌아갔어요!';
+    body = `${emojis} ${names} 반납!\n다시 달성하면 새 재료를 받아요`;
+  }
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:linear-gradient(135deg,#3b1a1a,#2a1a2e);border-radius:20px;padding:28px 24px;max-width:300px;width:85%;text-align:center;color:#fff;box-shadow:0 16px 40px rgba(0,0,0,.4);border:1px solid rgba(255,100,100,.2);animation:scaleIn .25s cubic-bezier(.175,.885,.32,1.275);';
+  modal.innerHTML = `
+    <div style="font-size:36px;margin-bottom:12px;">${isSleepOnly ? '😴' : '📤'}</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:8px;">${title}</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;white-space:pre-line;">${body}</div>
+  `;
+  overlay.appendChild(modal);
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
+
+  // Auto close after 2.8s
+  setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 2800);
 }
 
 function dropIngredient(type) {

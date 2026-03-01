@@ -6,76 +6,39 @@
 <title>키웁 — 공개 프로필</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 <style>
-:root{--accent:#1952f5;--accent2:#ff5e7d;--accent3:#00b96b;--text:#111827;--text-dim:#64748b;--border:#e2e8f0;--surface:#f8fafc;--bg:#ffffff;--font-main:'IBM Plex Sans KR',sans-serif;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-main);background:#f1f5f9;color:var(--text);min-height:100vh;display:flex;justify-content:center;}
-.wrap{max-width:440px;width:100%;background:var(--bg);min-height:100vh;position:relative;overflow-x:hidden;}
-.top-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;position:sticky;top:0;z-index:50;background:var(--bg);}
-.top-bar .logo{font-size:22px;font-weight:800;color:var(--accent);}
-.public-badge{font-size:10px;font-weight:700;background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;}
-.avatar-section{text-align:center;padding:10px 20px 20px;position:relative;}
-.avatar-art{width:280px;height:280px;margin:0 auto;position:relative;}
-.nickname{font-size:20px;font-weight:800;margin-top:4px;}
-.stage-badge{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);background:rgba(25,82,245,.08);padding:4px 12px;border-radius:20px;margin-bottom:4px;}
-.sub-tab-bar{display:flex;background:#f1f5f9;border-radius:14px;padding:4px;margin:0 20px;gap:4px;position:sticky;top:52px;z-index:30;box-shadow:0 2px 6px rgba(0,0,0,0.04);}
-.sub-tab-bar::before{content:'';position:absolute;top:-8px;left:-20px;right:-20px;bottom:-6px;background:#fff;z-index:-1;}
-.sub-tab-btn{flex:1;padding:12px 0;border:none;border-radius:11px;font-size:14px;font-weight:700;font-family:var(--font-main);cursor:pointer;color:#9ca3af;background:transparent;transition:all .2s;}
-.sub-tab-btn.active{background:#fff;color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,.1);}
-.panel{display:none;padding:16px 20px;}
-.panel.active{display:block;}
-.section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-.section-title{font-size:15px;font-weight:800;}
-.section-count{font-size:15px;font-weight:800;color:var(--accent);}
-.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
-.h-card{border-radius:14px;padding:14px;position:relative;min-height:90px;}
-.h-card.done{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:1.5px solid #a5d6a7;}
-.h-card.undone{background:linear-gradient(135deg,#1952f5,#3b6ff5);color:#fff;}
-.h-card .title{font-size:14px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.h-card .meta{font-size:11px;opacity:0.75;}
-.h-card .done-badge{position:absolute;top:10px;right:10px;width:28px;height:28px;background:var(--accent3);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;}
-.h-card .pct{text-align:right;font-size:13px;font-weight:800;margin-top:6px;}
-.h-card .bar{height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-top:4px;overflow:hidden;}
-.h-card .bar-fill{height:100%;border-radius:2px;transition:width .3s;}
-.h-card.undone .bar-fill{background:#fff;}
-.h-card.done .bar{background:rgba(0,0,0,.08);}
-.h-card.done .bar-fill{background:var(--accent3);}
-.c-card{border-radius:14px;padding:14px;background:linear-gradient(135deg,#1952f5,#3b6ff5);color:#fff;min-height:90px;position:relative;}
-.c-card.done{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);color:var(--text);border:1.5px solid #a5d6a7;}
-.c-card .title{font-size:14px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.c-card .type-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.2);margin-bottom:6px;}
-.c-card.done .type-badge{background:rgba(0,0,0,.06);}
-.c-card .pct{text-align:right;font-size:13px;font-weight:800;margin-top:6px;}
-.c-card .bar{height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-top:4px;overflow:hidden;}
-.c-card .bar-fill{height:100%;background:#fff;border-radius:2px;}
-.c-card.done .bar{background:rgba(0,0,0,.08);}
-.c-card.done .bar-fill{background:var(--accent3);}
-.c-card .done-badge{position:absolute;top:10px;right:10px;width:28px;height:28px;background:var(--accent3);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;}
-.cheers-section{padding:20px;border-top:2px solid var(--border);margin-top:10px;}
-.cheers-title{font-size:15px;font-weight:800;margin-bottom:14px;}
-.cheer-card{background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);}
-.cheer-from{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:2px;}
-.cheer-text{font-size:14px;font-weight:600;}
-.cheer-time{font-size:11px;color:var(--text-dim);margin-top:4px;}
-.cheer-empty{text-align:center;color:var(--text-dim);font-size:13px;padding:20px 0;}
-.loading{text-align:center;padding:80px 20px;font-size:14px;color:var(--text-dim);}
-.error-msg{text-align:center;padding:80px 20px;font-size:14px;color:var(--accent2);}
-.public-footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:20px;}
-.public-footer a{color:var(--accent);text-decoration:none;font-weight:700;}
+body{background:#f1f5f9;display:flex;justify-content:center;}
+.pub-wrap{max-width:440px;width:100%;background:var(--bg);min-height:100vh;overflow-x:hidden;}
+.pub-top{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;position:sticky;top:0;z-index:50;background:var(--bg);}
+.pub-top .logo{font-family:var(--font-main);font-size:22px;font-weight:800;color:var(--accent);}
+.pub-badge{font-size:10px;font-weight:700;background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;letter-spacing:.5px;}
+.pub-scroll{overflow-y:auto;padding-bottom:40px;}
+.pub-footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:20px;}
+.pub-footer a{color:var(--accent);text-decoration:none;font-weight:700;}
+.pub-loading{text-align:center;padding:80px 20px;font-size:14px;color:var(--text-dim);}
+.pub-error{text-align:center;padding:80px 20px;font-size:14px;color:#ff5e7d;}
 .pub-alert{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:999;}
 .pub-alert-box{background:#fff;border-radius:16px;padding:24px;max-width:300px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);}
 .pub-alert-box p{font-size:14px;font-weight:700;margin-bottom:16px;line-height:1.5;}
 .pub-alert-box button{background:var(--accent);color:#fff;border:none;padding:10px 28px;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;}
+.pub-cheers{padding:16px 20px;border-top:2px solid var(--border);margin-top:10px;}
+.pub-cheers-title{font-size:15px;font-weight:800;margin-bottom:14px;}
+.pub-cheer-item{background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);}
+.pub-cheer-from{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:2px;}
+.pub-cheer-text{font-size:14px;font-weight:600;}
+.pub-cheer-time{font-size:11px;color:var(--text-dim);margin-top:4px;}
+.pub-empty{text-align:center;color:var(--text-dim);font-size:13px;padding:30px 0;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top-bar">
+<div class="pub-wrap">
+  <div class="pub-top">
     <div class="logo">키웁</div>
-    <div class="public-badge">👀 공개 프로필</div>
+    <div class="pub-badge">👀 공개 프로필</div>
   </div>
-  <div id="content">
-    <div class="loading">불러오는 중...</div>
+  <div class="pub-scroll" id="content">
+    <div class="pub-loading">불러오는 중...</div>
   </div>
 </div>
 
@@ -137,32 +100,38 @@ function calcStreak(g,gi,comp){
   }
   return 0;
 }
+function getStreakLabel(g, streak) {
+  if (!g) return '0일째';
+  g = migrateGoal(g);
+  if (g.unit === 'weekly' || g.unit === 'biweekly' || g.unit === 'multiweek') return `${streak}주째`;
+  return `${streak}일째`;
+}
 
 // ===== INIT =====
 const hash = new URLSearchParams(location.search).get('id');
-if (!hash) { document.getElementById('content').innerHTML = '<div class="error-msg">잘못된 링크예요.</div>'; }
+if (!hash) { document.getElementById('content').innerHTML = '<div class="pub-error">잘못된 링크예요.</div>'; }
 else { loadProfile(hash); }
 
 async function loadProfile(hash) {
   try {
     const linkSnap = await get(ref(db, `publicLinks/${hash}`));
-    if (!linkSnap.exists()) { document.getElementById('content').innerHTML = '<div class="error-msg">존재하지 않는 프로필이에요.</div>'; return; }
+    if (!linkSnap.exists()) { document.getElementById('content').innerHTML = '<div class="pub-error">존재하지 않는 프로필이에요.</div>'; return; }
     const uid = linkSnap.val();
     const [uSnap, dSnap, cSnap] = await Promise.all([
       get(ref(db, `users/${uid}`)), get(ref(db, `dashboards/${uid}`)), get(ref(db, `cheers/${uid}`))
     ]);
-    if (!uSnap.exists()||!dSnap.exists()) { document.getElementById('content').innerHTML = '<div class="error-msg">프로필 데이터를 찾을 수 없어요.</div>'; return; }
+    if (!uSnap.exists()||!dSnap.exists()) { document.getElementById('content').innerHTML = '<div class="pub-error">프로필 데이터를 찾을 수 없어요.</div>'; return; }
     renderProfile(uSnap.val(), dSnap.val(), cSnap.exists()?cSnap.val():{});
-  } catch(e) { console.error(e); document.getElementById('content').innerHTML = '<div class="error-msg">데이터를 불러오지 못했어요.</div>'; }
+  } catch(e) { console.error(e); document.getElementById('content').innerHTML = '<div class="pub-error">데이터를 불러오지 못했어요.</div>'; }
 }
 
 function renderProfile(user, dash, cheersData) {
-  // Normalize goals
   const src = dash.goals||{};
   if (!Array.isArray(src)) { const a=[]; Object.keys(src).forEach(k=>{a[parseInt(k)]=src[k];}); dash.goals=a; }
   const goals = []; for(let i=0;i<MAX_HABITS;i++) goals.push((dash.goals||[])[i]||null);
   const comp = dash.completions||{};
-  const challenges = Array.isArray(dash.challenges)?dash.challenges:Object.values(dash.challenges||{});
+  const rawChallenges = dash.challenges||[];
+  const challenges = Array.isArray(rawChallenges)?rawChallenges:Object.values(rawChallenges);
   const nick = dash.nickname||user.name||'익명';
   const now=new Date(), y=now.getFullYear(), m=now.getMonth()+1;
 
@@ -173,67 +142,97 @@ function renderProfile(user, dash, cheersData) {
   const stage=Math.min(9,Math.floor(gPct/10));
 
   let h='';
-  h+=`<div class="avatar-section"><div class="avatar-art" id="avatarArt"></div>`;
-  h+=`<div class="stage-badge">${stage+1}단계</div>`;
-  h+=`<div class="nickname">${esc(nick)}</div></div>`;
 
-  h+=`<div class="sub-tab-bar"><button class="sub-tab-btn active" onclick="switchPubTab('habit')">습관</button>`;
-  h+=`<button class="sub-tab-btn" onclick="switchPubTab('challenge')">도전</button></div>`;
+  // ===== AVATAR SECTION (same classes as app) =====
+  h+=`<div class="avatar-section">`;
+  h+=`<div class="avatar-art" id="avatarArt"></div>`;
+  h+=`<div class="avatar-stage" id="avatarStage">${stage+1}단계</div>`;
+  h+=`<div class="avatar-nickname" id="avatarNickname">${esc(nick)}</div>`;
+  h+=`</div>`;
 
-  // === Habit panel ===
-  const activeGoals=goals.filter(g=>g&&g.unit);
+  // ===== SUB TAB BAR (same classes as app) =====
+  h+=`<div class="sub-tab-bar">`;
+  h+=`<button class="sub-tab-btn active" id="subTabHabit" onclick="switchPubTab('habit')">습관</button>`;
+  h+=`<button class="sub-tab-btn" id="subTabChallenge" onclick="switchPubTab('challenge')">도전</button>`;
+  h+=`</div>`;
+
+  // ===== HABIT PANEL =====
+  const activeGoals = [];
+  goals.forEach((g,i)=>{ if(g&&g.unit) activeGoals.push({g,idx:i}); });
   h+=`<div class="panel active" id="panelHabit">`;
-  h+=`<div class="section-hdr"><span class="section-title">습관</span><span class="section-count">${activeGoals.length}</span></div>`;
-  if(activeGoals.length===0){ h+=`<div style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:13px;">등록된 습관이 없어요</div>`; }
-  else {
+  h+=`<div class="section-header"><span class="section-title">습관</span> <span class="section-count" style="color:var(--accent);font-weight:800;">${activeGoals.length}</span></div>`;
+  if(activeGoals.length===0){
+    h+=`<div class="pub-empty">등록된 습관이 없어요</div>`;
+  } else {
     h+=`<div class="card-grid">`;
-    goals.forEach((g,i)=>{
-      if(!g||!g.unit) return; g=migrateGoal(g);
-      const {pct}=goalPct(g,i,y,m,comp);
-      const todayK=`g${i}_${y}_${m}_${now.getDate()}`;
-      const isDone=g.unit==='once'?comp[`g${i}_once`]:comp[todayK];
-      const streak=calcStreak(g,i,comp);
-      h+=`<div class="h-card ${isDone?'done':'undone'}">`;
-      h+=`<div class="title">${esc(g.title||'습관')}</div>`;
-      h+=`<div class="meta">${getUnitLabel(g)}${streak>0?' · '+streak+'일째':''}</div>`;
-      if(isDone) h+=`<div class="done-badge">✓</div>`;
-      h+=`<div class="pct">${pct}%</div>`;
-      h+=`<div class="bar"><div class="bar-fill" style="width:${Math.min(100,pct)}%"></div></div></div>`;
+    activeGoals.forEach(({g,idx})=>{
+      const mg=migrateGoal(g);
+      const {pct}=goalPct(mg,idx,y,m,comp);
+      const todayK=`g${idx}_${y}_${m}_${now.getDate()}`;
+      const todayDone=comp[todayK]===true;
+      const isOnce=mg.unit==='once';
+      const isCompleted=pct>=100;
+      const isOver=pct>100;
+      const isDone=todayDone||(isOnce&&comp[`g${idx}_once`]);
+      const streak=calcStreak(mg,idx,comp);
+      const streakLbl=getStreakLabel(mg,streak);
+      // Exact same HTML as generateHabitCardHtml in app.js
+      h+=`<div class="habit-card-outer">`;
+      h+=`<div class="habit-card ${isCompleted?'completed':''} ${isDone?'today-done':''}" style="cursor:default;">`;
+      if(isDone) h+=`<div class="habit-card-done-badge">✓</div>`;
+      h+=`<div><div class="habit-card-title">${esc(g.title)}</div>`;
+      h+=`<div class="habit-card-mid"><div class="habit-card-unit">${getUnitLabel(mg)}</div>`;
+      h+=`<div class="habit-card-streak ${streak>0?'':'zero'}"><span class="streak-num">${streakLbl}</span></div></div></div>`;
+      h+=`<div class="habit-card-bot"><div class="habit-card-bar"><div class="habit-card-bar-fill ${isOver?'over100':''}" style="width:${Math.min(pct,100)}%"></div></div>`;
+      h+=`<div class="habit-card-pct">${pct}%</div></div>`;
+      h+=`</div></div>`;
     });
     h+=`</div>`;
   }
   h+=`</div>`;
 
-  // === Challenge panel ===
+  // ===== CHALLENGE PANEL =====
   const activeC=challenges.filter(c=>c);
   h+=`<div class="panel" id="panelChallenge">`;
-  h+=`<div class="section-hdr"><span class="section-title">도전</span><span class="section-count">${activeC.length}</span></div>`;
-  if(activeC.length===0){ h+=`<div style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:13px;">등록된 도전이 없어요</div>`; }
-  else {
+  h+=`<div class="section-header"><span class="section-title">도전</span> <span class="section-count" style="color:var(--accent);font-weight:800;">${activeC.length}</span></div>`;
+  if(activeC.length===0){
+    h+=`<div class="pub-empty">등록된 도전이 없어요</div>`;
+  } else {
     h+=`<div class="card-grid">`;
-    activeC.forEach(c=>{
-      const type=c.type||'bucket';
-      const typeLbl=type==='project'?'프로젝트':'버킷리스트';
-      let pct=0,info='';
-      if(type==='project'&&c.stages){
-        const all=c.stages.flatMap(s=>s.tasks||[]);
-        const dn=all.filter(t=>t.done);
-        pct=all.length>0?Math.round(dn.length/all.length*100):0;
-        info=`${dn.length}/${all.length} 단계`;
-      } else { pct=c.done?100:0; }
-      const isDone=pct>=100;
-      h+=`<div class="c-card ${isDone?'done':''}">`;
-      h+=`<div class="title">${esc(c.title)}</div>`;
-      h+=`<div class="type-badge">${typeLbl}${info?' · '+info:''}</div>`;
-      if(isDone) h+=`<div class="done-badge">✓</div>`;
-      h+=`<div class="pct">${pct}%</div>`;
-      h+=`<div class="bar"><div class="bar-fill" style="width:${Math.min(100,pct)}%"></div></div></div>`;
+    activeC.forEach((c,idx)=>{
+      if(c.type==='bucket'){
+        const done=c.done===true;
+        h+=`<div class="challenge-card-outer">`;
+        h+=`<div class="challenge-card type-bucket ${done?'bucket-done':''}" style="cursor:default;">`;
+        if(done) h+=`<div class="challenge-card-done-badge">✓</div>`;
+        h+=`<div><div class="challenge-card-title">${esc(c.title)}</div>`;
+        h+=`<span class="challenge-card-type bucket">버킷리스트</span></div>`;
+        if(done) h+=`<div><div class="challenge-card-achieve">달성 완료</div></div>`;
+        else h+=`<div></div>`;
+        h+=`</div></div>`;
+      } else {
+        const stages=c.stages||[];
+        const allTasks=stages.flatMap(s=>s.tasks||[]);
+        const doneTasks=allTasks.filter(t=>t.done);
+        const total=allTasks.length, dn=doneTasks.length;
+        const pct=total>0?Math.round(dn/total*100):0;
+        const projDone=pct>=100;
+        h+=`<div class="challenge-card type-project ${projDone?'project-done':''}" style="cursor:default;">`;
+        if(projDone) h+=`<div class="challenge-card-done-badge">✓</div>`;
+        h+=`<div><div class="challenge-card-title">${esc(c.title)}</div>`;
+        h+=`<div class="challenge-card-meta-row"><span class="challenge-card-type project">프로젝트</span>`;
+        h+=`<span class="challenge-card-stage">${dn}/${total} 단계</span></div></div>`;
+        h+=`<div><div style="display:flex;align-items:center;gap:6px;">`;
+        h+=`<div class="challenge-card-bar" style="flex:1;"><div class="challenge-card-bar-fill project" style="width:${Math.min(pct,100)}%"></div></div>`;
+        h+=`<div class="challenge-card-pct project">${pct}%</div></div></div>`;
+        h+=`</div>`;
+      }
     });
     h+=`</div>`;
   }
   h+=`</div>`;
 
-  // === Cheers ===
+  // ===== CHEERS =====
   let allCheers=[];
   Object.entries(cheersData).forEach(([gi,msgs])=>{
     Object.entries(msgs).forEach(([ts,msg])=>{
@@ -243,16 +242,16 @@ function renderProfile(user, dash, cheersData) {
     });
   });
   allCheers.sort((a,b)=>b.ts-a.ts);
-  h+=`<div class="cheers-section"><div class="cheers-title">💬 받은 응원 (${allCheers.length})</div>`;
-  if(allCheers.length===0){ h+=`<div class="cheer-empty">아직 받은 응원이 없어요</div>`; }
+  h+=`<div class="pub-cheers"><div class="pub-cheers-title">💬 받은 응원 (${allCheers.length})</div>`;
+  if(allCheers.length===0){ h+=`<div class="pub-empty">아직 받은 응원이 없어요</div>`; }
   else { allCheers.slice(0,10).forEach(c=>{
     const d=new Date(c.ts);
-    h+=`<div class="cheer-card"><div class="cheer-from">${esc(c.from)}</div><div class="cheer-text">${esc(c.text)}</div>`;
-    h+=`<div class="cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
+    h+=`<div class="pub-cheer-item"><div class="pub-cheer-from">${esc(c.from)}</div><div class="pub-cheer-text">${esc(c.text)}</div>`;
+    h+=`<div class="pub-cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
   }); }
   h+=`</div>`;
 
-  h+=`<div class="public-footer">🐹 <a href="./">키웁</a>에서 나만의 목표를 키워보세요</div>`;
+  h+=`<div class="pub-footer">🐹 <a href="./">키웁</a>에서 나만의 목표를 키워보세요</div>`;
   document.getElementById('content').innerHTML = h;
 
   // 3D hamster
@@ -261,12 +260,13 @@ function renderProfile(user, dash, cheersData) {
 }
 
 window.switchPubTab = function(tab){
-  document.querySelectorAll('.sub-tab-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()===(tab==='habit'?'습관':'도전')));
+  document.getElementById('subTabHabit').classList.toggle('active',tab==='habit');
+  document.getElementById('subTabChallenge').classList.toggle('active',tab==='challenge');
   document.getElementById('panelHabit').classList.toggle('active',tab==='habit');
   document.getElementById('panelChallenge').classList.toggle('active',tab==='challenge');
 };
 
-// ===== 3D HAMSTER =====
+// ===== 3D HAMSTER (from app.js) =====
 function buildHamster(container){
   if(typeof THREE==='undefined'){container.innerHTML='🐹';return;}
   let scene,camera,renderer,hamster,handsGroup,seed,clock=new THREE.Clock(),mouse=new THREE.Vector2(),targetRotation=new THREE.Vector2(),eyes=[],isBlinking=false;

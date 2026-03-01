@@ -102,6 +102,7 @@ function pubAlert(msg){
   d.innerHTML=`<div class="pub-alert-box"><p>${msg}</p><button onclick="this.closest('.pub-alert').remove()">확인</button></div>`;
   document.body.appendChild(d);
 }
+window.pubAlert=pubAlert;
 
 const hash=new URLSearchParams(location.search).get('id');
 if(!hash){document.getElementById('content').innerHTML='<div class="pub-error">잘못된 링크예요.</div>';}
@@ -432,7 +433,6 @@ async function renderPubFriendBanner(uid){
     }
   }catch(e){console.error(e);el.innerHTML=`<div class="main-friend-banner idle"><span>친구 정보를 불러올 수 없어요</span></div>`;}
 }
-}
 
 window.changePubHView=function(v){pubViewMode=v;renderHabits();};
 window.changePubCView=function(v){pubCViewMode=v;renderChallenges();};
@@ -441,6 +441,7 @@ window.changePubCView=function(v){pubCViewMode=v;renderChallenges();};
 window.closePubBS=function(){document.getElementById('bsOverlay').classList.remove('open');document.getElementById('bottomSheet').classList.remove('open');};
 function openPubBS(){document.getElementById('bsOverlay').classList.add('open');document.getElementById('bottomSheet').classList.add('open');}
 function readOnlyAlert(){pubAlert('👀 공개 모드에서는 수정할 수 없어요');}
+window.readOnlyAlert=readOnlyAlert;
 
 const TYPE_LABELS={bucket:'🎯 버킷리스트',project:'📋 프로젝트'};
 function formatTargetMonth(tm){if(!tm||tm==='someday')return'☁️ 언젠가';const p=tm.split('-');return`📅 ${p[0]}년 ${parseInt(p[1])}월`;}

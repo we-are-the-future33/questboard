@@ -736,58 +736,68 @@ window.generateStampCard = function (cols) {
     }
   });
 
-  // Sort: done first, then by title
+  // Sort: done first
   items.sort((a, b) => (b.done ? 1 : 0) - (a.done ? 1 : 0));
 
+  // For "전체" mode, auto-calculate cols
+  const actualCols = cols > 0 ? cols : Math.min(Math.ceil(Math.sqrt(items.length)), 5) || 3;
   const maxItems = cols > 0 ? cols * cols : items.length;
   const displayItems = items.slice(0, maxItems);
-  const actualCols = cols > 0 ? cols : Math.min(Math.ceil(Math.sqrt(displayItems.length)), 5) || 3;
   const doneCount = items.filter(i => i.done).length;
 
-  const cellSize = cols <= 3 ? '80px' : cols <= 4 ? '64px' : '52px';
-  const fontSize = cols <= 3 ? '20px' : cols <= 4 ? '16px' : '14px';
-  const titleSize = cols <= 3 ? '10px' : cols <= 4 ? '9px' : '8px';
+  // Rows = just enough for display items (no excessive empty rows)
+  const rows = Math.ceil(displayItems.length / actualCols);
+  const totalCells = rows * actualCols;
+
+  const gap = actualCols <= 3 ? '8px' : actualCols <= 4 ? '6px' : '5px';
+  const fontSize = actualCols <= 3 ? '22px' : actualCols <= 4 ? '18px' : '15px';
+  const titleSize = actualCols <= 3 ? '10px' : actualCols <= 4 ? '9px' : '8px';
+  const checkSize = actualCols <= 3 ? '20px' : actualCols <= 4 ? '18px' : '16px';
+  const checkFont = actualCols <= 3 ? '11px' : actualCols <= 4 ? '10px' : '9px';
+  const radius = actualCols <= 3 ? '14px' : actualCols <= 4 ? '12px' : '10px';
 
   let gridHtml = '';
-  for (let i = 0; i < (cols > 0 ? maxItems : displayItems.length); i++) {
+  for (let i = 0; i < totalCells; i++) {
     const item = displayItems[i];
     if (!item) {
-      gridHtml += `<div style="width:${cellSize};height:${cellSize};border-radius:12px;border:2px dashed #e2e8f0;"></div>`;
+      // Empty cell — only show if within grid bounds, subtle dashed
+      gridHtml += `<div style="aspect-ratio:1;border-radius:${radius};border:1.5px dashed #e2e8f0;"></div>`;
       continue;
     }
-    const bg = item.done ? 'linear-gradient(135deg,#dbeafe,#bfdbfe)' : '#f8fafc';
-    const border = item.done ? '2px solid var(--accent)' : '2px solid #e2e8f0';
-    const check = item.done ? '<div style="position:absolute;top:-4px;right:-4px;background:var(--accent);color:white;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">✓</div>' : '';
-    const pctLabel = !item.done && item.pct > 0 ? `<div style="font-size:8px;color:var(--accent);font-weight:700;">${item.pct}%</div>` : '';
-    gridHtml += `<div style="position:relative;width:${cellSize};height:${cellSize};background:${bg};border:${border};border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;${item.done ? '' : 'opacity:0.7;'}">
+    const bg = item.done ? 'linear-gradient(135deg,#dbeafe,#c7d9f7)' : '#f8fafc';
+    const border = item.done ? '2px solid #6ba3f7' : '1.5px solid #e2e8f0';
+    const opacity = item.done ? '' : 'opacity:0.6;';
+    const check = item.done ? `<div style="position:absolute;top:-3px;right:-3px;background:#3b82f6;color:white;border-radius:50%;width:${checkSize};height:${checkSize};display:flex;align-items:center;justify-content:center;font-size:${checkFont};font-weight:800;box-shadow:0 1px 3px rgba(0,0,0,.15);">✓</div>` : '';
+    const pctLabel = !item.done && item.pct > 0 ? `<div style="font-size:${actualCols <= 3 ? '9px' : '8px'};color:#3b82f6;font-weight:700;">${item.pct}%</div>` : '';
+    gridHtml += `<div style="position:relative;aspect-ratio:1;background:${bg};border:${border};border-radius:${radius};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;${opacity}">
       ${check}
-      <div style="font-size:${fontSize};">${item.emoji}</div>
-      <div style="font-size:${titleSize};font-weight:700;color:#334155;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;">${esc(item.title)}</div>
+      <div style="font-size:${fontSize};line-height:1.2;">${item.emoji}</div>
+      <div style="font-size:${titleSize};font-weight:700;color:#334155;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;line-height:1.3;">${esc(item.title)}</div>
       ${pctLabel}
     </div>`;
   }
 
   const pctTotal = items.length > 0 ? Math.round(doneCount / items.length * 100) : 0;
   const cardHtml = `
-  <div id="shareCardPreview" style="width:340px;padding:28px;background:linear-gradient(135deg,#f0f7ff 0%,#e8f4f8 100%);border-radius:20px;font-family:var(--font-main);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-size:16px;font-weight:800;color:var(--accent);">🐹 키웁</div>
+  <div id="shareCardPreview" style="width:340px;padding:24px;background:linear-gradient(135deg,#f0f7ff 0%,#e8f4f8 100%);border-radius:20px;font-family:var(--font-main);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:800;color:#3b82f6;">🐹 키웁</div>
       <div style="font-size:12px;font-weight:700;color:#94a3b8;">${esc(nick)}</div>
     </div>
-    <div style="text-align:center;margin-bottom:16px;">
+    <div style="text-align:center;margin-bottom:14px;">
       <div style="font-size:15px;font-weight:800;color:var(--text);">🏆 나의 도전 현황</div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:repeat(${actualCols},1fr);gap:${gap};margin-bottom:14px;">
       ${gridHtml}
     </div>
-    <div style="background:white;border-radius:10px;padding:12px;text-align:center;">
+    <div style="background:white;border-radius:10px;padding:10px 14px;text-align:center;">
       <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:6px;">${doneCount} / ${items.length} 달성</div>
-      <div style="height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
-        <div style="height:100%;width:${pctTotal}%;background:var(--accent);border-radius:4px;"></div>
+      <div style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${pctTotal}%;background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:3px;"></div>
       </div>
-      <div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:4px;">${pctTotal}%</div>
+      <div style="font-size:11px;color:#3b82f6;font-weight:700;margin-top:4px;">${pctTotal}%</div>
     </div>
-    <div style="text-align:center;margin-top:16px;font-size:10px;color:#94a3b8;">키웁 - 목표 달성 게임 🐹</div>
+    <div style="text-align:center;margin-top:12px;font-size:10px;color:#94a3b8;">키웁 - 목표 달성 게임 🐹</div>
   </div>`;
 
   showSharePreview(cardHtml);

@@ -120,9 +120,9 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .gb-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.25) 0%,transparent 60%);border-radius:100px;}
 
 /* 아바타 */
-.avatar-section{padding:40px 16px 20px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:0;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
+.avatar-section{padding:40px 16px 90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
 .avatar-section::before{content:'';position:absolute;top:0;left:0;right:0;height:24px;background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,transparent 100%);z-index:2;pointer-events:none;}
-.avatar-art{width:180px;height:180px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-top:0px;margin-bottom:-30px;}
+.avatar-art{width:180px;height:180px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-top:0px;margin-bottom:10px;}
 .avatar-art canvas{width:180px!important;height:180px!important;}
 .avatar-stage{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:8px;position:relative;z-index:3;}
 .avatar-info-row{display:flex;align-items:center;justify-content:center;gap:8px;position:relative;z-index:3;padding-bottom:8px;}
@@ -889,7 +889,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 
 /* Milestone Progress Bar - Pill Style */
 .ms-bar-wrap {
-  position: relative; margin: 0 -16px; padding: 0 16px; width: calc(100% + 32px);
+  position: absolute; bottom: 20px; left: 16px; right: 16px;
   box-sizing: border-box;
 }
 .ms-bar-pill {
@@ -901,8 +901,8 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 }
 .ms-bar-track {
   position: absolute; left: 35px; right: 35px; top: 50%;
-  height: 2px; background: rgba(255,255,255,.15); border-radius: 100px;
-  transform: translateY(-50%); z-index: 0;
+  height: 2px; background: rgba(255,255,255,.2); border-radius: 100px;
+  transform: translateY(-50%); z-index: 0; overflow: hidden;
 }
 .ms-bar-fill {
   position: absolute; left: 0; top: 0; height: 100%; border-radius: 100px;

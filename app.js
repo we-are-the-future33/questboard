@@ -610,6 +610,293 @@ window.openAndroidGuide = function () {
   openBS();
 };
 
+// ===== SHARE CARD =====
+const CAT_EMOJI = { health:'💪', diet:'🥗', study:'📚', work:'💼', finance:'💰', life:'🌱', home:'🧹', hobby:'🎨', social:'🤝', mental:'🧘', etc:'📦' };
+
+window.openShareCard = function () {
+  document.getElementById('bsTitle').textContent = '📤 공유하기';
+  clearMetaTags();
+  let h = `<div style="display:flex;flex-direction:column;gap:10px;">
+    <button class="share-menu-btn" onclick="openShareHabit()">
+      <span style="font-size:24px;">🔥</span>
+      <div><div style="font-size:13px;font-weight:800;">습관 카드</div><div style="font-size:11px;color:var(--text-dim);">연속 달성 + 월간 달력</div></div>
+    </button>
+    <button class="share-menu-btn" onclick="openShareStamp()">
+      <span style="font-size:24px;">🏆</span>
+      <div><div style="font-size:13px;font-weight:800;">도전 스탬프</div><div style="font-size:11px;color:var(--text-dim);">버킷 & 프로젝트 현황</div></div>
+    </button>
+    <button class="share-menu-btn" onclick="openShareReport()">
+      <span style="font-size:24px;">📊</span>
+      <div><div style="font-size:13px;font-weight:800;">월간 리포트</div><div style="font-size:11px;color:var(--text-dim);">이번 달 요약</div></div>
+    </button>
+  </div>`;
+  document.getElementById('bsBody').innerHTML = h;
+  openBS();
+};
+
+// --- Share: Habit Card ---
+window.openShareHabit = function () {
+  document.getElementById('bsTitle').textContent = '🔥 습관 카드';
+  clearMetaTags();
+  const goals = getAllGoals();
+  let h = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">공유할 습관을 선택하세요</div>`;
+  h += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  goals.forEach((g, i) => {
+    if (!g || !g.title) return;
+    const streak = calcStreak(g, i);
+    const label = getUnitLabel(migrateGoal(g));
+    h += `<button class="share-menu-btn" onclick="generateHabitCard(${i})">
+      <span style="font-size:18px;">${CAT_EMOJI[g.category] || '📦'}</span>
+      <div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:700;">${esc(g.title)}</div><div style="font-size:11px;color:var(--text-dim);">${label} · ${streak > 0 ? streak + '일 연속' : '기록 없음'}</div></div>
+    </button>`;
+  });
+  h += `</div>`;
+  document.getElementById('bsBody').innerHTML = h;
+};
+
+window.generateHabitCard = function (idx) {
+  const g = migrateGoal(localDash.goals[idx]);
+  if (!g) return;
+  const nick = localDash.nickname || currentUser?.name || '나';
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  const streak = calcStreak(g, idx);
+  const { pct } = goalPct(g, idx, y, m);
+  const days = getMonthDays(y, m), fd = new Date(y, m - 1, 1).getDay();
+
+  // Build calendar data
+  let calHtml = '';
+  const weekdays = ['일','월','화','수','목','금','토'];
+  calHtml += weekdays.map(d => `<div style="font-size:9px;color:#94a3b8;text-align:center;font-weight:700;">${d}</div>`).join('');
+  for (let b = 0; b < fd; b++) calHtml += `<div></div>`;
+  for (let d = 1; d <= days; d++) {
+    const done = localDash.completions[`g${idx}_${y}_${m}_${d}`] === true;
+    const isToday = d === now.getDate();
+    calHtml += `<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:10px;font-weight:700;
+      ${done ? 'background:var(--accent);color:white;' : isToday ? 'border:1.5px solid var(--accent);color:var(--accent);' : 'color:#cbd5e1;'}">${d}</div>`;
+  }
+
+  const cardHtml = `
+  <div id="shareCardPreview" style="width:340px;padding:28px;background:linear-gradient(135deg,#f0f7ff 0%,#e8f4f8 100%);border-radius:20px;font-family:var(--font-main);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:16px;font-weight:800;color:var(--accent);">🐹 키웁</div>
+      <div style="font-size:12px;font-weight:700;color:#94a3b8;">${esc(nick)}</div>
+    </div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:28px;margin-bottom:4px;">${CAT_EMOJI[g.category] || '📦'}</div>
+      <div style="font-size:16px;font-weight:800;color:var(--text);">${esc(g.title)}</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${getUnitLabel(g)}</div>
+    </div>
+    ${streak > 0 ? `<div style="text-align:center;margin-bottom:16px;">
+      <span style="background:var(--accent);color:white;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:800;">🔥 ${streak}일 연속 달성 중</span>
+    </div>` : ''}
+    <div style="background:white;border-radius:12px;padding:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:8px;">${y}년 ${m}월 · 달성률 ${pct}%</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">${calHtml}</div>
+    </div>
+    <div style="text-align:center;margin-top:16px;font-size:10px;color:#94a3b8;">키웁 - 목표 달성 게임 🐹</div>
+  </div>`;
+
+  showSharePreview(cardHtml);
+};
+
+// --- Share: Stamp Card ---
+window.openShareStamp = function () {
+  document.getElementById('bsTitle').textContent = '🏆 도전 스탬프';
+  clearMetaTags();
+  let h = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">카드 크기를 선택하세요</div>`;
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <button class="share-menu-btn" style="justify-content:center;" onclick="generateStampCard(3)"><div style="font-size:13px;font-weight:700;">3×3</div><div style="font-size:11px;color:var(--text-dim);">최대 9개</div></button>
+    <button class="share-menu-btn" style="justify-content:center;" onclick="generateStampCard(4)"><div style="font-size:13px;font-weight:700;">4×4</div><div style="font-size:11px;color:var(--text-dim);">최대 16개</div></button>
+    <button class="share-menu-btn" style="justify-content:center;" onclick="generateStampCard(5)"><div style="font-size:13px;font-weight:700;">5×5</div><div style="font-size:11px;color:var(--text-dim);">최대 25개</div></button>
+    <button class="share-menu-btn" style="justify-content:center;" onclick="generateStampCard(0)"><div style="font-size:13px;font-weight:700;">전체</div><div style="font-size:11px;color:var(--text-dim);">모두 표시</div></button>
+  </div>`;
+  document.getElementById('bsBody').innerHTML = h;
+};
+
+window.generateStampCard = function (cols) {
+  const challengesObj = localDash.challenges || {};
+  const nick = localDash.nickname || currentUser?.name || '나';
+  let items = [];
+  Object.keys(challengesObj).forEach(key => {
+    const c = challengesObj[key];
+    if (c && c.title) {
+      const done = isChallengeComplete(c);
+      const emoji = CAT_EMOJI[c.category] || (c.type === 'project' ? '📋' : '🎯');
+      let pctVal = done ? 100 : 0;
+      if (c.type === 'project' && !done) pctVal = getProjectProgress(c).pct;
+      items.push({ title: c.title, emoji, done, pct: pctVal });
+    }
+  });
+
+  // Sort: done first, then by title
+  items.sort((a, b) => (b.done ? 1 : 0) - (a.done ? 1 : 0));
+
+  const maxItems = cols > 0 ? cols * cols : items.length;
+  const displayItems = items.slice(0, maxItems);
+  const actualCols = cols > 0 ? cols : Math.min(Math.ceil(Math.sqrt(displayItems.length)), 5) || 3;
+  const doneCount = items.filter(i => i.done).length;
+
+  const cellSize = cols <= 3 ? '80px' : cols <= 4 ? '64px' : '52px';
+  const fontSize = cols <= 3 ? '20px' : cols <= 4 ? '16px' : '14px';
+  const titleSize = cols <= 3 ? '10px' : cols <= 4 ? '9px' : '8px';
+
+  let gridHtml = '';
+  for (let i = 0; i < (cols > 0 ? maxItems : displayItems.length); i++) {
+    const item = displayItems[i];
+    if (!item) {
+      gridHtml += `<div style="width:${cellSize};height:${cellSize};border-radius:12px;border:2px dashed #e2e8f0;"></div>`;
+      continue;
+    }
+    const bg = item.done ? 'linear-gradient(135deg,#dbeafe,#bfdbfe)' : '#f8fafc';
+    const border = item.done ? '2px solid var(--accent)' : '2px solid #e2e8f0';
+    const check = item.done ? '<div style="position:absolute;top:-4px;right:-4px;background:var(--accent);color:white;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">✓</div>' : '';
+    const pctLabel = !item.done && item.pct > 0 ? `<div style="font-size:8px;color:var(--accent);font-weight:700;">${item.pct}%</div>` : '';
+    gridHtml += `<div style="position:relative;width:${cellSize};height:${cellSize};background:${bg};border:${border};border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;${item.done ? '' : 'opacity:0.7;'}">
+      ${check}
+      <div style="font-size:${fontSize};">${item.emoji}</div>
+      <div style="font-size:${titleSize};font-weight:700;color:#334155;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;">${esc(item.title)}</div>
+      ${pctLabel}
+    </div>`;
+  }
+
+  const pctTotal = items.length > 0 ? Math.round(doneCount / items.length * 100) : 0;
+  const cardHtml = `
+  <div id="shareCardPreview" style="width:340px;padding:28px;background:linear-gradient(135deg,#f0f7ff 0%,#e8f4f8 100%);border-radius:20px;font-family:var(--font-main);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:16px;font-weight:800;color:var(--accent);">🐹 키웁</div>
+      <div style="font-size:12px;font-weight:700;color:#94a3b8;">${esc(nick)}</div>
+    </div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:15px;font-weight:800;color:var(--text);">🏆 나의 도전 현황</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px;">
+      ${gridHtml}
+    </div>
+    <div style="background:white;border-radius:10px;padding:12px;text-align:center;">
+      <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:6px;">${doneCount} / ${items.length} 달성</div>
+      <div style="height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${pctTotal}%;background:var(--accent);border-radius:4px;"></div>
+      </div>
+      <div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:4px;">${pctTotal}%</div>
+    </div>
+    <div style="text-align:center;margin-top:16px;font-size:10px;color:#94a3b8;">키웁 - 목표 달성 게임 🐹</div>
+  </div>`;
+
+  showSharePreview(cardHtml);
+};
+
+// --- Share: Monthly Report ---
+window.openShareReport = function () {
+  const nick = localDash.nickname || currentUser?.name || '나';
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+  const goals = getAllGoals();
+
+  // Habit stats
+  let totalPct = 0, habitCount = 0, maxStreak = 0, bestHabit = null;
+  goals.forEach((g, i) => {
+    if (!g || !g.title) return;
+    const mg = migrateGoal(g);
+    const { pct } = goalPct(mg, i, y, m);
+    const streak = calcStreak(mg, i);
+    totalPct += pct;
+    habitCount++;
+    if (streak > maxStreak) { maxStreak = streak; bestHabit = g; }
+  });
+  const avgPct = habitCount > 0 ? Math.round(totalPct / habitCount) : 0;
+
+  // Challenge stats
+  const challengesObj = localDash.challenges || {};
+  let totalChal = 0, doneChal = 0, projCount = 0;
+  Object.keys(challengesObj).forEach(key => {
+    const c = challengesObj[key];
+    if (!c || !c.title) return;
+    totalChal++;
+    if (isChallengeComplete(c)) doneChal++;
+    if (c.type === 'project') projCount++;
+  });
+
+  const cardHtml = `
+  <div id="shareCardPreview" style="width:340px;padding:28px;background:linear-gradient(135deg,#f0f7ff 0%,#e8f4f8 100%);border-radius:20px;font-family:var(--font-main);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:16px;font-weight:800;color:var(--accent);">🐹 키웁</div>
+      <div style="font-size:12px;font-weight:700;color:#94a3b8;">${esc(nick)}</div>
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:15px;font-weight:800;color:var(--text);">📊 ${m}월 리포트</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="background:white;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--accent);">${avgPct}%</div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;">습관 달성률</div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--accent);">${maxStreak}일</div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;">최장 연속</div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--accent);">${doneChal}개</div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;">도전 달성</div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--accent);">${projCount}개</div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;">프로젝트 진행</div>
+      </div>
+    </div>
+    ${bestHabit ? `<div style="background:white;border-radius:12px;padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:4px;">🏆 이달의 베스트</div>
+      <div style="font-size:14px;font-weight:800;color:var(--text);">${esc(bestHabit.title)}</div>
+      <div style="font-size:12px;color:var(--accent);font-weight:700;">${maxStreak}일 연속</div>
+    </div>` : ''}
+    <div style="text-align:center;margin-top:16px;font-size:10px;color:#94a3b8;">키웁 - 목표 달성 게임 🐹</div>
+  </div>`;
+
+  showSharePreview(cardHtml);
+};
+
+// --- Share Preview + Export ---
+function showSharePreview(cardHtml) {
+  document.getElementById('bsTitle').textContent = '📤 미리보기';
+  clearMetaTags();
+  let h = `<div style="display:flex;justify-content:center;margin-bottom:16px;">${cardHtml}</div>`;
+  h += `<div style="display:flex;gap:8px;">
+    <button class="share-export-btn" onclick="exportShareCard('save')">💾 이미지 저장</button>
+    <button class="share-export-btn primary" onclick="exportShareCard('share')">📤 공유하기</button>
+  </div>`;
+  document.getElementById('bsBody').innerHTML = h;
+}
+
+window.exportShareCard = async function (mode) {
+  const el = document.getElementById('shareCardPreview');
+  if (!el) return;
+  try {
+    const canvas = await html2canvas(el, { scale: 2, backgroundColor: null, useCORS: true });
+    canvas.toBlob(async (blob) => {
+      if (!blob) { showToast('이미지 생성 실패', 'normal'); return; }
+      const file = new File([blob], 'kiwup-share.png', { type: 'image/png' });
+
+      if (mode === 'share' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: '키웁 - 목표 달성 게임' });
+        } catch (e) {
+          if (e.name !== 'AbortError') downloadBlob(blob);
+        }
+      } else {
+        downloadBlob(blob);
+      }
+    }, 'image/png');
+  } catch (e) {
+    showToast('이미지 생성 실패', 'normal');
+  }
+};
+
+function downloadBlob(blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'kiwup-share.png'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 이미지 저장됨', 'done');
+}
+
 // ===== TAB =====
 window.switchTab = function (tab) {
   document.getElementById('tabBtnMy').classList.toggle('active', tab === 'my');

@@ -208,6 +208,7 @@
           </button>
           <div class="hamburger-menu" id="hamburgerMenu">
             <button class="hamburger-item" onclick="openAboutMe(); toggleHamburger();">🔍 나 알아보기</button>
+            <button class="hamburger-item" onclick="openShareCard(); toggleHamburger();">📤 공유하기</button>
             <button class="hamburger-item" onclick="openSettings(); toggleHamburger();">⚙️ 설정</button>
             <button class="hamburger-item" onclick="openServiceInfo(); toggleHamburger();">📦 서비스 정보</button>
             <button class="hamburger-item" onclick="openAndroidGuide(); toggleHamburger();">🤖 안드로이드 연동</button>
@@ -329,6 +330,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script type="module" src="app.js"></script>
 <script>
 /* 로그인 배경 애니메이션 */

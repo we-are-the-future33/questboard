@@ -647,3 +647,10 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .week-clear-sub{font-size:13px;color:var(--text-dim);}
 @keyframes screen-shake{0%,100%{transform:translateX(0);}10%{transform:translateX(-8px);}20%{transform:translateX(8px);}30%{transform:translateX(-6px);}40%{transform:translateX(6px);}50%{transform:translateX(-4px);}60%{transform:translateX(4px);}}
 .shake{animation:screen-shake .7s ease-out;}
+
+/* Share Card */
+.share-menu-btn{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;font-family:var(--font-main);text-align:left;transition:all .15s;}
+.share-menu-btn:active{transform:scale(0.97);background:#f0f7ff;border-color:var(--accent);}
+.share-export-btn{flex:1;padding:13px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-main);border:1.5px solid #e2e8f0;background:#f8fafc;color:var(--text);}
+.share-export-btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.share-export-btn:active{transform:scale(0.97);}

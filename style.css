@@ -173,12 +173,12 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .filter-pill.active-filter .filter-dot{background:var(--accent);}
 
 /* 2열 그리드 카드 */
-.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;overflow:hidden;}
 
 /* 습관 카드 (스와이프) */
-.habit-card-outer{position:relative;overflow:visible;border-radius:18px;}
-.habit-card-swipe-bg-left{position:absolute;top:0;left:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-start;padding-left:18px;border-radius:16px;background:#1952f5;}
-.habit-card-swipe-bg-right{position:absolute;top:0;right:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-end;padding-right:18px;border-radius:16px;background:#ff5e7d;}
+.habit-card-outer{position:relative;overflow:hidden;border-radius:18px;}
+.habit-card-swipe-bg-left{position:absolute;top:0;left:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-start;padding-left:18px;border-radius:16px;background:#93b4f8;}
+.habit-card-swipe-bg-right{position:absolute;top:0;right:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-end;padding-right:18px;border-radius:16px;background:#f8a4b8;}
 .habit-card-outer.swiping-right .habit-card-swipe-bg-left{display:flex;}
 .habit-card-outer.swiping-left .habit-card-swipe-bg-right{display:flex;}
 .swipe-bg-text{color:#fff;font-size:11px;font-weight:800;letter-spacing:1px;opacity:.9;}
@@ -260,10 +260,10 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .challenge-card.project-done .challenge-card-bar-fill.project{background:#6ee7b7;}
 .challenge-card.project-done .challenge-card-pct.project{color:#34d399;}
 /* 도전 카드 스와이프 (버킷리스트) */
-.challenge-card-outer{position:relative;overflow:visible;border-radius:18px;}
+.challenge-card-outer{position:relative;overflow:hidden;border-radius:18px;}
 .challenge-swipe-bg{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;display:flex;align-items:center;border-radius:16px;z-index:0;}
-.challenge-swipe-bg.todo{background:#1952f5;justify-content:flex-start;padding-left:18px;}
-.challenge-swipe-bg.done{background:#ff5e7d;justify-content:flex-end;padding-right:18px;}
+.challenge-swipe-bg.todo{background:#93b4f8;justify-content:flex-start;padding-left:18px;}
+.challenge-swipe-bg.done{background:#f8a4b8;justify-content:flex-end;padding-right:18px;}
 .challenge-card-outer:has(.bucket-done) .challenge-swipe-bg{display:none;}
 .challenge-card.swiping{transition:none;position:relative;z-index:2;}
 .challenge-card.snapping{transition:transform .3s cubic-bezier(.15,.9,.3,1);position:relative;z-index:2;}

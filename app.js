@@ -763,8 +763,8 @@ window.generateStampCard = function (cols) {
   const displayItems = items.slice(0, maxItems);
   const doneCount = items.filter(i => i.done).length;
 
-  // Rows = just enough for display items (no excessive empty rows)
-  const rows = Math.ceil(displayItems.length / actualCols);
+  // When cols specified (3,4,5), fix grid to NxN; otherwise fit to items
+  const rows = cols > 0 ? cols : Math.ceil(displayItems.length / actualCols);
   const totalCells = rows * actualCols;
 
   const gap = actualCols <= 3 ? '8px' : actualCols <= 4 ? '6px' : '5px';
@@ -1375,10 +1375,12 @@ function initHabitSwipe(idx) {
     const isDone = card.dataset.done === '1';
 
     if (dx >= TH && !isDone) {
-      card.style.transform = `translateX(${window.innerWidth}px)`;
+      const cardW = card.offsetWidth || 200;
+      card.style.transform = `translateX(${cardW + 20}px)`;
       setTimeout(() => habitMarkDone(idx), 250);
     } else if (dx <= -TH && isDone) {
-      card.style.transform = `translateX(${-window.innerWidth}px)`;
+      const cardW = card.offsetWidth || 200;
+      card.style.transform = `translateX(${-(cardW + 20)}px)`;
       setTimeout(() => habitMarkUndo(idx), 250);
     } else {
       card.style.transform = 'translateX(0)';
@@ -1589,7 +1591,7 @@ function initBucketSwipe(idx) {
   function onE() {
     card.classList.remove('swiping'); card.classList.add('snapping');
     const elapsed = Date.now() - tapStart;
-    if (Math.abs(dx) >= TH) { card.style.transform = `translateX(${dx > 0 ? window.innerWidth : -window.innerWidth}px)`; setTimeout(() => swipeBucket(idx), 250); }
+    if (Math.abs(dx) >= TH) { const cW = card.offsetWidth || 200; card.style.transform = `translateX(${dx > 0 ? cW + 20 : -(cW + 20)}px)`; setTimeout(() => swipeBucket(idx), 250); }
     else {
       card.style.transform = 'translateX(0)';
       const totalMove = Math.abs(sx - (dx + sx));
@@ -1635,7 +1637,8 @@ window.openBucketEdit = function (idx) {
   if (!c) return;
   document.getElementById('bsTitle').textContent = '버킷리스트 수정';
   clearMetaTags();
-  const deadline = c.deadline || '';
+  _bucketEditCat = c.category || 'etc';
+  _bucketEditMonth = c.targetMonth || 'someday';
   const cat = c.category || 'etc';
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">이름</div>`;
   h += `<input class="proj-edit-input" id="editBucketName" value="${esc(c.title)}" maxlength="30">`;
@@ -1645,8 +1648,8 @@ window.openBucketEdit = function (idx) {
     h += `<div class="chip-opt ${cat === k ? 'selected' : ''}" onclick="selectBucketCat('${k}')">${CAT_LABELS[k]}</div>`;
   });
   h += `</div>`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 기한</div>`;
-  h += `<input type="date" class="proj-edit-input" id="editBucketDeadline" value="${deadline}" style="color:var(--text);">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 시기</div>`;
+  h += `<div id="bucketMonthArea">${getEditMonthChipsHTML(_bucketEditMonth, 'bucket')}</div>`;
   h += `<div class="proj-save-row" style="margin-top:24px;"><button class="proj-save-btn cancel" onclick="openBucketDetail(${idx})">취소</button><button class="proj-save-btn save" onclick="saveBucketEdit(${idx})">저장</button></div>`;
   document.getElementById('bsBody').innerHTML = h;
   setTimeout(() => document.getElementById('editBucketName')?.focus(), 200);
@@ -1654,6 +1657,38 @@ window.openBucketEdit = function (idx) {
 
 let _bucketEditCat = 'etc';
 let _projEditCat = 'etc';
+let _bucketEditMonth = 'someday';
+let _projEditMonth = 'someday';
+
+function getEditMonthChipsHTML(selectedMonth, prefix) {
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth();
+  let h = `<div class="chip-group" id="${prefix}MonthChips"><div class="chip-opt ${selectedMonth === 'someday' ? 'selected' : ''}" onclick="selectEditMonth_${prefix}('someday')">☁️ 언젠가 할 일</div>`;
+  for (let m = 0; m < 12; m++) {
+    const val = `${curY}-${String(m+1).padStart(2,'0')}`;
+    const lbl = `${curY}년 ${m+1}월`;
+    const isPast = m < curM;
+    if (isPast) {
+      h += `<div class="chip-opt" style="opacity:0.35;cursor:not-allowed;pointer-events:none;">📅 ${lbl}</div>`;
+    } else {
+      h += `<div class="chip-opt ${selectedMonth === val ? 'selected' : ''}" onclick="selectEditMonth_${prefix}('${val}')">📅 ${lbl}</div>`;
+    }
+  }
+  h += `</div>`;
+  return h;
+}
+
+window.selectEditMonth_bucket = function(m) {
+  _bucketEditMonth = m;
+  const wrapper = document.getElementById('bucketMonthArea');
+  if (wrapper) wrapper.innerHTML = getEditMonthChipsHTML(m, 'bucket');
+};
+
+window.selectEditMonth_proj = function(m) {
+  _projEditMonth = m;
+  const wrapper = document.getElementById('projMonthArea');
+  if (wrapper) wrapper.innerHTML = getEditMonthChipsHTML(m, 'proj');
+};
 
 window.selectBucketCat = function (cat) {
   _bucketEditCat = cat;
@@ -1670,13 +1705,13 @@ window.selectProjEditCat = function (cat) {
 window.saveBucketEdit = async function (idx) {
   const name = document.getElementById('editBucketName')?.value.trim();
   if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
-  const deadline = document.getElementById('editBucketDeadline')?.value || '';
   const selCat = document.querySelector('#bucketCatChips .chip-opt.selected');
   const cat = selCat ? [...document.querySelectorAll('#bucketCatChips .chip-opt')].indexOf(selCat) : -1;
   const catKey = cat >= 0 ? Object.keys(CAT_LABELS)[cat] : 'etc';
   localDash.challenges[idx].title = name;
-  localDash.challenges[idx].deadline = deadline;
+  localDash.challenges[idx].targetMonth = _bucketEditMonth;
   localDash.challenges[idx].category = catKey;
+  delete localDash.challenges[idx].deadline;
   await saveDash();
   document.getElementById('bsTitle').textContent = name;
   openBucketDetail(idx);
@@ -1893,7 +1928,7 @@ window.openProjectEdit = function (idx) {
   document.getElementById('bsTitle').textContent = '프로젝트 수정';
   clearMetaTags();
   _projEditCat = c.category || 'etc';
-  const deadline = c.deadline || '';
+  _projEditMonth = c.targetMonth || 'someday';
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">🏷 카테고리</div>`;
   h += `<div class="chip-group" id="projEditCatChips">`;
   Object.keys(CAT_LABELS).forEach(k => {
@@ -1902,8 +1937,8 @@ window.openProjectEdit = function (idx) {
   h += `</div>`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">도전의 이름</div>`;
   h += `<input class="proj-edit-input" id="peTitle" value="${esc(c.title)}" maxlength="30">`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 기한</div>`;
-  h += `<input type="date" class="proj-edit-input" id="peDeadline" value="${deadline}" style="color:var(--text);">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 시기</div>`;
+  h += `<div id="projMonthArea">${getEditMonthChipsHTML(_projEditMonth, 'proj')}</div>`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">나의 궁극적인 목적 (WHY)</div>`;
   h += `<textarea class="proj-edit-input proj-edit-textarea" id="peWhy" maxlength="100">${esc(c.why || '')}</textarea>`;
   // Stages with task checkboxes
@@ -1979,7 +2014,6 @@ function rebuildEditUI() {
   const c = localDash.challenges[activeGoalIdx];
   const title = document.getElementById('peTitle')?.value || c.title;
   const why = document.getElementById('peWhy')?.value || c.why || '';
-  const deadline = document.getElementById('peDeadline')?.value || c.deadline || '';
   const stages = _editStages;
   const body = document.getElementById('bsBody');
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">🏷 카테고리</div>`;
@@ -1990,8 +2024,8 @@ function rebuildEditUI() {
   h += `</div>`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">도전의 이름</div>`;
   h += `<input class="proj-edit-input" id="peTitle" value="${esc(title)}" maxlength="30">`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 기한</div>`;
-  h += `<input type="date" class="proj-edit-input" id="peDeadline" value="${deadline}" style="color:var(--text);">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 시기</div>`;
+  h += `<div id="projMonthArea">${getEditMonthChipsHTML(_projEditMonth, 'proj')}</div>`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">나의 궁극적인 목적 (WHY)</div>`;
   h += `<textarea class="proj-edit-input proj-edit-textarea" id="peWhy" maxlength="100">${esc(why)}</textarea>`;
   stages.forEach((s, si) => {
@@ -2026,7 +2060,6 @@ window.saveProjectEdit = async function (idx) {
   const title = document.getElementById('peTitle').value.trim();
   if (!title) { showToast('이름을 입력하세요', 'normal'); return; }
   const why = document.getElementById('peWhy').value.trim();
-  const deadline = document.getElementById('peDeadline')?.value || '';
   const stages = getEditStagesFromDOM();
   stages.forEach((s, i) => {
     s.tasks.forEach((t, j) => {
@@ -2034,7 +2067,9 @@ window.saveProjectEdit = async function (idx) {
     });
     if (!s.name.trim()) s.name = `단계 ${i + 1}`;
   });
-  localDash.challenges[idx] = { ...localDash.challenges[idx], title, why, deadline, stages, category: _projEditCat };
+  const updated = { ...localDash.challenges[idx], title, why, targetMonth: _projEditMonth, stages, category: _projEditCat };
+  delete updated.deadline;
+  localDash.challenges[idx] = updated;
   await saveDash();
   _editStages = [];
   document.getElementById('bsTitle').textContent = title;

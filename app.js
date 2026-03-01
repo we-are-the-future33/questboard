@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302s';
+const APP_VERSION = '20260302t';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -98,6 +98,48 @@ let _createStages = [];
 const TIME_LABELS = { any: '🔄 언제나', dawn: '🌅 새벽', morning: '🌤 아침', midday: '🏞 낮', afternoon: '🌇 오후', evening: '🌟 저녁', night: '🦉 밤' };
 const CAT_LABELS = { health: '💪 건강 & 체력', diet: '🥗 식단 & 영양', study: '📚 학습 & 성장', work: '💼 업무 & 커리어', finance: '💰 재무 & 자산', life: '🌱 생활 & 루틴', home: '🧹 집안일 & 정리', hobby: '🎨 취미 & 창작', social: '🤝 관계 & 소셜', mental: '🧘 휴식 & 멘탈', etc: '📦 기타' };
 const TYPE_LABELS = { bucket: '🎯 버킷리스트', project: '📋 프로젝트' };
+
+// ===== COOKING SYSTEM CONSTANTS =====
+const INGREDIENTS = {
+  flour:      { emoji: '🌾', name: '밀가루', type: 'normal' },
+  milk:       { emoji: '🥛', name: '우유', type: 'normal' },
+  egg:        { emoji: '🥚', name: '계란', type: 'normal' },
+  rice:       { emoji: '🍚', name: '쌀', type: 'normal' },
+  strawberry: { emoji: '🍓', name: '딸기', type: 'special', minLv: 0 },
+  chocolate:  { emoji: '🍫', name: '초콜릿', type: 'special', minLv: 0 },
+  cheese:     { emoji: '🧀', name: '치즈', type: 'special', minLv: 0 },
+  honey:      { emoji: '🍯', name: '꿀', type: 'special', minLv: 0 },
+  apple:      { emoji: '🍎', name: '사과', type: 'special', minLv: 0 },
+  blueberry:  { emoji: '🫐', name: '블루베리', type: 'special', minLv: 6 },
+  chestnut:   { emoji: '🌰', name: '밤', type: 'special', minLv: 6 },
+  peach:      { emoji: '🍑', name: '복숭아', type: 'special', minLv: 6 }
+};
+const INGREDIENT_ORDER = ['flour','milk','egg','rice','strawberry','chocolate','cheese','honey','apple','blueberry','chestnut','peach'];
+const INGREDIENT_CAP = 9;
+
+const RECIPES = [
+  { id:0,  name:'딸기 우유',           emoji:'🧃', lv:1, ingredients:['milk','strawberry'] },
+  { id:1,  name:'초코 쿠키',           emoji:'🍪', lv:1, ingredients:['flour','chocolate'] },
+  { id:2,  name:'달콤한 꿀떡',          emoji:'🍡', lv:1, ingredients:['rice','honey'] },
+  { id:3,  name:'치즈 케이크',          emoji:'🧀', lv:2, ingredients:['flour','egg','cheese'] },
+  { id:4,  name:'애플 파이',           emoji:'🥧', lv:2, ingredients:['flour','milk','apple'] },
+  { id:5,  name:'초코 푸딩',           emoji:'🍮', lv:2, ingredients:['milk','egg','chocolate'] },
+  { id:6,  name:'복숭아 치즈 타르트',    emoji:'🍑', lv:3, ingredients:['flour','peach','cheese'] },
+  { id:7,  name:'블루베리 요거트',       emoji:'🫐', lv:3, ingredients:['milk','blueberry','honey'] },
+  { id:8,  name:'달콤 밤 찹쌀떡',       emoji:'🌰', lv:3, ingredients:['rice','chestnut','honey'] },
+  { id:9,  name:'블루베리 생크림 케이크', emoji:'🎂', lv:4, ingredients:['flour','milk','egg','blueberry'] },
+  { id:10, name:'초코 밤 몽블랑',       emoji:'🌰', lv:4, ingredients:['flour','egg','chocolate','chestnut'] },
+  { id:11, name:'궁극의 복숭아 파르페',   emoji:'🍨', lv:4, ingredients:['milk','peach','strawberry','blueberry'] }
+];
+
+const MILESTONE_STAGES = [25, 50, 75, 100];
+const STAGE_MESSAGES = [
+  { min:0,   max:24,  msg:'Zzz... 25% 달성해서 나를 깨워줘! 💤' },
+  { min:25,  max:49,  msg:'앗, 햄스터 출몰! 🐹 이제 기본 재료를 모아줘' },
+  { min:50,  max:74,  msg:'야호! 절반 넘었어! 이제 스페셜 재료를 모으자 ✨' },
+  { min:75,  max:99,  msg:'좋아, 조금만 더 하면 100% 완벽한 하루야! 🔥' },
+  { min:100, max:999, msg:'오늘 미션 컴플리트! 진짜 대박이야! 👑' }
+];
 function formatTargetMonth(tm) {
   if (!tm || tm === 'someday') return '☁️ 언젠가';
   const parts = tm.split('-');
@@ -278,6 +320,18 @@ async function loadDash() {
   if (!localDash.goals) localDash.goals = [];
   if (!localDash.completions) localDash.completions = {};
   if (!localDash.challenges) localDash.challenges = [];
+  // Cooking system init
+  if (!localDash.cooking) localDash.cooking = {};
+  const ck = localDash.cooking;
+  if (ck.currentScenarioId === undefined) ck.currentScenarioId = 0;
+  if (!Array.isArray(ck.clearedRecipes)) ck.clearedRecipes = [];
+  if (!ck.inventory) ck.inventory = {};
+  INGREDIENT_ORDER.forEach(k => { if (ck.inventory[k] === undefined) ck.inventory[k] = 0; });
+  if (!ck.milestoneToday) ck.milestoneToday = '';
+  if (!Array.isArray(ck.milestoneReached)) ck.milestoneReached = [];
+  // Reset milestone if day changed
+  const todayStr = new Date().toISOString().slice(0, 10);
+  if (ck.milestoneToday !== todayStr) { ck.milestoneToday = todayStr; ck.milestoneReached = []; }
 }
 async function saveDash() { localDash.lastUpdate = new Date().toISOString(); await set(ref(db, `dashboards/${currentUser.id}`), localDash); }
 
@@ -1108,7 +1162,7 @@ function renderDashboard() {
   if (hPill) { hPill.classList.toggle('active-filter', habitFilter === 'active'); hPill.innerHTML = (habitFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
   const cPill = document.getElementById('challengeFilterPill');
   if (cPill) { cPill.classList.toggle('active-filter', challengeFilter === 'active'); cPill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
-  renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers(); checkFriendActivity();
+  renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers(); checkFriendActivity(); renderCookingFAB();
   // jin 전용 어드민 메뉴
   const adminEl = document.getElementById('adminMenuItem');
   if (adminEl) adminEl.style.display = (currentUser && currentUser.id === 'jin') ? '' : 'none';
@@ -1503,6 +1557,7 @@ async function habitMarkDone(idx) {
   if (!isOnce) checkWeekClear(idx);
   renderHabitCards(); renderAvatar();
   saveDash();
+  checkMilestone();
 }
 
 async function habitMarkUndo(idx) {
@@ -1515,6 +1570,7 @@ async function habitMarkUndo(idx) {
   showToast('↩️ 취소', 'undo');
   renderHabitCards(); renderAvatar();
   saveDash();
+  renderStageMessage();
 }
 
 // ===== CHALLENGE CARDS (2-col grid) =====
@@ -2942,6 +2998,7 @@ function renderBSOnce(idx, body) {
 window.bsToggleOnce = async function (idx) {
   const k = `g${idx}_once`; localDash.completions[k] = localDash.completions[k] !== true;
   await saveDash(); renderBSBody(idx); renderHabitCards(); renderAvatar();
+  checkMilestone();
 };
 
 // ===== 6개월 통계 =====
@@ -3465,38 +3522,7 @@ function getMyTodayProgress() {
 }
 
 function renderMainFriendActivity() {
-  const el = document.getElementById('mainFriendActivity');
-  if (!el) return;
-
-  // My progress (left)
-  const { total, done } = getMyTodayProgress();
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  let myHtml;
-  if (total === 0) {
-    myHtml = `<div class="main-progress-chip" onclick="switchTab('home')">✅ 시작해볼까요? 🌱</div>`;
-  } else if (done >= total) {
-    myHtml = `<div class="main-progress-chip" onclick="switchTab('home')">✅ ${done}/${total} (100%) 모두 클리어 🎉</div>`;
-  } else {
-    myHtml = `<div class="main-progress-chip" onclick="switchTab('home')">✅ ${done}/${total} (${pct}%) 달성 중 🔥</div>`;
-  }
-
-  // Friend activity (right)
-  let friendHtml;
-  if (_friendActivityCache.length > 0) {
-    const show = _friendActivityCache.slice(0, 3);
-    const rest = _friendActivityCache.length - show.length;
-    let summary = show.map(f => `${f.emoji} ${f.nick} (${f.todayCount})`).join(' · ');
-    if (rest > 0) summary += ` 외 ${rest}명`;
-    friendHtml = `<div class="main-friend-chip active" onclick="switchTab('friends')">${summary} 달성 중 🔥</div>`;
-  } else if (_friendTotalCount > 0 && _friendHasHabitsCount > 0) {
-    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">아직 아무도 달성 못함 😴</div>`;
-  } else if (_friendTotalCount > 0) {
-    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">투두 등록한 친구가 없음! 알려주기 📢</div>`;
-  } else {
-    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">아직 친구 없음! 추가해봐요 👋</div>`;
-  }
-
-  el.innerHTML = `<div class="main-banner-row">${myHtml}${friendHtml}</div>`;
+  renderStageMessage();
 }
 
 async function renderFriends() {
@@ -4420,3 +4446,317 @@ function shakeScreen() {
   const el = document.querySelector('#dashboardScreen .mobile-wrap');
   if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 800); }
 }
+
+
+// ===== COOKING SYSTEM =====
+
+// --- Milestone Check ---
+let _milestoneToastQueue = [];
+let _milestoneToastRunning = false;
+
+function checkMilestone() {
+  const ck = localDash.cooking; if (!ck) return;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  if (ck.milestoneToday !== todayStr) { ck.milestoneToday = todayStr; ck.milestoneReached = []; }
+  // All recipes cleared? Skip drops but still update message
+  const allCleared = ck.currentScenarioId >= 12;
+  const { total, done } = getMyTodayProgress();
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  // Find newly crossed milestones
+  const newMilestones = [];
+  MILESTONE_STAGES.forEach(ms => {
+    if (pct >= ms && !ck.milestoneReached.includes(ms)) {
+      ck.milestoneReached.push(ms);
+      newMilestones.push(ms);
+    }
+  });
+  // Process rewards
+  newMilestones.forEach(ms => {
+    if (allCleared) {
+      _milestoneToastQueue.push({ ms, ingredient: null, allCleared: true });
+    } else if (ms === 25) {
+      _milestoneToastQueue.push({ ms, ingredient: null });
+    } else if (ms === 50) {
+      const ing = dropIngredient('normal');
+      _milestoneToastQueue.push({ ms, ingredient: ing });
+    } else if (ms === 75 || ms === 100) {
+      const ing = dropIngredient('special');
+      _milestoneToastQueue.push({ ms, ingredient: ing });
+    }
+  });
+  if (newMilestones.length > 0) saveDash();
+  renderStageMessage();
+  runMilestoneToastQueue();
+}
+
+function dropIngredient(type) {
+  const ck = localDash.cooking;
+  const scenarioId = ck.currentScenarioId;
+  const recipe = RECIPES[scenarioId];
+  // Build drop pool based on type and level gating
+  let pool;
+  if (type === 'normal') {
+    pool = INGREDIENT_ORDER.filter(k => INGREDIENTS[k].type === 'normal');
+  } else {
+    pool = INGREDIENT_ORDER.filter(k => {
+      if (INGREDIENTS[k].type !== 'special') return false;
+      const minLv = INGREDIENTS[k].minLv || 0;
+      return scenarioId >= minLv;
+    });
+  }
+  // Remove capped ingredients
+  pool = pool.filter(k => (ck.inventory[k] || 0) < INGREDIENT_CAP);
+  if (pool.length === 0) return null;
+  // Bias toward needed ingredients
+  const biasChance = type === 'normal' ? 0.5 : 0.7;
+  let needed = [];
+  if (recipe) {
+    needed = recipe.ingredients.filter(k => {
+      return INGREDIENTS[k].type === type && (ck.inventory[k] || 0) < 1 && pool.includes(k);
+    });
+    // For normal type checking if recipe needs any normal ingredient
+    if (type === 'normal') {
+      needed = recipe.ingredients.filter(k => INGREDIENTS[k].type === 'normal' && (ck.inventory[k] || 0) < 1 && pool.includes(k));
+    } else {
+      needed = recipe.ingredients.filter(k => INGREDIENTS[k].type === 'special' && (ck.inventory[k] || 0) < 1 && pool.includes(k));
+    }
+  }
+  let chosen;
+  if (needed.length > 0 && Math.random() < biasChance) {
+    chosen = needed[Math.floor(Math.random() * needed.length)];
+  } else {
+    chosen = pool[Math.floor(Math.random() * pool.length)];
+  }
+  ck.inventory[chosen] = (ck.inventory[chosen] || 0) + 1;
+  return chosen;
+}
+
+function runMilestoneToastQueue() {
+  if (_milestoneToastRunning || _milestoneToastQueue.length === 0) return;
+  _milestoneToastRunning = true;
+  const item = _milestoneToastQueue.shift();
+  showMilestoneToast(item);
+  setTimeout(() => { _milestoneToastRunning = false; runMilestoneToastQueue(); }, 1800);
+}
+
+function showMilestoneToast(item) {
+  const { ms, ingredient, allCleared } = item;
+  const overlay = document.createElement('div');
+  overlay.className = 'milestone-toast';
+  let bgClass = 'ms-25';
+  if (ms === 50) bgClass = 'ms-50';
+  else if (ms === 75) bgClass = 'ms-75';
+  else if (ms === 100) bgClass = 'ms-100';
+  overlay.classList.add(bgClass);
+  let html = '';
+  if (allCleared) {
+    if (ms === 25) html = `<div class="ms-icon">🐹</div><div class="ms-text">${ms}% 달성!</div>`;
+    else html = `<div class="ms-icon">🎉</div><div class="ms-text">${ms}% 달성! 모든 요리 완성!</div>`;
+  } else if (ms === 25) {
+    html = `<div class="ms-icon">🐹</div><div class="ms-text">앗, 햄스터 출몰!</div><div class="ms-sub">${ms}% 달성</div>`;
+  } else if (ingredient) {
+    const ing = INGREDIENTS[ingredient];
+    html = `<div class="ms-icon">${ing.emoji}</div><div class="ms-text">${ing.name}을(를) 획득!</div><div class="ms-sub">${ms}% 달성 보상</div>`;
+  } else {
+    html = `<div class="ms-icon">📦</div><div class="ms-text">재료가 가득 찼어요!</div><div class="ms-sub">요리를 해보세요 🍳</div>`;
+  }
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('show'));
+  setTimeout(() => { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 400); }, 2500);
+}
+
+// --- Stage Message ---
+function renderStageMessage() {
+  const el = document.getElementById('mainFriendActivity');
+  if (!el) return;
+  const goals = getAllGoals();
+  const hasHabits = goals.some(g => g && g.title && migrateGoal(g).unit);
+  if (!hasHabits) {
+    el.innerHTML = `<div class="main-banner-row"><div class="stage-msg">습관을 등록하고 요리 재료를 모아보자! 🍳</div></div>`;
+    return;
+  }
+  const { total, done } = getMyTodayProgress();
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const sm = STAGE_MESSAGES.find(s => pct >= s.min && pct <= s.max) || STAGE_MESSAGES[0];
+
+  // Friend activity (right side) — keep existing logic
+  let friendHtml;
+  if (_friendActivityCache.length > 0) {
+    const show = _friendActivityCache.slice(0, 3);
+    const rest = _friendActivityCache.length - show.length;
+    let summary = show.map(f => `${f.emoji} ${f.nick} (${f.todayCount})`).join(' · ');
+    if (rest > 0) summary += ` 외 ${rest}명`;
+    friendHtml = `<div class="main-friend-chip active" onclick="switchTab('friends')">${summary} 달성 중 🔥</div>`;
+  } else if (_friendTotalCount > 0 && _friendHasHabitsCount > 0) {
+    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">아직 아무도 달성 못함 😴</div>`;
+  } else if (_friendTotalCount > 0) {
+    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">투두 등록한 친구가 없음! 알려주기 📢</div>`;
+  } else {
+    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">아직 친구 없음! 추가해봐요 👋</div>`;
+  }
+  el.innerHTML = `<div class="main-banner-row"><div class="stage-msg">${sm.msg}</div>${friendHtml}</div>`;
+}
+
+// --- Cooking Modal ---
+function openCookingModal() {
+  let overlay = document.getElementById('cookingOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'cookingOverlay';
+    overlay.className = 'cooking-overlay';
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeCookingModal(); });
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = buildCookingModalHTML();
+  requestAnimationFrame(() => overlay.classList.add('open'));
+}
+window.openCookingModal = openCookingModal;
+
+function closeCookingModal() {
+  const overlay = document.getElementById('cookingOverlay');
+  if (overlay) { overlay.classList.remove('open'); setTimeout(() => { overlay.innerHTML = ''; }, 300); }
+}
+window.closeCookingModal = closeCookingModal;
+
+function buildCookingModalHTML() {
+  const ck = localDash.cooking;
+  const sid = ck.currentScenarioId;
+  const allCleared = sid >= 12;
+  let h = `<div class="cooking-modal">`;
+  h += `<button class="cooking-close" onclick="closeCookingModal()">✕</button>`;
+  h += `<div class="cooking-title">🍳 햄스터 주방</div>`;
+  // Equation
+  h += `<div class="cooking-equation">`;
+  if (allCleared) {
+    h += `<div class="cooking-complete">🎉 모든 요리를 완성했어요!</div>`;
+    h += `<div class="cooking-complete-sub">총 ${RECIPES.length}종의 요리를 마스터했습니다</div>`;
+  } else {
+    const recipe = RECIPES[sid];
+    const lvLabel = ['🟢 Lv.1','🟡 Lv.2','🟠 Lv.3','🔴 Lv.4'][recipe.lv - 1] || '';
+    h += `<div class="cooking-lv">${lvLabel} — ${recipe.emoji} ${recipe.name}</div>`;
+    h += `<div class="cooking-recipe-row">`;
+    recipe.ingredients.forEach((key, i) => {
+      const ing = INGREDIENTS[key];
+      const has = (ck.inventory[key] || 0) >= 1;
+      if (i > 0) h += `<span class="cooking-plus">+</span>`;
+      h += `<div class="cooking-ing-slot ${has ? 'has' : 'missing'}">`;
+      h += `<span class="cooking-ing-emoji">${ing.emoji}</span>`;
+      h += `<span class="cooking-ing-name">${ing.name}</span>`;
+      if (has) h += `<span class="cooking-ing-check">✓</span>`;
+      h += `</div>`;
+    });
+    h += `<span class="cooking-equals">=</span>`;
+    const canCook = recipe.ingredients.every(k => (ck.inventory[k] || 0) >= 1);
+    h += `<div class="cooking-result-slot ${canCook ? 'ready' : 'locked'}">`;
+    h += `<span class="cooking-result-emoji">${recipe.emoji}</span>`;
+    h += `</div>`;
+    h += `</div>`; // recipe-row
+    // Cook button
+    h += `<button class="cooking-btn ${canCook ? 'active' : 'disabled'}" ${canCook ? 'onclick="doCook()"' : 'disabled'}>`;
+    h += canCook ? '🍳 요리하기' : '🔒 재료가 부족해요';
+    h += `</button>`;
+  }
+  h += `</div>`; // equation
+  // Inventory
+  h += `<div class="cooking-inv-divider">내 재료</div>`;
+  h += `<div class="cooking-inv">`;
+  const visibleKeys = INGREDIENT_ORDER.filter(k => {
+    const ing = INGREDIENTS[k];
+    if (ing.type === 'normal') return true;
+    return sid >= (ing.minLv || 0);
+  });
+  let hasAny = false;
+  visibleKeys.forEach(k => {
+    const qty = ck.inventory[k] || 0;
+    if (qty > 0) hasAny = true;
+    const ing = INGREDIENTS[k];
+    h += `<div class="cooking-inv-item ${qty > 0 ? '' : 'empty'}">`;
+    h += `<span class="cooking-inv-emoji">${ing.emoji}</span>`;
+    h += `<span class="cooking-inv-qty">${qty > 0 ? 'x' + qty : '-'}</span>`;
+    h += `</div>`;
+  });
+  if (!hasAny && !allCleared) {
+    h += `<div class="cooking-inv-empty">습관을 달성해서 재료를 모아보세요! 🐹</div>`;
+  }
+  h += `</div>`; // inv
+  // Progress
+  h += `<div class="cooking-progress">`;
+  RECIPES.forEach((r, i) => {
+    const cleared = ck.clearedRecipes.includes(i);
+    const current = i === sid;
+    h += `<span class="cooking-prog-dot ${cleared ? 'cleared' : ''} ${current ? 'current' : ''}" title="${r.emoji} ${r.name}">${cleared ? r.emoji : (current ? '▶' : '·')}</span>`;
+  });
+  h += `</div>`;
+  h += `</div>`; // modal
+  return h;
+}
+
+async function doCook() {
+  const ck = localDash.cooking;
+  const sid = ck.currentScenarioId;
+  if (sid >= 12) return;
+  const recipe = RECIPES[sid];
+  // Verify ingredients
+  if (!recipe.ingredients.every(k => (ck.inventory[k] || 0) >= 1)) return;
+  // Deduct ingredients
+  recipe.ingredients.forEach(k => { ck.inventory[k] = Math.max(0, (ck.inventory[k] || 0) - 1); });
+  // Record clear
+  if (!ck.clearedRecipes.includes(sid)) ck.clearedRecipes.push(sid);
+  ck.currentScenarioId = sid + 1;
+  await saveDash();
+  // Play success animation
+  showCookingSuccess(recipe, () => {
+    // After animation, rebuild modal
+    const overlay = document.getElementById('cookingOverlay');
+    if (overlay && overlay.classList.contains('open')) {
+      overlay.innerHTML = buildCookingModalHTML();
+    }
+  });
+}
+window.doCook = doCook;
+
+function showCookingSuccess(recipe, callback) {
+  const modal = document.querySelector('.cooking-modal');
+  if (!modal) { if (callback) callback(); return; }
+  // Overlay content with success animation
+  const anim = document.createElement('div');
+  anim.className = 'cooking-success-anim';
+  anim.innerHTML = `
+    <div class="cs-gather">
+      ${recipe.ingredients.map(k => `<span class="cs-ing">${INGREDIENTS[k].emoji}</span>`).join('')}
+    </div>
+    <div class="cs-result">
+      <span class="cs-result-emoji">${recipe.emoji}</span>
+      <div class="cs-result-text">${recipe.emoji} ${recipe.name} 완성!</div>
+    </div>
+  `;
+  modal.appendChild(anim);
+  requestAnimationFrame(() => anim.classList.add('phase1'));
+  setTimeout(() => anim.classList.add('phase2'), 600);
+  setTimeout(() => {
+    showConfettiSmall();
+    triggerHaptic('heavy');
+  }, 700);
+  setTimeout(() => {
+    anim.remove();
+    if (callback) callback();
+  }, 2800);
+}
+
+// --- FAB Button ---
+function renderCookingFAB() {
+  const section = document.querySelector('.avatar-section');
+  if (!section) return;
+  let fab = document.getElementById('cookingFab');
+  if (!fab) {
+    fab = document.createElement('button');
+    fab.id = 'cookingFab';
+    fab.className = 'cooking-fab';
+    fab.innerHTML = '🍳';
+    fab.onclick = openCookingModal;
+    section.style.position = 'relative';
+    section.appendChild(fab);
+  }
+}
+

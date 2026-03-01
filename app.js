@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301n';
+const APP_VERSION = '20260301o';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1102,6 +1102,16 @@ window.switchSubTab = function (tab) {
   document.getElementById('subTabChallenge').classList.toggle('active', tab === 'challenge');
   document.getElementById('panelHabit').classList.toggle('active', tab === 'habit');
   document.getElementById('panelChallenge').classList.toggle('active', tab === 'challenge');
+  // Wait one frame for layout, then scroll so section-hdr is visible
+  requestAnimationFrame(() => {
+    const scroll = document.querySelector('.dash-scroll');
+    const panel = document.getElementById(tab === 'habit' ? 'panelHabit' : 'panelChallenge');
+    const subBar = document.querySelector('.sub-tab-bar');
+    if (scroll && panel && subBar) {
+      const subBarH = subBar.offsetHeight + 12;
+      scroll.scrollTo({ top: panel.offsetTop - subBarH, behavior: 'smooth' });
+    }
+  });
 };
 
 // ===== HABIT FILTER =====

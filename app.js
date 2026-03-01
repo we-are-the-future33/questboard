@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302t';
+const APP_VERSION = '20260302u';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1162,7 +1162,7 @@ function renderDashboard() {
   if (hPill) { hPill.classList.toggle('active-filter', habitFilter === 'active'); hPill.innerHTML = (habitFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
   const cPill = document.getElementById('challengeFilterPill');
   if (cPill) { cPill.classList.toggle('active-filter', challengeFilter === 'active'); cPill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
-  renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers(); checkFriendActivity(); renderCookingFAB();
+  renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers(); checkFriendActivity(); renderCookingFAB(); renderMilestoneBar();
   // jin 전용 어드민 메뉴
   const adminEl = document.getElementById('adminMenuItem');
   if (adminEl) adminEl.style.display = (currentUser && currentUser.id === 'jin') ? '' : 'none';
@@ -4566,36 +4566,50 @@ function showMilestoneToast(item) {
   setTimeout(() => { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 400); }, 2500);
 }
 
+// --- Milestone Progress Bar ---
+function renderMilestoneBar() {
+  const el = document.getElementById('milestoneBar');
+  if (!el) return;
+  const { total, done } = getMyTodayProgress();
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const ck = localDash.cooking || {};
+  const reached = ck.milestoneReached || [];
+  const icons = [
+    { ms: 0,   emoji: '💤', label: '시작' },
+    { ms: 25,  emoji: '🐹', label: '외출' },
+    { ms: 50,  emoji: '📦', label: '재료' },
+    { ms: 75,  emoji: '✨', label: '스페셜' },
+    { ms: 100, emoji: '👑', label: '완료' }
+  ];
+  let h = `<div class="ms-bar-wrap">`;
+  h += `<div class="ms-bar-track"><div class="ms-bar-fill" style="width:${Math.min(pct, 100)}%"></div></div>`;
+  h += `<div class="ms-bar-icons">`;
+  icons.forEach(ic => {
+    const active = pct >= ic.ms;
+    const justReached = ic.ms > 0 && reached.includes(ic.ms);
+    h += `<div class="ms-bar-icon ${active ? 'active' : ''} ${justReached ? 'bounce' : ''}" style="left:${ic.ms}%">`;
+    h += `<span class="ms-bar-emoji">${ic.emoji}</span>`;
+    h += `</div>`;
+  });
+  h += `</div></div>`;
+  el.innerHTML = h;
+}
+
 // --- Stage Message ---
 function renderStageMessage() {
+  renderMilestoneBar();
   const el = document.getElementById('mainFriendActivity');
   if (!el) return;
   const goals = getAllGoals();
   const hasHabits = goals.some(g => g && g.title && migrateGoal(g).unit);
   if (!hasHabits) {
-    el.innerHTML = `<div class="main-banner-row"><div class="stage-msg">습관을 등록하고 요리 재료를 모아보자! 🍳</div></div>`;
+    el.innerHTML = `<div class="stage-msg-wrap"><div class="stage-msg">습관을 등록하고 요리 재료를 모아보자! 🍳</div></div>`;
     return;
   }
   const { total, done } = getMyTodayProgress();
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const sm = STAGE_MESSAGES.find(s => pct >= s.min && pct <= s.max) || STAGE_MESSAGES[0];
-
-  // Friend activity (right side) — keep existing logic
-  let friendHtml;
-  if (_friendActivityCache.length > 0) {
-    const show = _friendActivityCache.slice(0, 3);
-    const rest = _friendActivityCache.length - show.length;
-    let summary = show.map(f => `${f.emoji} ${f.nick} (${f.todayCount})`).join(' · ');
-    if (rest > 0) summary += ` 외 ${rest}명`;
-    friendHtml = `<div class="main-friend-chip active" onclick="switchTab('friends')">${summary} 달성 중 🔥</div>`;
-  } else if (_friendTotalCount > 0 && _friendHasHabitsCount > 0) {
-    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">아직 아무도 달성 못함 😴</div>`;
-  } else if (_friendTotalCount > 0) {
-    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">투두 등록한 친구가 없음! 알려주기 📢</div>`;
-  } else {
-    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">아직 친구 없음! 추가해봐요 👋</div>`;
-  }
-  el.innerHTML = `<div class="main-banner-row"><div class="stage-msg">${sm.msg}</div>${friendHtml}</div>`;
+  el.innerHTML = `<div class="stage-msg-wrap"><div class="stage-msg">${sm.msg}</div></div>`;
 }
 
 // --- Cooking Modal ---
@@ -4680,14 +4694,6 @@ function buildCookingModalHTML() {
     h += `<div class="cooking-inv-empty">습관을 달성해서 재료를 모아보세요! 🐹</div>`;
   }
   h += `</div>`; // inv
-  // Progress
-  h += `<div class="cooking-progress">`;
-  RECIPES.forEach((r, i) => {
-    const cleared = ck.clearedRecipes.includes(i);
-    const current = i === sid;
-    h += `<span class="cooking-prog-dot ${cleared ? 'cleared' : ''} ${current ? 'current' : ''}" title="${r.emoji} ${r.name}">${cleared ? r.emoji : (current ? '▶' : '·')}</span>`;
-  });
-  h += `</div>`;
   h += `</div>`; // modal
   return h;
 }

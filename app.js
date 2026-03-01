@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302q';
+const APP_VERSION = '20260302r';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1898,10 +1898,33 @@ function cwizGoTo(step) {
   const summaryEl = document.getElementById('cAddSummary');
   const lastStep = _createType === 'project' ? 5 : 4;
   if (summaryEl) summaryEl.style.display = step === lastStep ? 'none' : 'flex';
+  renderCAddSummary();
   renderCAddDots();
 }
 
 window.cwizGoTo = cwizGoTo;
+
+function renderCAddSummary() {
+  const el = document.getElementById('cAddSummary');
+  if (!el) return;
+  const chips = [];
+  const typeLbl = _createType === 'bucket' ? '⭐ 버킷리스트' : _createType === 'project' ? '🗺️ 프로젝트' : null;
+  if (_cwizStep > 0 && typeLbl) chips.push({ label: typeLbl, step: 0 });
+  const name = document.getElementById('cAddName')?.value.trim();
+  if (_cwizStep > 1 && name) chips.push({ label: name, step: 1 });
+  if (_cwizStep > 2 && _createCat) {
+    const cl = { health:'💪 건강', diet:'🥗 식단', study:'📚 학습', work:'💼 업무', finance:'💰 재무', life:'🌱 생활', home:'🧹 집안일', hobby:'🎨 취미', social:'🤝 관계', mental:'🧘 멘탈', etc:'📦 기타' };
+    chips.push({ label: cl[_createCat] || _createCat, step: 2 });
+  }
+  if (_cwizStep > 3 && _createMonth) {
+    const lbl = _createMonth === 'someday' ? '언젠가' : _createMonth;
+    chips.push({ label: lbl, step: 3 });
+  }
+  if (_cwizStep > 4 && _createType === 'project') {
+    chips.push({ label: `${_createStages.length}단계`, step: 4 });
+  }
+  el.innerHTML = chips.map(c => `<span class="wiz-chip" onclick="cwizGoTo(${c.step})">${esc(c.label)}</span>`).join('');
+}
 
 function renderCAddDots() {
   const els = document.querySelectorAll('.cAddDotsBar');

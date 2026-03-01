@@ -585,16 +585,14 @@ window.openServiceInfo = function () {
   openBS();
 };
 
-window.openAndroidGuide = function () {
-  document.getElementById('bsTitle').textContent = '🤖 안드로이드 연동';
+window.openWatchGuide = function () {
+  document.getElementById('bsTitle').textContent = '⌚ 워치 데이터 연동';
   clearMetaTags();
   const uid = currentUser?.id || '(로그인 필요)';
-  // Find health_workout goals
   const goals = getAllGoals();
   let healthList = '';
   goals.forEach((g, i) => {
     if (g && (g.unit === 'health_workout' || g.unit === 'health_sleep')) {
-      const label = getUnitLabel(g);
       const wType = g.workoutType ? ` (${g.workoutType})` : '';
       healthList += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">
         <span style="font-size:13px;">${esc(g.title)}${wType}</span>
@@ -603,58 +601,110 @@ window.openAndroidGuide = function () {
     }
   });
 
-  let h = `<div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:16px;margin-bottom:16px;">
+  const infoBox = `<div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:16px;margin-bottom:16px;">
     <div style="font-size:13px;font-weight:700;color:#0284c7;margin-bottom:8px;">📌 내 연동 정보</div>
     <div style="display:flex;justify-content:space-between;padding:6px 0;">
       <span style="font-size:12px;color:#64748b;">유저 ID</span>
       <span style="font-size:13px;font-weight:800;color:#0284c7;">${esc(uid)}</span>
     </div>
-    ${healthList || '<div style="font-size:12px;color:#94a3b8;padding:6px 0;">헬스 연동 습관이 없습니다. 습관 추가 시 ⌚ 애플 헬스 연동에서 등록하세요.</div>'}
+    ${healthList || '<div style="font-size:12px;color:#94a3b8;padding:6px 0;">헬스 연동 습관이 없습니다. 습관 추가 시 "자동"에서 등록하세요.</div>'}
   </div>`;
 
-  h += `<div style="font-size:14px;font-weight:800;margin-bottom:12px;">MacroDroid 설정 방법</div>`;
-
-  h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
-    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">1️⃣ MacroDroid 설치</div>
-    <div style="font-size:12px;color:#475569;">Play Store에서 <b>MacroDroid</b> 검색 → 설치 (무료)<br>앱 실행 → 알림 접근 권한 허용</div>
+  let h = `<div style="display:flex;gap:0;margin-bottom:16px;">
+    <button class="sub-tab-btn active" id="watchTabAnd" onclick="switchWatchTab('android')" style="flex:1;">🤖 안드로이드</button>
+    <button class="sub-tab-btn" id="watchTabIos" onclick="switchWatchTab('ios')" style="flex:1;">🍎 iOS</button>
   </div>`;
-
-  h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
-    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">2️⃣ 트리거 설정</div>
-    <div style="font-size:12px;color:#475569;">매크로 추가 → 트리거 → <b>Notification</b><br>앱: Samsung Health (또는 사용 중인 건강 앱)<br>텍스트 조건: "운동" 또는 "Exercise" 포함</div>
-  </div>`;
-
-  h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
-    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">3️⃣ 액션 설정</div>
-    <div style="font-size:12px;color:#475569;">액션 → <b>HTTP Request</b><br>Method: <b>PUT</b><br>Content Type: application/json<br>Body: <b>true</b></div>
-    <div style="font-size:11px;color:#0284c7;font-weight:700;margin-top:8px;">URL:</div>
-    <div style="font-size:10px;color:#334155;background:#e8f4f8;padding:8px;border-radius:6px;margin-top:4px;word-break:break-all;font-family:monospace;">
-      https://grow-goal-default-rtdb.firebaseio.com/dashboards/<b>${esc(uid)}</b>/completions/<b>g번호</b>_{year}_{month}_{day_of_month}.json
-    </div>
-    <div style="font-size:10px;color:#94a3b8;margin-top:4px;">⚠️ {year}, {month}, {day_of_month}은 MacroDroid 매직 텍스트로 삽입 ({ } 아이콘)</div>
-  </div>`;
-
-  h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
-    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">4️⃣ 테스트</div>
-    <div style="font-size:12px;color:#475569;">매크로 저장 후 활성화<br>건강 앱에서 짧은 운동 기록<br>키웁 새로고침 → 자동 체크 확인</div>
-  </div>`;
-
-  h += `<div style="background:#fef3c7;border:1.5px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:10px;">
-    <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">💡 운동 여러 개일 때</div>
-    <div style="font-size:11px;color:#78350f;">운동 종류마다 별도 매크로를 만드세요.<br>알림 텍스트 조건을 "달리기", "수영" 등으로 구분하면<br>각각 다른 g번호 습관에 기록됩니다.</div>
-  </div>`;
-
-  h += `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px;">
-    <div style="font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px;">⚠️ 주의사항</div>
-    <div style="font-size:11px;color:#7f1d1d;">
-      • MacroDroid 배터리 최적화 해제 필수<br>
-      • 설정 → 앱 → MacroDroid → 배터리 → 제한 없음<br>
-      • 무료 버전은 매크로 5개 제한
-    </div>
-  </div>`;
+  h += infoBox;
+  h += `<div id="watchTabContent"></div>`;
 
   document.getElementById('bsBody').innerHTML = h;
   openBS();
+  switchWatchTab('android');
+};
+
+window.switchWatchTab = function (tab) {
+  document.getElementById('watchTabAnd').classList.toggle('active', tab === 'android');
+  document.getElementById('watchTabIos').classList.toggle('active', tab === 'ios');
+  const area = document.getElementById('watchTabContent');
+  const uid = currentUser?.id || '(로그인 필요)';
+
+  if (tab === 'android') {
+    let h = `<div style="font-size:14px;font-weight:800;margin-bottom:12px;">MacroDroid 설정 방법</div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">1️⃣ MacroDroid 설치</div>
+      <div style="font-size:12px;color:#475569;">Play Store에서 <b>MacroDroid</b> 검색 → 설치 (무료)<br>앱 실행 → 알림 접근 권한 허용</div>
+    </div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">2️⃣ 트리거 설정</div>
+      <div style="font-size:12px;color:#475569;">매크로 추가 → 트리거 → <b>Notification</b><br>앱: Samsung Health (또는 사용 중인 건강 앱)<br>텍스트 조건: "운동" 또는 "Exercise" 포함</div>
+    </div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">3️⃣ 액션 설정</div>
+      <div style="font-size:12px;color:#475569;">액션 → <b>HTTP Request</b><br>Method: <b>PUT</b><br>Content Type: application/json<br>Body: <b>true</b></div>
+      <div style="font-size:11px;color:#0284c7;font-weight:700;margin-top:8px;">URL:</div>
+      <div style="font-size:10px;color:#334155;background:#e8f4f8;padding:8px;border-radius:6px;margin-top:4px;word-break:break-all;font-family:monospace;">
+        https://grow-goal-default-rtdb.firebaseio.com/dashboards/<b>${esc(uid)}</b>/completions/<b>g번호</b>_{year}_{month}_{day_of_month}.json
+      </div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:4px;">⚠️ {year}, {month}, {day_of_month}은 MacroDroid 매직 텍스트로 삽입</div>
+    </div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">4️⃣ 테스트</div>
+      <div style="font-size:12px;color:#475569;">매크로 저장 후 활성화<br>건강 앱에서 짧은 운동 기록<br>키웁 새로고침 → 자동 체크 확인</div>
+    </div>`;
+    h += `<div style="background:#fef3c7;border:1.5px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">💡 운동 여러 개일 때</div>
+      <div style="font-size:11px;color:#78350f;">운동 종류마다 별도 매크로를 만드세요.<br>알림 텍스트 조건을 "달리기", "수영" 등으로 구분하면<br>각각 다른 g번호 습관에 기록됩니다.</div>
+    </div>`;
+    h += `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px;">⚠️ 주의사항</div>
+      <div style="font-size:11px;color:#7f1d1d;">
+        • MacroDroid 배터리 최적화 해제 필수<br>
+        • 설정 → 앱 → MacroDroid → 배터리 → 제한 없음<br>
+        • 무료 버전은 매크로 5개 제한
+      </div>
+    </div>`;
+    area.innerHTML = h;
+  } else {
+    let h = `<div style="font-size:14px;font-weight:800;margin-bottom:12px;">iOS 단축어 설정 방법</div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">1️⃣ 단축어 앱 열기</div>
+      <div style="font-size:12px;color:#475569;">iPhone에서 <b>단축어</b> 앱 실행<br><b>자동화</b> 탭 → <b>새로운 자동화</b></div>
+    </div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">2️⃣ 트리거 설정</div>
+      <div style="font-size:12px;color:#475569;"><b>수면:</b> 수면 → 취침 준비가 시작될 때<br><b>운동:</b> Apple Watch 운동 → 운동이 끝났을 때<br><br>실행 시 묻지 않음으로 설정</div>
+    </div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">3️⃣ 액션 추가</div>
+      <div style="font-size:12px;color:#475569;">액션 검색 → <b>URL의 콘텐츠 가져오기</b><br>Method: <b>PUT</b><br>본문: <b>true</b> (텍스트)</div>
+      <div style="font-size:11px;color:#0284c7;font-weight:700;margin-top:8px;">URL:</div>
+      <div style="font-size:10px;color:#334155;background:#e8f4f8;padding:8px;border-radius:6px;margin-top:4px;word-break:break-all;font-family:monospace;">
+        https://grow-goal-default-rtdb.firebaseio.com/dashboards/<b>${esc(uid)}</b>/completions/<b>g번호</b>_<b>년_월_일</b>.json
+      </div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:4px;">⚠️ 날짜 부분에 단축어 <b>현재 날짜</b> 매직 변수를 사용<br>포맷: yyyy_M_d (예: 2026_3_1)</div>
+    </div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">4️⃣ 날짜 변수 설정 방법</div>
+      <div style="font-size:12px;color:#475569;">URL 입력 시 g번호_ 뒤에:<br>1. <b>현재 날짜</b> 변수 삽입 (날짜 포맷: 사용자 지정)<br>2. 포맷을 <b>yyyy</b>로 → _ 입력<br>3. 다시 <b>현재 날짜</b> → <b>M</b>으로 → _ 입력<br>4. 다시 <b>현재 날짜</b> → <b>d</b>로<br><br>결과: g0_2026_3_1.json</div>
+    </div>`;
+    h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">5️⃣ 테스트</div>
+      <div style="font-size:12px;color:#475569;">자동화 저장 → Apple Watch에서 운동 완료<br>또는 수면 시작 시 자동 실행 확인<br>키웁 새로고침 → 자동 체크 확인</div>
+    </div>`;
+    h += `<div style="background:#fef3c7;border:1.5px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">💡 팁</div>
+      <div style="font-size:11px;color:#78350f;">운동 종류별로 별도 자동화를 만들면<br>각각 다른 g번호 습관에 기록할 수 있어요.<br>Apple Watch 운동 앱에서 종류 선택 후 종료하면 자동 실행됩니다.</div>
+    </div>`;
+    h += `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px;">⚠️ 주의사항</div>
+      <div style="font-size:11px;color:#7f1d1d;">
+        • 단축어 자동화가 "묻지 않고 실행"으로 설정되어야 합니다<br>
+        • Apple Watch가 iPhone과 연결된 상태여야 합니다<br>
+        • 인터넷 연결이 필요합니다
+      </div>
+    </div>`;
+    area.innerHTML = h;
+  }
 };
 
 // ===== SHARE CARD =====

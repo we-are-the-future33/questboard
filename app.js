@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303f';
+const APP_VERSION = '20260303g';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4301,18 +4301,22 @@ function buildHamsterHouse(container) {
       if (leftEyeMesh) leftEyeMesh.scale.y = sY * 1.1;
       if (rightEyeMesh) rightEyeMesh.scale.y = sY * 1.1;
     }
-    // Drag rotation
-    houseGroup.rotation.y = rotY;
-    houseGroup.rotation.x = rotX;
+    // Drag rotation + idle wandering (noticeable)
+    const idleY = Math.sin(t * 0.4) * 0.2 + Math.sin(t * 0.7) * 0.1 + Math.cos(t * 1.1) * 0.05;
+    const idleX = Math.sin(t * 0.3) * 0.08 + Math.cos(t * 0.55) * 0.04;
+    houseGroup.rotation.y = rotY + idleY;
+    houseGroup.rotation.x = rotX + idleX;
+    // Slight Z tilt for liveliness
+    houseGroup.rotation.z = Math.sin(t * 0.6) * 0.03;
     // Bounce on tap
     let bounceScale = 1;
     if (bounceTime > 0) {
       bounceTime -= 0.05;
       bounceScale = 1 + Math.sin(bounceTime * Math.PI * 6) * bounceTime * 0.15;
     }
-    // Breathing + bounce
-    const br = (1 + Math.sin(t * 2) * 0.005) * bounceScale;
-    houseGroup.scale.set(br, br, br);
+    // Breathing (visible pulsing) + bounce
+    const br = (1 + Math.sin(t * 1.5) * 0.04 + Math.sin(t * 2.8) * 0.02) * bounceScale;
+    houseGroup.scale.set(br, br * (1 + Math.sin(t * 2) * 0.015), br);
     renderer.render(scene, camera);
   }
   anim();

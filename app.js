@@ -2650,6 +2650,8 @@ window.closeNoticeModal = function () { document.getElementById('noticeModalOver
 
 // ===== FRIENDS =====
 let _friendActivityCache = []; // [{fid, nick, emoji, todayCount}]
+let _friendHasHabitsCount = 0; // friends with at least 1 habit
+let _friendTotalCount = 0; // total friends
 
 async function checkFriendActivity() {
   try {
@@ -2663,6 +2665,8 @@ async function checkFriendActivity() {
     const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
     const todayPrefix = `_${y}_${m}_${d}`;
     _friendActivityCache = [];
+    _friendHasHabitsCount = 0;
+    _friendTotalCount = friendIds.size;
 
     for (const fid of friendIds) {
       const dSnap = await get(ref(db, `dashboards/${fid}`));
@@ -2671,6 +2675,9 @@ async function checkFriendActivity() {
       const u = uSnap.val(), dash = dSnap.exists() ? dSnap.val() : {};
       const nick = dash.nickname || u.name || fid;
       const comp = dash.completions || {};
+      const goals = dash.goals || [];
+      const hasHabits = Array.isArray(goals) ? goals.some(g => g && g.unit) : Object.values(goals).some(g => g && g.unit);
+      if (hasHabits) _friendHasHabitsCount++;
       const todayCount = Object.entries(comp).filter(([k, v]) => k.endsWith(todayPrefix) && v === true).length;
       if (todayCount > 0) {
         _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount });
@@ -2708,10 +2715,26 @@ async function renderFriends() {
   // Activity summary card
   let h = '';
   if (_friendActivityCache.length > 0) {
-    const summary = _friendActivityCache.map(f => `${f.emoji} ${esc(f.nick)} ${f.todayCount}개`).join(' · ');
+    // Active friends: show max 3 + "외 N명"
+    const show = _friendActivityCache.slice(0, 3);
+    const rest = _friendActivityCache.length - show.length;
+    let summary = show.map(f => `${f.emoji} ${esc(f.nick)} ${f.todayCount}개`).join(' · ');
+    if (rest > 0) summary += ` 외 ${rest}명`;
     h += `<div class="friend-activity-card">
       <div class="friend-activity-text">${summary}</div>
       <div class="friend-activity-sub">오늘 친구들이 열심히 하고 있어요 💪</div>
+    </div>`;
+  } else if (_friendHasHabitsCount > 0) {
+    // Friends have habits but nobody did anything today
+    h += `<div class="friend-activity-card idle">
+      <div class="friend-activity-text">아직 아무도 시작 안 했어요 😴</div>
+      <div class="friend-activity-sub">먼저 시작해서 친구들을 자극해볼까요?</div>
+    </div>`;
+  } else if (_friendTotalCount > 0) {
+    // Friends exist but none have habits
+    h += `<div class="friend-activity-card idle">
+      <div class="friend-activity-text">친구들이 아직 습관을 등록하지 않았어요</div>
+      <div class="friend-activity-sub">습관을 등록하라고 알려주세요! 📢</div>
     </div>`;
   }
   h += '<div class="friend-list">';

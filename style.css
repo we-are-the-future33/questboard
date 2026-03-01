@@ -664,5 +664,8 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 
 /* Friend activity card */
 .friend-activity-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #bfdbfe;border-radius:14px;padding:14px 16px;margin-bottom:12px;}
+.friend-activity-card.idle{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-color:#e2e8f0;}
+.friend-activity-card.idle .friend-activity-text{color:#64748b;}
+.friend-activity-card.idle .friend-activity-sub{color:#94a3b8;}
 .friend-activity-text{font-size:13px;font-weight:700;color:#1e40af;line-height:1.5;}
 .friend-activity-sub{font-size:11px;color:#60a5fa;margin-top:4px;font-weight:600;}

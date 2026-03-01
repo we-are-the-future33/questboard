@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301d';
+const APP_VERSION = '20260301e';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1646,9 +1646,8 @@ window.saveBucketEdit = async function (idx) {
   localDash.challenges[idx].category = catKey;
   delete localDash.challenges[idx].deadline;
   await saveDash();
-  document.getElementById('bsTitle').textContent = name;
-  openBucketDetail(idx);
   renderChallengeCards();
+  closeBottomSheet();
   showToast('✅ 수정 완료', 'done');
 };
 
@@ -1862,14 +1861,14 @@ window.openProjectEdit = function (idx) {
   clearMetaTags();
   _projEditCat = c.category || 'etc';
   _projEditMonth = c.targetMonth || 'someday';
-  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">🏷 카테고리</div>`;
+  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>`;
+  h += `<input class="proj-edit-input" id="peTitle" value="${esc(c.title)}" maxlength="30">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">🏷 카테고리</div>`;
   h += `<div class="chip-group" id="projEditCatChips">`;
   Object.keys(CAT_LABELS).forEach(k => {
     h += `<div class="chip-opt ${_projEditCat === k ? 'selected' : ''}" onclick="selectProjEditCat('${k}')">${CAT_LABELS[k]}</div>`;
   });
   h += `</div>`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">도전의 이름</div>`;
-  h += `<input class="proj-edit-input" id="peTitle" value="${esc(c.title)}" maxlength="30">`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 시기</div>`;
   h += `<div id="projMonthArea">${getEditMonthChipsHTML(_projEditMonth, 'proj')}</div>`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">나의 궁극적인 목적 (WHY)</div>`;
@@ -1949,14 +1948,14 @@ function rebuildEditUI() {
   const why = document.getElementById('peWhy')?.value || c.why || '';
   const stages = _editStages;
   const body = document.getElementById('bsBody');
-  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">🏷 카테고리</div>`;
+  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>`;
+  h += `<input class="proj-edit-input" id="peTitle" value="${esc(title)}" maxlength="30">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">🏷 카테고리</div>`;
   h += `<div class="chip-group" id="projEditCatChips">`;
   Object.keys(CAT_LABELS).forEach(k => {
     h += `<div class="chip-opt ${_projEditCat === k ? 'selected' : ''}" onclick="selectProjEditCat('${k}')">${CAT_LABELS[k]}</div>`;
   });
   h += `</div>`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">도전의 이름</div>`;
-  h += `<input class="proj-edit-input" id="peTitle" value="${esc(title)}" maxlength="30">`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 시기</div>`;
   h += `<div id="projMonthArea">${getEditMonthChipsHTML(_projEditMonth, 'proj')}</div>`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">나의 궁극적인 목적 (WHY)</div>`;
@@ -2005,9 +2004,8 @@ window.saveProjectEdit = async function (idx) {
   localDash.challenges[idx] = updated;
   await saveDash();
   _editStages = [];
-  document.getElementById('bsTitle').textContent = title;
-  renderProjectDetail(idx);
   renderChallengeCards();
+  closeBottomSheet();
   showToast('✅ 저장 완료!', 'done');
 };
 
@@ -2566,9 +2564,8 @@ window.saveHabitEdit = async function (idx) {
   localDash.goals[idx].time = time;
   localDash.goals[idx].category = cat;
   await saveDash();
-  document.getElementById('bsTitle').textContent = name;
-  renderBSBody(idx);
   renderHabitCards();
+  closeBottomSheet();
   showToast('✅ 수정 완료', 'done');
 };
 

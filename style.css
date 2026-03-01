@@ -319,15 +319,15 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .proj-edit-input:focus{border-color:var(--accent);}
 .proj-edit-textarea{resize:vertical;min-height:60px;}
 .proj-edit-stage-box{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
-.proj-edit-task-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.proj-edit-task-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
 .task-check-label{display:flex;align-items:center;cursor:pointer;flex-shrink:0;}
 .task-check{display:none;}
-.task-check-mark{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:12px;}
+.task-check-mark{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:11px;}
 .task-check:checked + .task-check-mark{background:var(--accent3);border-color:var(--accent3);color:#fff;}
 .task-check:checked + .task-check-mark::after{content:'✓';font-weight:900;}
-.proj-edit-task-input{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:var(--font-main);color:var(--text);outline:none;}
+.proj-edit-task-input{flex:1;min-width:0;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:var(--font-main);color:var(--text);outline:none;}
 .proj-edit-task-input:focus{border-color:var(--accent);}
-.proj-edit-task-del{background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:4px;line-height:1;}
+.proj-edit-task-del{background:none;border:none;color:var(--text-dim);font-size:14px;cursor:pointer;padding:2px;line-height:1;flex-shrink:0;width:22px;text-align:center;}
 .proj-edit-task-del:hover{color:var(--danger);}
 .proj-add-task-btn{background:transparent;border:1.5px dashed var(--border);border-radius:8px;padding:8px;text-align:center;font-size:12px;color:var(--text-dim);cursor:pointer;font-family:var(--font-main);font-weight:700;width:100%;transition:all .2s;}
 .proj-add-task-btn:hover{border-color:var(--accent);color:var(--accent);}

@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302o';
+const APP_VERSION = '20260302p';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1886,7 +1886,9 @@ let _cwizStep = 0;
 let _cwizTotalSteps = 5; // bucket: 5, project: 6
 
 function cwizGoTo(step) {
-  const slides = document.querySelectorAll('.cwiz-slide');
+  const container = document.getElementById('bsBody');
+  if (!container) return;
+  const slides = container.querySelectorAll('.wiz-slide');
   slides.forEach((s, i) => {
     s.classList.remove('active', 'exit-left');
     if (i < step) s.classList.add('exit-left');
@@ -1929,7 +1931,7 @@ window.openAddChallengeSheet = function () {
   h += `<div class="wiz-wrap">`;
 
   // Slide 0: Type
-  h += `<div class="cwiz-slide active" id="cWiz0">
+  h += `<div class="wiz-slide active" id="cWiz0">
     <div class="pdisc-label">유형</div>
     <div class="challenge-type-grid">
       <div class="challenge-type-card" id="ctBucket2" onclick="cAddSelectType('bucket')">
@@ -1947,35 +1949,35 @@ window.openAddChallengeSheet = function () {
   </div>`;
 
   // Slide 1: Name
-  h += `<div class="cwiz-slide" id="cWiz1">
+  h += `<div class="wiz-slide" id="cWiz1">
     <div class="pdisc-label">도전의 이름</div>
     <input class="proj-edit-input" id="cAddName" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
     <div class="wiz-nav" style="flex-direction:column;gap:10px;"><div class="wiz-dots cAddDotsBar"></div><button class="unit-confirm-btn" style="width:100%;padding:12px 28px;" onclick="cWizNameNext()">다음</button></div>
   </div>`;
 
   // Slide 2: Category
-  h += `<div class="cwiz-slide" id="cWiz2">
+  h += `<div class="wiz-slide" id="cWiz2">
     <div class="pdisc-label">카테고리</div>
     <div id="cAddCatArea"></div>
     <div class="wiz-nav"><div class="wiz-dots cAddDotsBar"></div></div>
   </div>`;
 
   // Slide 3: Target month
-  h += `<div class="cwiz-slide" id="cWiz3">
+  h += `<div class="wiz-slide" id="cWiz3">
     <div class="pdisc-label">목표 시기</div>
     <div id="cAddMonthArea"></div>
     <div class="wiz-nav"><div class="wiz-dots cAddDotsBar"></div></div>
   </div>`;
 
   // Slide 4: Stages (project only) — will be skipped for bucket
-  h += `<div class="cwiz-slide" id="cWiz4">
+  h += `<div class="wiz-slide" id="cWiz4">
     <div class="pdisc-label">단계 설정</div>
     <div id="cAddStagesArea"></div>
     <div class="wiz-nav" style="flex-direction:column;gap:10px;"><div class="wiz-dots cAddDotsBar"></div><button class="unit-confirm-btn" style="width:100%;padding:12px 28px;" onclick="cWizStagesNext()">다음</button></div>
   </div>`;
 
   // Slide 5: Confirm (project) / Slide 4: Confirm (bucket)
-  h += `<div class="cwiz-slide" id="cWiz5">
+  h += `<div class="wiz-slide" id="cWiz5">
     <div style="text-align:center;padding:16px 0;">
       <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;" id="cWizConfirmTags"></div>
     </div>
@@ -2366,7 +2368,9 @@ function pdiscReveal(stepId) {
 }
 
 window.wizGoTo = function (step) {
-  const slides = document.querySelectorAll('.wiz-slide');
+  const container = document.getElementById('bsBody');
+  if (!container) return;
+  const slides = container.querySelectorAll('.wiz-slide');
   slides.forEach((s, i) => {
     s.classList.remove('active', 'exit-left');
     if (i < step) s.classList.add('exit-left');

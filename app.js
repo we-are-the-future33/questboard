@@ -3671,11 +3671,19 @@ function showToast(msg, type = 'normal') {
 }
 // ===== CELEBRATION EFFECTS =====
 function triggerHaptic(style) {
+  // Native vibration (Android)
   if (navigator.vibrate) {
     if (style === 'heavy') navigator.vibrate([30, 50, 30, 50, 60]);
     else if (style === 'light') navigator.vibrate(15);
     else navigator.vibrate(10);
   }
+  // Visual haptic (all platforms)
+  const body = document.body;
+  const cls = style === 'heavy' ? 'vhap-heavy' : 'vhap-light';
+  body.classList.remove('vhap-light', 'vhap-heavy');
+  void body.offsetWidth;
+  body.classList.add(cls);
+  setTimeout(() => body.classList.remove(cls), style === 'heavy' ? 250 : 150);
 }
 
 function showConfetti() {

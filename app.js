@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301k';
+const APP_VERSION = '20260301l';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1102,13 +1102,12 @@ window.switchSubTab = function (tab) {
   document.getElementById('subTabChallenge').classList.toggle('active', tab === 'challenge');
   document.getElementById('panelHabit').classList.toggle('active', tab === 'habit');
   document.getElementById('panelChallenge').classList.toggle('active', tab === 'challenge');
-  // Scroll so sub-tab-bar sticks at top and content is visible
+  // Scroll so sub-tab-bar sticks at top (position 0 of dash-scroll)
   const scroll = document.querySelector('.dash-scroll');
-  const subBar = document.querySelector('.sub-tab-bar');
-  if (scroll && subBar) {
-    // subBar height + margin so content starts right below sticky bar
-    const target = subBar.offsetTop - 4;
-    scroll.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+  const avatarSection = document.querySelector('.avatar-section');
+  if (scroll && avatarSection) {
+    const target = avatarSection.offsetTop + avatarSection.offsetHeight;
+    scroll.scrollTo({ top: target, behavior: 'smooth' });
   }
 };
 

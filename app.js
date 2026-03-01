@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303a';
+const APP_VERSION = '20260303c';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4104,11 +4104,11 @@ function buildHamsterHouse(container) {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 3.5, 10);
-  camera.lookAt(0, 2.5, 0);
+  camera.position.set(0, 2.5, 10);
+  camera.lookAt(0, 2.2, 0);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(196, 196);
+  renderer.setSize(160, 160);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -4176,26 +4176,38 @@ function buildHamsterHouse(container) {
   seedGroup.scale.set(0.65, 0.65, 1);
   houseGroup.add(seedGroup);
 
-  // Inner face (eyes + nose peeking from door)
+  // Inner face (eyes + nose + mouth peeking from door - matching hamster proportions)
   const faceZ = 2.02;
-  // Nose
-  const nose = new THREE.Mesh(new THREE.CircleGeometry(0.04, 32), new THREE.MeshBasicMaterial({ color: 0xdba39a }));
-  nose.position.set(0, 1.85, faceZ);
+  const faceCY = 1.65;
+  // Nose - pink sphere like hamster
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.08, 32, 32), new THREE.MeshBasicMaterial({ color: 0xf5b0a0 }));
+  nose.scale.set(1.2, 0.8, 1);
+  nose.position.set(0, faceCY, faceZ);
   houseGroup.add(nose);
-  // Eyes
-  const mkEye = (x, rot) => {
+  // Mouth
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.035, 16, 16), new THREE.MeshBasicMaterial({ color: 0x7a5a5a }));
+  mouth.scale.set(1, 0.7, 0.5);
+  mouth.position.set(0, faceCY - 0.1, faceZ);
+  houseGroup.add(mouth);
+  // Eyes - bright white with dark pupil, visible in dark doorway
+  const mkEye = (x) => {
     const g = new THREE.Group();
-    const e = new THREE.Mesh(new THREE.CircleGeometry(0.08, 32), new THREE.MeshBasicMaterial({ color: 0x1a1a1a }));
-    e.scale.set(0.85, 1.1, 1);
-    const hl = new THREE.Mesh(new THREE.CircleGeometry(0.025, 16), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    hl.position.set(0.02, 0.04, 0.01);
-    g.add(e, hl);
-    g.position.set(x, 2.1, faceZ);
-    g.rotation.z = rot;
-    return { group: g, mesh: e };
+    // White of eye
+    const eWhite = new THREE.Mesh(new THREE.SphereGeometry(0.13, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    eWhite.scale.set(0.85, 1.1, 0.5);
+    // Dark pupil
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.07, 32, 32), new THREE.MeshBasicMaterial({ color: 0x1a1a1a }));
+    pupil.position.set(0, 0, 0.05);
+    pupil.scale.set(0.9, 1, 0.5);
+    // Highlight
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    hl.position.set(0.03, 0.04, 0.08);
+    g.add(eWhite, pupil, hl);
+    g.position.set(x, faceCY + 0.33, faceZ);
+    return { group: g, mesh: eWhite };
   };
-  const le = mkEye(-0.35, Math.PI / 12);
-  const re = mkEye(0.35, -Math.PI / 12);
+  const le = mkEye(-0.33);
+  const re = mkEye(0.33);
   leftEyeMesh = le.mesh; rightEyeMesh = re.mesh;
   houseGroup.add(le.group, re.group);
 
@@ -4248,25 +4260,30 @@ function buildHamsterHouse(container) {
   }, { passive: true });
   container.addEventListener('touchend', () => { isDragging = false; });
 
-  // Tap emoji
-  const emojis = ['💤','😴','🌙','⭐','✨','🐹'];
+  // Tap emoji + house bounce
+  const emojis = ['💤','😴','🌙','⭐','✨','🐹','💫','🏠'];
+  let bounceTime = 0;
   container.addEventListener('click', e => {
+    if (isDragging) return;
     const r = container.getBoundingClientRect();
     const cx = e.clientX - r.left, cy = e.clientY - r.top;
-    for (let i = 0; i < 4; i++) {
+    // Confetti burst - more particles, longer travel
+    for (let i = 0; i < 12; i++) {
       const em = document.createElement('div');
       em.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-      em.style.cssText = `position:absolute;font-size:${16+Math.random()*12}px;pointer-events:none;z-index:10;left:${cx-10+(Math.random()-.5)*60}px;top:${cy-10}px;opacity:1;transition:none;`;
+      em.style.cssText = `position:absolute;font-size:${18+Math.random()*16}px;pointer-events:none;z-index:10;left:${cx-10+(Math.random()-.5)*40}px;top:${cy-10}px;opacity:1;transition:none;`;
       container.style.position = 'relative';
       container.appendChild(em);
-      const dx = (Math.random()-.5)*80, dy = -(30+Math.random()*60);
+      const dx = (Math.random()-.5)*160, dy = -(60+Math.random()*120);
       requestAnimationFrame(() => {
-        em.style.transition = 'all 1.4s ease-out';
-        em.style.transform = `translate(${dx}px,${dy}px)`;
+        em.style.transition = 'all 2s cubic-bezier(.2,.8,.3,1)';
+        em.style.transform = `translate(${dx}px,${dy}px) rotate(${(Math.random()-.5)*360}deg)`;
         em.style.opacity = '0';
       });
-      setTimeout(() => em.remove(), 1600);
+      setTimeout(() => em.remove(), 2200);
     }
+    // Trigger house bounce
+    bounceTime = 1.0;
   });
 
   // Animate
@@ -4287,8 +4304,14 @@ function buildHamsterHouse(container) {
     // Drag rotation
     houseGroup.rotation.y = rotY;
     houseGroup.rotation.x = rotX;
-    // Breathing
-    const br = 1 + Math.sin(t * 2) * 0.005;
+    // Bounce on tap
+    let bounceScale = 1;
+    if (bounceTime > 0) {
+      bounceTime -= 0.05;
+      bounceScale = 1 + Math.sin(bounceTime * Math.PI * 6) * bounceTime * 0.15;
+    }
+    // Breathing + bounce
+    const br = (1 + Math.sin(t * 2) * 0.005) * bounceScale;
     houseGroup.scale.set(br, br, br);
     renderer.render(scene, camera);
   }
@@ -4349,7 +4372,7 @@ function buildHamster(container) {
   camera.position.set(0, 0, 8.5);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(196, 196);
+  renderer.setSize(160, 160);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.innerHTML = '';
   container.appendChild(renderer.domElement);

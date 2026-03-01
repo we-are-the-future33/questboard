@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301q';
+const APP_VERSION = '20260301r';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -3565,9 +3565,32 @@ function buildHamster(container) {
     spawnEmoji(cx, cy);
     // 햄스터 살짝 점프
     hamster._jumpT = clock.getElapsedTime();
+    // iOS gyro 권한 요청 (첫 탭 시)
+    if (!hamster._gyroReq && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      hamster._gyroReq = true;
+      DeviceOrientationEvent.requestPermission().then(r => { if (r === 'granted') enableGyro(); }).catch(() => {});
+    }
   }
   container.addEventListener('click', onTap);
   container.addEventListener('touchstart', (e) => { if (e.touches.length === 1) onTap(e); }, { passive: true });
+
+  // --- Gyro (Device Orientation) ---
+  let gyroTarget = { x: 0, y: 0 };
+  let gyroActive = false;
+  function enableGyro() {
+    if (gyroActive) return;
+    gyroActive = true;
+    window.addEventListener('deviceorientation', (e) => {
+      const gamma = e.gamma || 0; // left-right tilt: -90 to 90
+      const beta = e.beta || 0;   // front-back tilt: -180 to 180
+      gyroTarget.y = Math.max(-1, Math.min(1, gamma / 30)) * 0.35;
+      gyroTarget.x = Math.max(-1, Math.min(1, (beta - 45) / 30)) * -0.2;
+    });
+  }
+  // Android: no permission needed, start right away
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function') {
+    enableGyro();
+  }
 
   // --- Animate ---
   function animate() {
@@ -3601,9 +3624,11 @@ function buildHamster(container) {
     handsGroup.position.y = -0.35 + nibble;
     seed.rotation.z = Math.sin(time * 30) * 0.05;
 
-    // 마우스 추적
-    hamster.rotation.y += (targetRotation.y - hamster.rotation.y) * 0.08;
-    hamster.rotation.x += (targetRotation.x - hamster.rotation.x) * 0.08;
+    // 마우스/터치 + 자이로 블렌딩
+    const finalY = gyroActive ? gyroTarget.y : targetRotation.y;
+    const finalX = gyroActive ? gyroTarget.x : targetRotation.x;
+    hamster.rotation.y += (finalY - hamster.rotation.y) * 0.08;
+    hamster.rotation.x += (finalX - hamster.rotation.x) * 0.08;
 
     renderer.render(scene, camera);
   }

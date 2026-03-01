@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301m';
+const APP_VERSION = '20260301n';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1102,17 +1102,6 @@ window.switchSubTab = function (tab) {
   document.getElementById('subTabChallenge').classList.toggle('active', tab === 'challenge');
   document.getElementById('panelHabit').classList.toggle('active', tab === 'habit');
   document.getElementById('panelChallenge').classList.toggle('active', tab === 'challenge');
-  // Only scroll if sub-tab-bar hasn't reached sticky position yet
-  const scroll = document.querySelector('.dash-scroll');
-  const subBar = document.querySelector('.sub-tab-bar');
-  if (scroll && subBar) {
-    const subBarTop = subBar.getBoundingClientRect().top;
-    const scrollTop = scroll.getBoundingClientRect().top;
-    // If sub-tab-bar is below the scroll container top, scroll it up
-    if (subBarTop > scrollTop + 10) {
-      scroll.scrollTo({ top: subBar.offsetTop, behavior: 'smooth' });
-    }
-  }
 };
 
 // ===== HABIT FILTER =====

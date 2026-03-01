@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302y';
+const APP_VERSION = '20260302z';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4108,7 +4108,7 @@ function buildHamsterHouse(container) {
   camera.lookAt(0, 2.5, 0);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(280, 280);
+  renderer.setSize(196, 196);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -4225,18 +4225,28 @@ function buildHamsterHouse(container) {
 
   scene.add(houseGroup);
 
-  // Mouse/touch look
-  let targetRot = { x: 0, y: 0 };
+  // Drag rotation
+  let isDragging = false, prevX = 0, prevY = 0;
+  let rotY = 0, rotX = 0;
+  container.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
   container.addEventListener('mousemove', e => {
-    const r = container.getBoundingClientRect();
-    targetRot.y = ((e.clientX - r.left) / r.width * 2 - 1) * 0.15;
-    targetRot.x = -(((e.clientY - r.top) / r.height) * 2 - 1) * 0.1;
+    if (!isDragging) return;
+    rotY += (e.clientX - prevX) * 0.008;
+    rotX += (e.clientY - prevY) * 0.005;
+    rotX = Math.max(-0.3, Math.min(0.3, rotX));
+    prevX = e.clientX; prevY = e.clientY;
   });
+  container.addEventListener('mouseup', () => { isDragging = false; });
+  container.addEventListener('touchstart', e => { if (e.touches.length === 1) { isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; } }, { passive: true });
   container.addEventListener('touchmove', e => {
-    const r = container.getBoundingClientRect(), t = e.touches[0];
-    targetRot.y = ((t.clientX - r.left) / r.width * 2 - 1) * 0.15;
-    targetRot.x = -(((t.clientY - r.top) / r.height) * 2 - 1) * 0.1;
-  });
+    if (!isDragging || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    rotY += (t.clientX - prevX) * 0.008;
+    rotX += (t.clientY - prevY) * 0.005;
+    rotX = Math.max(-0.3, Math.min(0.3, rotX));
+    prevX = t.clientX; prevY = t.clientY;
+  }, { passive: true });
+  container.addEventListener('touchend', () => { isDragging = false; });
 
   // Tap emoji
   const emojis = ['💤','😴','🌙','⭐','✨','🐹'];
@@ -4274,8 +4284,9 @@ function buildHamsterHouse(container) {
       if (leftEyeMesh) leftEyeMesh.scale.y = sY * 1.1;
       if (rightEyeMesh) rightEyeMesh.scale.y = sY * 1.1;
     }
-    // Gentle sway
-    houseGroup.rotation.y += (targetRot.y - houseGroup.rotation.y) * 0.05;
+    // Drag rotation
+    houseGroup.rotation.y = rotY;
+    houseGroup.rotation.x = rotX;
     // Breathing
     const br = 1 + Math.sin(t * 2) * 0.005;
     houseGroup.scale.set(br, br, br);
@@ -4338,7 +4349,7 @@ function buildHamster(container) {
   camera.position.set(0, 0, 8.5);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(280, 280);
+  renderer.setSize(196, 196);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.innerHTML = '';
   container.appendChild(renderer.domElement);
@@ -4483,22 +4494,28 @@ function buildHamster(container) {
   rFoot.add(createOutline(footGeom, 0.08, 0x5a3e2b));
   hamster.add(rFoot);
 
-  // --- Events ---
+  // --- Events: Drag rotation ---
+  let isDragging = false, prevDragX = 0, prevDragY = 0;
+  let dragRotY = 0, dragRotX = 0;
+  container.addEventListener('mousedown', e => { isDragging = true; prevDragX = e.clientX; prevDragY = e.clientY; });
   container.addEventListener('mousemove', (e) => {
-    const r = container.getBoundingClientRect();
-    mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-    mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
-    targetRotation.y = mouse.x * 0.25;
-    targetRotation.x = -mouse.y * 0.15;
+    if (!isDragging) return;
+    dragRotY += (e.clientX - prevDragX) * 0.008;
+    dragRotX += (e.clientY - prevDragY) * 0.005;
+    dragRotX = Math.max(-0.3, Math.min(0.3, dragRotX));
+    prevDragX = e.clientX; prevDragY = e.clientY;
   });
+  container.addEventListener('mouseup', () => { isDragging = false; });
+  container.addEventListener('touchstart', e => { if (e.touches.length === 1) { isDragging = true; prevDragX = e.touches[0].clientX; prevDragY = e.touches[0].clientY; } }, { passive: true });
   container.addEventListener('touchmove', (e) => {
-    const r = container.getBoundingClientRect();
+    if (!isDragging || e.touches.length !== 1) return;
     const t = e.touches[0];
-    mouse.x = ((t.clientX - r.left) / r.width) * 2 - 1;
-    mouse.y = -((t.clientY - r.top) / r.height) * 2 + 1;
-    targetRotation.y = mouse.x * 0.25;
-    targetRotation.x = -mouse.y * 0.15;
-  });
+    dragRotY += (t.clientX - prevDragX) * 0.008;
+    dragRotX += (t.clientY - prevDragY) * 0.005;
+    dragRotX = Math.max(-0.3, Math.min(0.3, dragRotX));
+    prevDragX = t.clientX; prevDragY = t.clientY;
+  }, { passive: true });
+  container.addEventListener('touchend', () => { isDragging = false; });
 
   // 클릭/탭 시 이모지 파티클
   function onTap(e) {
@@ -4581,8 +4598,8 @@ function buildHamster(container) {
     seed.rotation.z = Math.sin(time * 30) * 0.05;
 
     // 마우스/터치 + 자이로 블렌딩
-    const finalY = gyroActive ? gyroTarget.y : targetRotation.y;
-    const finalX = gyroActive ? gyroTarget.x : targetRotation.x;
+    const finalY = gyroActive ? gyroTarget.y : dragRotY;
+    const finalX = gyroActive ? gyroTarget.x : dragRotX;
     hamster.rotation.y += (finalY - hamster.rotation.y) * 0.08;
     hamster.rotation.x += (finalX - hamster.rotation.x) * 0.08;
 

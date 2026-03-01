@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301z';
+const APP_VERSION = '20260302a';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -3268,27 +3268,57 @@ async function checkFriendActivity() {
   } catch (e) {}
 }
 
+function getMyTodayProgress() {
+  const goals = getAllGoals();
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+  let total = 0, done = 0;
+  goals.forEach((g, i) => {
+    if (!g || !g.title) return;
+    const mg = migrateGoal(g);
+    if (!mg.unit) return;
+    // Check if this habit is active today
+    if (mg.unit === 'daily' || mg.unit === 'health_sleep' || mg.unit === 'health_workout') {
+      total++;
+    } else if (mg.unit === 'weekly' || mg.unit === 'biweekly') {
+      total++;
+    } else return;
+    if (localDash.completions && localDash.completions[`g${i}_${y}_${m}_${d}`] === true) done++;
+  });
+  return { total, done };
+}
+
 function renderMainFriendActivity() {
   const el = document.getElementById('mainFriendActivity');
   if (!el) return;
-  if (_friendTotalCount === 0) { el.innerHTML = ''; return; }
 
-  let html = '';
+  // My progress
+  const { total, done } = getMyTodayProgress();
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const myHtml = total > 0
+    ? `<div class="main-progress-chip" onclick="switchTab('home')">✅ ${done}/${total} (${pct}%) 달성 중 🔥</div>`
+    : '';
+
+  // Friend activity
+  let friendHtml = '';
+  if (_friendTotalCount === 0) {
+    el.innerHTML = myHtml ? `<div class="main-banner-row">${myHtml}</div>` : '';
+    return;
+  }
+
   if (_friendActivityCache.length > 0) {
     const show = _friendActivityCache.slice(0, 3);
     const rest = _friendActivityCache.length - show.length;
     let summary = show.map(f => `${f.emoji} ${f.nick} (${f.todayCount})`).join(' · ');
     if (rest > 0) summary += ` 외 ${rest}명`;
-    html = `<div class="main-friend-banner active" onclick="switchTab('friends')">
-      <span>${summary} 오늘 달성 중 🔥</span></div>`;
+    friendHtml = `<div class="main-friend-chip active" onclick="switchTab('friends')">${summary} 🔥</div>`;
   } else if (_friendHasHabitsCount > 0) {
-    html = `<div class="main-friend-banner idle" onclick="switchTab('friends')">
-      <span>아직 아무도 시작 안 했어요 😴 먼저 시작해볼까요?</span></div>`;
+    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">친구들 아직 😴</div>`;
   } else {
-    html = `<div class="main-friend-banner idle" onclick="switchTab('friends')">
-      <span>친구들에게 습관을 등록하라고 알려주세요 📢</span></div>`;
+    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">친구 초대 📢</div>`;
   }
-  el.innerHTML = html;
+
+  el.innerHTML = `<div class="main-banner-row">${myHtml}${friendHtml}</div>`;
 }
 
 async function renderFriends() {

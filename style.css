@@ -685,6 +685,12 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .main-friend-banner:active{transform:scale(0.97);}
 .main-friend-banner.active{background:rgba(59,130,246,.12);color:#3b82f6;}
 .main-friend-banner.idle{background:rgba(100,116,139,.08);color:#94a3b8;}
+.main-banner-row{display:flex;gap:6px;margin-top:10px;align-items:stretch;}
+.main-progress-chip,.main-friend-chip{flex:1;padding:8px 10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:transform .1s;display:flex;align-items:center;justify-content:center;line-height:1.3;}
+.main-progress-chip:active,.main-friend-chip:active{transform:scale(0.97);}
+.main-progress-chip{background:rgba(34,197,94,.12);color:#16a34a;}
+.main-friend-chip.active{background:rgba(59,130,246,.12);color:#3b82f6;}
+.main-friend-chip.idle{background:rgba(100,116,139,.08);color:#94a3b8;}
 
 /* Cheer bubble badge near avatar */
 .cheer-bubble{position:absolute;top:16px;right:16px;background:#fff;border-radius:16px;padding:6px 12px;box-shadow:0 4px 14px rgba(0,0,0,.12);font-size:12px;font-weight:800;color:var(--accent2);z-index:10;cursor:pointer;animation:cheerBounce 0.4s cubic-bezier(.175,.885,.32,1.275) both;display:flex;align-items:center;gap:4px;}
@@ -696,8 +702,9 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .cheer-count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent2);color:#fff;font-size:10px;font-weight:800;min-width:18px;height:18px;padding:0 5px;border-radius:9px;margin-left:6px;vertical-align:middle;}
 
 /* Friend banner dark-bg aware */
-.avatar-section.dark-bg .main-friend-banner.active{background:rgba(96,165,250,.2);color:#93c5fd;}
-.avatar-section.dark-bg .main-friend-banner.idle{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);}
+.avatar-section.dark-bg .main-friend-banner.active,.avatar-section.dark-bg .main-friend-chip.active{background:rgba(96,165,250,.2);color:#93c5fd;}
+.avatar-section.dark-bg .main-friend-banner.idle,.avatar-section.dark-bg .main-friend-chip.idle{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);}
+.avatar-section.dark-bg .main-progress-chip{background:rgba(74,222,128,.2);color:#86efac;}
 
 /* Visual haptic feedback */
 @keyframes vhap-light-shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-2px);}75%{transform:translateX(2px);}}

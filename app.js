@@ -1422,8 +1422,10 @@ function generateChallengeCardHtml(c, idx) {
       ${projDone ? '<div class="challenge-card-done-badge">✓</div>' : ''}
       <div>
         <div class="challenge-card-title">${esc(c.title)}</div>
-        <span class="challenge-card-type project">프로젝트</span>
-        <div class="challenge-card-progress">${done}/${total} 단계</div>
+        <div class="challenge-card-meta-row">
+          <span class="challenge-card-type project">프로젝트</span>
+          <span class="challenge-card-stage">${done}/${total} 단계</span>
+        </div>
       </div>
       <div>
         <div style="display:flex;align-items:center;gap:6px;">
@@ -1869,6 +1871,7 @@ window.toggleProjectTask = async function (cIdx, sIdx, tIdx) {
 window.openProjectEdit = function (idx) {
   const c = localDash.challenges[idx], body = document.getElementById('bsBody');
   document.getElementById('bsTitle').textContent = '프로젝트 수정';
+  clearMetaTags();
   _projEditCat = c.category || 'etc';
   const deadline = c.deadline || '';
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">🏷 카테고리</div>`;

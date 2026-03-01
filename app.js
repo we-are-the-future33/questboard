@@ -2711,7 +2711,33 @@ async function checkFriendActivity() {
     } else {
       if (badge) badge.style.display = 'none';
     }
+
+    // Render mini activity on main screen
+    renderMainFriendActivity();
   } catch (e) {}
+}
+
+function renderMainFriendActivity() {
+  const el = document.getElementById('mainFriendActivity');
+  if (!el) return;
+  if (_friendTotalCount === 0) { el.innerHTML = ''; return; }
+
+  let html = '';
+  if (_friendActivityCache.length > 0) {
+    const show = _friendActivityCache.slice(0, 3);
+    const rest = _friendActivityCache.length - show.length;
+    let summary = show.map(f => `${f.emoji} ${f.nick}`).join(' · ');
+    if (rest > 0) summary += ` 외 ${rest}명`;
+    html = `<div class="main-friend-banner active" onclick="switchTab('friends')">
+      <span>${summary} 오늘 달성 중 🔥</span></div>`;
+  } else if (_friendHasHabitsCount > 0) {
+    html = `<div class="main-friend-banner idle" onclick="switchTab('friends')">
+      <span>아직 아무도 시작 안 했어요 😴 먼저 시작해볼까요?</span></div>`;
+  } else {
+    html = `<div class="main-friend-banner idle" onclick="switchTab('friends')">
+      <span>친구들에게 습관을 등록하라고 알려주세요 📢</span></div>`;
+  }
+  el.innerHTML = html;
 }
 
 async function renderFriends() {

@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301g';
+const APP_VERSION = '20260301h';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -298,9 +298,6 @@ async function setupDashTabs(uid) {
   let has = false;
   if (snap.exists()) has = Object.values(snap.val()).some(g => g.members && Object.values(g.members).includes(uid));
   document.getElementById('dashTabBar').style.display = has ? 'flex' : 'none';
-  // Adjust sub-tab-bar sticky top based on tab-bar visibility
-  const subBar = document.querySelector('.sub-tab-bar');
-  if (subBar) subBar.style.top = has ? '46px' : '0px';
 }
 
 // ===== LOGIN =====
@@ -1080,8 +1077,7 @@ window.switchSubTab = function (tab) {
   const scroll = document.querySelector('.dash-scroll');
   const subBar = document.querySelector('.sub-tab-bar');
   if (scroll && subBar) {
-    const tabBarH = 46;
-    const target = subBar.offsetTop - tabBarH;
+    const target = subBar.offsetTop;
     scroll.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
   }
 };

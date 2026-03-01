@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302g';
+const APP_VERSION = '20260302i';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -2436,7 +2436,7 @@ function renderHAddCycle2() {
       h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">`;
       workoutTypes.forEach(([lbl, val]) => {
         const sel = _workoutType === val;
-        h += `<div class="unit-opt" style="font-size:12px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="_workoutType='${val}';renderHAddCycle2();wizGoTo(2);">${lbl}</div>`;
+        h += `<div class="unit-opt" style="font-size:12px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="hAddSelectWorkout('${val}')">${lbl}</div>`;
       });
       h += `</div>`;
     }
@@ -2453,6 +2453,12 @@ function renderHAddCycle2() {
   }
   area.innerHTML = h;
 }
+
+window.hAddSelectWorkout = function (val) {
+  _workoutType = val;
+  renderHAddCycle2();
+  wizGoTo(2);
+};
 
 window.hAddSelectHealth = function (val) {
   _habitCycle2 = val;

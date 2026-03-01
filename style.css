@@ -445,7 +445,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 
 /* 단위 설정 */
 .unit-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
-.unit-opt{background:#fff;border:2px solid var(--border);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;font-size:13px;font-weight:700;transition:all .2s;font-family:var(--font-main);color:var(--text);}
+.unit-opt{background:#fff;border:2px solid var(--border);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;font-size:13px;font-weight:700;transition:all .2s;font-family:var(--font-main);color:var(--text);display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box;}
 .unit-opt:hover{border-color:var(--accent);background:var(--accent-light);}
 .unit-opt.selected{border-color:var(--accent);background:var(--accent-light);color:var(--accent);}
 .unit-confirm-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font-main);cursor:pointer;box-shadow:0 4px 12px rgba(25,82,245,.28);transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275);}
@@ -688,9 +688,9 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .main-banner-row{display:flex;gap:6px;margin-top:10px;align-items:stretch;}
 .main-progress-chip,.main-friend-chip{flex:1;padding:8px 10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:transform .1s;display:flex;align-items:center;justify-content:center;line-height:1.3;}
 .main-progress-chip:active,.main-friend-chip:active{transform:scale(0.97);}
-.main-progress-chip{background:rgba(34,197,94,.12);color:#16a34a;}
-.main-friend-chip.active{background:rgba(59,130,246,.12);color:#3b82f6;}
-.main-friend-chip.idle{background:rgba(100,116,139,.08);color:#94a3b8;}
+.main-progress-chip{background:rgba(34,197,94,.12);color:#16a34a;white-space:nowrap;flex:0 0 auto;}
+.main-friend-chip.active{background:rgba(59,130,246,.12);color:#3b82f6;flex:1;min-width:0;}
+.main-friend-chip.idle{background:rgba(100,116,139,.08);color:#94a3b8;flex:1;min-width:0;}
 
 /* Cheer bubble badge near avatar */
 .cheer-bubble{position:absolute;top:16px;right:16px;background:#fff;border-radius:16px;padding:6px 12px;box-shadow:0 4px 14px rgba(0,0,0,.12);font-size:12px;font-weight:800;color:var(--accent2);z-index:10;cursor:pointer;animation:cheerBounce 0.4s cubic-bezier(.175,.885,.32,1.275) both;display:flex;align-items:center;gap:4px;}

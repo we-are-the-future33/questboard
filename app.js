@@ -1,6 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+const APP_VERSION = '20260301b';
+
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
   if (l && l.classList.contains('active')) { showScreen('loginScreen'); }
@@ -12,6 +14,22 @@ setTimeout(() => {
   const l = document.getElementById('loadingScreen');
   if (msg && l && l.classList.contains('active')) { msg.textContent = '서버 연결 중...'; }
 }, 3000);
+
+// Update check — fetch index.html and compare version
+async function checkAppUpdate() {
+  try {
+    const res = await fetch('index.html?_t=' + Date.now(), { cache: 'no-store' });
+    const text = await res.text();
+    const match = text.match(/app\.js\?v=(\w+)/);
+    if (match && match[1] !== APP_VERSION) {
+      const banner = document.createElement('div');
+      banner.className = 'update-banner';
+      banner.innerHTML = `<span>🔄 새 버전이 있어요!</span><button onclick="location.reload(true)">업데이트</button>`;
+      document.body.appendChild(banner);
+    }
+  } catch (e) {}
+}
+setTimeout(checkAppUpdate, 5000);
 
 const firebaseConfig = {
   apiKey: "AIzaSyAbEbLdJuWVai_NKTHuo1XtC8p76dmVPE0",

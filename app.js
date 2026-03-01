@@ -2658,6 +2658,11 @@ async function renderFriends() {
   }
   h += '</div><div id="friendDetailArea"></div>';
   sec.innerHTML = h;
+  // Auto-expand if only 1 friend
+  if (friendIds.size === 1) {
+    const fid = [...friendIds][0];
+    openFriendDetail(fid);
+  }
 }
 
 window.openFriendDetail = async function (fid) {
@@ -2669,7 +2674,7 @@ window.openFriendDetail = async function (fid) {
   const nick = d.nickname || u.name || fid;
   const goals = d.goals || [], comp = d.completions || {};
   const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
-  let h = `<div class="friend-detail"><div class="friend-detail-hdr"><span style="font-size:24px;margin-right:8px;">${getFriendEmoji(fid)}</span><div class="friend-detail-name">${esc(nick)}</div></div><div class="fgoal-grid">`;
+  let h = `<div class="friend-detail"><div class="fgoal-grid">`;
   for (let i = 0; i < MAX_HABITS; i++) {
     const g = goals[i]; if (!g || !g.unit) continue;
     const mg = migrateGoal(g);
@@ -2717,6 +2722,13 @@ window.showFriendGoalCal = async function (fid, gi) {
   }
   h += `<div class="cheer-input-row"><input class="cheer-text-input" id="cheerInput" placeholder="응원 메시지 보내기" maxlength="50"><button class="cheer-send-btn" onclick="sendCheer('${fid}',${gi})">보내기</button></div></div>`;
   area.innerHTML = h;
+  // Fix iOS keyboard scroll
+  const cheerInput = document.getElementById('cheerInput');
+  if (cheerInput) {
+    cheerInput.addEventListener('focus', () => {
+      setTimeout(() => { cheerInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
+    });
+  }
 };
 
 window.sendCheer = async function (fid, gi) {

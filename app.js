@@ -1380,6 +1380,7 @@ async function habitMarkDone(idx) {
   const k = isOnce ? `g${idx}_once` : `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
   localDash.completions[k] = true;
   await saveDash();
+  triggerHaptic('heavy');
   showToast('🎉 완료!', 'done'); showConfettiSmall();
   if (!isOnce) checkWeekClear(idx);
   renderHabitCards(); renderAvatar();
@@ -1392,6 +1393,7 @@ async function habitMarkUndo(idx) {
   const k = isOnce ? `g${idx}_once` : `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
   localDash.completions[k] = false;
   await saveDash();
+  triggerHaptic('light');
   showToast('↩️ 취소', 'undo');
   renderHabitCards(); renderAvatar();
 }
@@ -1587,8 +1589,8 @@ async function swipeBucket(idx) {
   const wasDone = c.done === true;
   localDash.challenges[idx].done = !wasDone;
   await saveDash();
-  if (!wasDone) { showToast('🎉 버킷리스트 달성!', 'done'); showConfetti(); }
-  else { showToast('↩️ 취소', 'undo'); }
+  if (!wasDone) { triggerHaptic('heavy'); showToast('🎉 버킷리스트 달성!', 'done'); showConfetti(); }
+  else { triggerHaptic('light'); showToast('↩️ 취소', 'undo'); }
   renderChallengeCards();
 }
 

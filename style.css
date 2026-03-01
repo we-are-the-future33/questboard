@@ -122,8 +122,8 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 /* 아바타 */
 .avatar-section{padding:40px 16px 90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
 .avatar-section::before{content:'';position:absolute;top:0;left:0;right:0;height:24px;background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,transparent 100%);z-index:2;pointer-events:none;}
-.avatar-art{width:180px;height:180px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-top:0px;margin-bottom:10px;}
-.avatar-art canvas{width:180px!important;height:180px!important;}
+.avatar-art{width:240px;height:240px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-top:-10px;margin-bottom:5px;}
+.avatar-art canvas{width:240px!important;height:240px!important;}
 .avatar-stage{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:8px;position:relative;z-index:3;}
 .avatar-info-row{display:flex;align-items:center;justify-content:center;gap:8px;position:relative;z-index:3;padding-bottom:8px;}
 .avatar-nickname{font-family:var(--font-heading);font-size:22px;color:#111827;letter-spacing:-0.02em;}
@@ -740,14 +740,13 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 /* ===== COOKING SYSTEM ===== */
 
 /* Stage Message */
-.stage-msg-wrap { text-align: center; padding: 2px 0; margin-bottom: 0; position: relative; z-index: 5; }
+.stage-msg-wrap { text-align: center; padding: 0; margin-bottom: 0; position: relative; z-index: 5; }
 .stage-msg {
-  display: inline-block; max-width: 85%;
-  font-size: 13px; font-weight: 500; padding: 10px 18px; border-radius: 20px;
-  background: rgba(255,255,255,.12); color: #ffffff; text-align: center;
-  line-height: 1.4; letter-spacing: -0.02em;
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.2);
+  display: inline-block;
+  font-size: 13px; font-weight: 500; padding: 4px 0; border-radius: 0;
+  background: transparent; color: rgba(255,255,255,.7); text-align: center;
+  line-height: 1.4; letter-spacing: -0.02em; white-space: nowrap;
+  border: none; backdrop-filter: none;
 }
 
 /* Cooking FAB */
@@ -894,9 +893,9 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 }
 .ms-bar-pill {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 10px; height: 60px; margin: 0;
-  background: rgba(255,255,255,.1); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-  border-radius: 30px; border: 1px solid rgba(255,255,255,.15);
+  padding: 0 12px; height: 60px; margin: 0;
+  background: rgba(255,255,255,.12); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+  border-radius: 30px; border: 1px solid rgba(255,255,255,.18);
   position: relative; box-sizing: border-box;
 }
 .ms-bar-track {

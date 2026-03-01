@@ -887,12 +887,13 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 
 /* Milestone Progress Bar */
 .ms-bar-wrap {
-  position: relative; margin: 12px 20px 8px; padding: 0 15px; height: 44px;
+  position: relative; margin: 12px 20px 8px; height: 44px;
+  display: flex; align-items: center;
 }
 .ms-bar-track {
-  position: absolute; top: 50%; left: 30px; right: 30px;
-  height: 5px; background: rgba(255,255,255,.2); border-radius: 100px;
-  transform: translateY(-50%); overflow: hidden;
+  position: absolute; left: 16px; right: 16px; top: 50%;
+  height: 4px; background: rgba(255,255,255,.18); border-radius: 100px;
+  transform: translateY(-50%); z-index: 0; overflow: hidden;
 }
 .ms-bar-fill {
   height: 100%; border-radius: 100px;
@@ -901,22 +902,19 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 }
 .ms-bar-icons {
   position: relative; display: flex; justify-content: space-between;
-  align-items: center; height: 100%;
+  align-items: center; width: 100%; z-index: 1;
 }
 .ms-bar-icon {
-  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: rgba(255,255,255,.15);
-  transition: all .3s; z-index: 1; flex-shrink: 0;
+  width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(30,30,60,.45); border: 2px solid rgba(255,255,255,.15);
+  transition: all .3s; flex-shrink: 0;
 }
 .ms-bar-icon.active {
-  background: rgba(255,255,255,.92);
-  box-shadow: 0 2px 10px rgba(0,0,0,.18);
+  background: rgba(255,255,255,.92); border-color: rgba(255,255,255,.5);
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
 }
-.ms-bar-icon.bounce {
-  animation: msBounce .5s ease;
-}
-.ms-bar-emoji { font-size: 16px; line-height: 1; }
-.ms-bar-icon.active .ms-bar-emoji { font-size: 18px; }
+.ms-bar-icon.bounce { animation: msBounce .5s ease; }
+.ms-bar-emoji { font-size: 17px; line-height: 1; }
 @keyframes msBounce {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.35); }

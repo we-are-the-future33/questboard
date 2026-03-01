@@ -50,6 +50,20 @@ body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
   </div>
 </div>
 
+<!-- Bottom Sheet (read-only) -->
+<div class="bottomsheet-overlay" id="bsOverlay" onclick="closePubBS()"></div>
+<div class="bottomsheet" id="bottomSheet">
+  <div class="bs-handle"><div class="bs-handle-bar"></div></div>
+  <div class="bs-header">
+    <div>
+      <div class="bs-title" id="bsTitle">목표 상세</div>
+      <div class="bs-meta-tags" id="bsMetaTags"></div>
+    </div>
+    <button class="bs-close" onclick="closePubBS()">✕</button>
+  </div>
+  <div class="bs-body" id="bsBody"></div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -225,6 +239,8 @@ function renderHabits(){
     else{html+=`<div class="card-grid">`;sorted.forEach(v=>{html+=habitCard(v.g,v.idx);});html+=`</div>`;}
   }
   document.getElementById('hList').innerHTML=html;
+  // Init swipe/tap for habit cards
+  sorted.forEach(v=>{initPubHabitSwipe(v.idx);});
 }
 
 function habitCard(g,idx){
@@ -237,8 +253,10 @@ function habitCard(g,idx){
   const isDone=todayDone||(isOnce&&_comp[`g${idx}_once`]);
   const streak=calcStreak(mg,idx,_comp);
   const streakLbl=getStreakLabel(mg,streak);
-  return `<div class="habit-card-outer">
-    <div class="habit-card ${isCompleted?'completed':''} ${isDone?'today-done':''}" style="cursor:default;">
+  return `<div class="habit-card-outer" id="hcO_${idx}">
+    <div class="habit-card-swipe-bg-left todo"><div class="swipe-bg-text">✓ 완료</div></div>
+    <div class="habit-card-swipe-bg-right done"><div class="swipe-bg-text">↩ 취소</div></div>
+    <div class="habit-card ${isCompleted?'completed':''} ${isDone?'today-done':''}" id="hc_${idx}" data-done="${isDone?1:0}" style="cursor:pointer;">
       ${isDone?'<div class="habit-card-done-badge">✓</div>':''}
       <div><div class="habit-card-title">${esc(g.title)}</div>
       <div class="habit-card-mid"><div class="habit-card-unit">${getUnitLabel(mg)}</div>
@@ -249,33 +267,35 @@ function habitCard(g,idx){
 }
 
 function renderChallenges(){
-  const activeC=_challenges.filter(c=>c);
+  const activeC=[];_challenges.forEach((c,i)=>{if(c)activeC.push({c,idx:i});});
   document.getElementById('cCount').textContent=activeC.length;
   let html='';
   if(pubCViewMode==='type'){
-    const buckets=activeC.filter(c=>c.type==='bucket'||!c.type);
-    const projects=activeC.filter(c=>c.type==='project');
-    if(buckets.length){html+=`<div class="group-header"><div class="group-header-left">🎯 버킷리스트 <span style="font-size:12px;color:var(--accent);">${buckets.length}</span></div></div><div class="card-grid">`;buckets.forEach((c,i)=>{html+=challengeCard(c);});html+=`</div>`;}
-    if(projects.length){html+=`<div class="group-header"><div class="group-header-left">📋 프로젝트 <span style="font-size:12px;color:var(--accent);">${projects.length}</span></div></div><div class="card-grid">`;projects.forEach((c,i)=>{html+=challengeCard(c);});html+=`</div>`;}
+    const buckets=activeC.filter(v=>v.c.type==='bucket'||!v.c.type);
+    const projects=activeC.filter(v=>v.c.type==='project');
+    if(buckets.length){html+=`<div class="group-header"><div class="group-header-left">🎯 버킷리스트 <span style="font-size:12px;color:var(--accent);">${buckets.length}</span></div></div><div class="card-grid">`;buckets.forEach(v=>{html+=challengeCard(v.c,v.idx);});html+=`</div>`;}
+    if(projects.length){html+=`<div class="group-header"><div class="group-header-left">📋 프로젝트 <span style="font-size:12px;color:var(--accent);">${projects.length}</span></div></div><div class="card-grid">`;projects.forEach(v=>{html+=challengeCard(v.c,v.idx);});html+=`</div>`;}
   }else if(pubCViewMode==='category'){
     const groups={};Object.keys(CAT_LABELS).forEach(k=>{groups[k]=[];});
-    activeC.forEach(c=>{const cat=c.category||'etc';(groups[cat]||groups.etc).push(c);});
-    Object.keys(groups).forEach(key=>{if(!groups[key].length)return;html+=`<div class="group-header"><div class="group-header-left">${CAT_LABELS[key]} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div></div><div class="card-grid">`;groups[key].forEach(c=>{html+=challengeCard(c);});html+=`</div>`;});
+    activeC.forEach(v=>{const cat=v.c.category||'etc';(groups[cat]||groups.etc).push(v);});
+    Object.keys(groups).forEach(key=>{if(!groups[key].length)return;html+=`<div class="group-header"><div class="group-header-left">${CAT_LABELS[key]} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div></div><div class="card-grid">`;groups[key].forEach(v=>{html+=challengeCard(v.c,v.idx);});html+=`</div>`;});
   }else{
     if(activeC.length===0){html=`<div class="pub-empty">등록된 도전이 없어요</div>`;}
-    else{html+=`<div class="card-grid">`;activeC.forEach(c=>{html+=challengeCard(c);});html+=`</div>`;}
+    else{html+=`<div class="card-grid">`;activeC.forEach(v=>{html+=challengeCard(v.c,v.idx);});html+=`</div>`;}
   }
   document.getElementById('cList').innerHTML=html;
+  // Init interactions after render
+  activeC.forEach(v=>{if(v.c.type==='bucket'||!v.c.type)initPubBucketSwipe(v.idx);else if(v.c.type==='project')initPubProjectTap(v.idx);});
 }
 
-function challengeCard(c){
+function challengeCard(c,idx){
   if(c.type==='bucket'||!c.type){
     const done=c.done===true;
-    return `<div class="challenge-card-outer"><div class="challenge-card type-bucket ${done?'bucket-done':''}" style="cursor:default;">${done?'<div class="challenge-card-done-badge">✓</div>':''}<div><div class="challenge-card-title">${esc(c.title)}</div><span class="challenge-card-type bucket">버킷리스트</span></div>${done?'<div><div class="challenge-card-achieve">달성 완료</div></div>':'<div></div>'}</div></div>`;
+    return `<div class="challenge-card-outer"><div class="challenge-swipe-bg ${done?'done':'todo'}"><div class="swipe-bg-text">${done?'↩ 취소':'✓ 완료'}</div></div><div class="challenge-card type-bucket ${done?'bucket-done':''}" id="cc_${idx}" style="cursor:default;">${done?'<div class="challenge-card-done-badge">✓</div>':''}<div><div class="challenge-card-title">${esc(c.title)}</div><span class="challenge-card-type bucket">버킷리스트</span></div>${done?'<div><div class="challenge-card-achieve">달성 완료</div></div>':'<div></div>'}</div></div>`;
   }else{
     const stages=c.stages||[];const all=stages.flatMap(s=>s.tasks||[]);const dn=all.filter(t=>t.done).length;const total=all.length;
     const pct=total>0?Math.round(dn/total*100):0;const projDone=pct>=100;
-    return `<div class="challenge-card type-project ${projDone?'project-done':''}" style="cursor:default;">${projDone?'<div class="challenge-card-done-badge">✓</div>':''}<div><div class="challenge-card-title">${esc(c.title)}</div><div class="challenge-card-meta-row"><span class="challenge-card-type project">프로젝트</span><span class="challenge-card-stage">${dn}/${total} 단계</span></div></div><div><div style="display:flex;align-items:center;gap:6px;"><div class="challenge-card-bar" style="flex:1;"><div class="challenge-card-bar-fill project" style="width:${Math.min(pct,100)}%"></div></div><div class="challenge-card-pct project">${pct}%</div></div></div></div>`;
+    return `<div class="challenge-card type-project ${projDone?'project-done':''}" id="cc_${idx}" style="cursor:pointer;">${projDone?'<div class="challenge-card-done-badge">✓</div>':''}<div><div class="challenge-card-title">${esc(c.title)}</div><div class="challenge-card-meta-row"><span class="challenge-card-type project">프로젝트</span><span class="challenge-card-stage">${dn}/${total} 단계</span></div></div><div><div style="display:flex;align-items:center;gap:6px;"><div class="challenge-card-bar" style="flex:1;"><div class="challenge-card-bar-fill project" style="width:${Math.min(pct,100)}%"></div></div><div class="challenge-card-pct project">${pct}%</div></div></div></div>`;
   }
 }
 
@@ -305,7 +325,142 @@ window.switchPubTab=function(t){
 window.changePubHView=function(v){pubViewMode=v;renderHabits();};
 window.changePubCView=function(v){pubCViewMode=v;renderChallenges();};
 
-// ===== 3D HAMSTER =====
+// ===== BOTTOM SHEET =====
+window.closePubBS=function(){document.getElementById('bsOverlay').classList.remove('open');document.getElementById('bottomSheet').classList.remove('open');};
+function openPubBS(){document.getElementById('bsOverlay').classList.add('open');document.getElementById('bottomSheet').classList.add('open');}
+function readOnlyAlert(){pubAlert('👀 공개 모드에서는 수정할 수 없어요');}
+
+const TYPE_LABELS={bucket:'🎯 버킷리스트',project:'📋 프로젝트'};
+function formatTargetMonth(tm){if(!tm||tm==='someday')return'☁️ 언젠가';const p=tm.split('-');return`📅 ${p[0]}년 ${parseInt(p[1])}월`;}
+
+function openPubHabitBS(idx){
+  const g=_goals[idx];if(!g||!g.unit)return;
+  const mg=migrateGoal(g);
+  document.getElementById('bsTitle').textContent=g.title;
+  // Meta tags
+  const el=document.getElementById('bsMetaTags');
+  const unitLbl=getUnitLabel(mg);
+  const timeLbl=TIME_LABELS[g.time||'any']||'🔄 언제나';
+  const catLbl=CAT_LABELS[g.category||'etc']||'📦 기타';
+  el.innerHTML=`<span class="bs-meta-chip accent">${unitLbl}</span><span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
+  renderPubHabitBody(idx);
+  openPubBS();
+}
+
+function renderPubHabitBody(idx){
+  const g=migrateGoal(_goals[idx]),body=document.getElementById('bsBody');
+  const now=new Date(),y=_viewMonth.year,m=_viewMonth.month;
+  const{done,mod,pct}=goalPct(g,idx,y,m,_comp);
+  let h='';
+  // Month nav
+  h+=`<div class="month-nav"><button class="month-nav-btn" onclick="pubBSMonthPrev(${idx})">‹</button><div class="month-label">${y}년 ${m}월</div>`;
+  const isFutureBlocked=y>now.getFullYear()||(y===now.getFullYear()&&m>=now.getMonth()+1);
+  h+=`<button class="month-nav-btn" ${isFutureBlocked?'disabled':''} onclick="pubBSMonthNext(${idx})">›</button></div>`;
+  // Calendar
+  h+=renderPubCalendar(idx,g,y,m);
+  // 6-month mini stats
+  h+=renderPubStats(idx,g);
+  // Edit/Delete buttons (read-only)
+  h+=`<button class="proj-edit-btn" onclick="readOnlyAlert()">✏️ 수정</button>`;
+  h+=`<button class="proj-edit-btn" style="color:var(--danger,#ef4444);border-color:var(--danger,#ef4444);margin-top:8px;" onclick="readOnlyAlert()">🗑 삭제</button>`;
+  body.innerHTML=h;
+}
+
+let _viewMonth={year:new Date().getFullYear(),month:new Date().getMonth()+1};
+window.pubBSMonthPrev=function(idx){_viewMonth.month--;if(_viewMonth.month<1){_viewMonth.month=12;_viewMonth.year--;}renderPubHabitBody(idx);};
+window.pubBSMonthNext=function(idx){_viewMonth.month++;if(_viewMonth.month>12){_viewMonth.month=1;_viewMonth.year++;}renderPubHabitBody(idx);};
+
+function renderPubCalendar(idx,g,y,m){
+  const now=new Date(),days=getMonthDays(y,m),fd=new Date(y,m-1,1).getDay();
+  let h=`<div class="cal-day-row">`;
+  ['일','월','화','수','목','금','토'].forEach(d=>h+=`<div class="cal-day-lbl">${d}</div>`);
+  h+=`</div><div class="cal-grid">`;
+  for(let i=0;i<fd;i++)h+=`<div class="cal-cell empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const k=`g${idx}_${y}_${m}_${d}`,isDone=_comp[k]===true;
+    const isToday=y===now.getFullYear()&&m===now.getMonth()+1&&d===now.getDate();
+    h+=`<div class="cal-cell ${isDone?'done':''} ${isToday?'today':''}">${d}</div>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+
+function renderPubStats(idx,g){
+  const now=new Date();
+  let h=`<div style="margin-top:16px;"><div style="font-size:12px;font-weight:700;color:var(--text-dim);margin-bottom:8px;">최근 6개월</div><div style="display:flex;gap:6px;">`;
+  for(let i=5;i>=0;i--){
+    let my=now.getMonth()+1-i,yy=now.getFullYear();
+    while(my<1){my+=12;yy--;}
+    const{pct}=goalPct(g,idx,yy,my,_comp);
+    const barH=Math.max(4,pct*0.6);
+    h+=`<div style="flex:1;text-align:center;"><div style="height:60px;display:flex;align-items:flex-end;justify-content:center;"><div style="width:100%;max-width:24px;height:${barH}px;background:${pct>=100?'var(--accent3,#10b981)':'var(--accent)'};border-radius:4px;"></div></div><div style="font-size:10px;color:var(--text-dim);margin-top:4px;">${my}월</div><div style="font-size:10px;font-weight:700;color:${pct>=100?'var(--accent3)':'var(--text)'}">${pct}%</div></div>`;
+  }
+  h+=`</div></div>`;
+  return h;
+}
+
+// ===== PROJECT DETAIL BOTTOM SHEET =====
+function openPubProjectBS(idx){
+  const c=_challenges[idx];if(!c||c.type!=='project')return;
+  document.getElementById('bsTitle').textContent=c.title;
+  const el=document.getElementById('bsMetaTags');
+  const typeLbl=TYPE_LABELS[c.type]||'🎯 버킷리스트';
+  const catLbl=CAT_LABELS[c.category||'etc']||'📦 기타';
+  const monthLbl=formatTargetMonth(c.targetMonth);
+  el.innerHTML=`<span class="bs-meta-chip">${typeLbl}</span><span class="bs-meta-chip">${catLbl}</span><span class="bs-meta-chip">${monthLbl}</span>`;
+  const body=document.getElementById('bsBody');
+  const stages=c.stages||[];
+  const all=stages.flatMap(s=>s.tasks||[]);const dn=all.filter(t=>t.done).length;const total=all.length;
+  const pct=total>0?Math.round(dn/total*100):0;
+  let h='';
+  if(c.why){h+=`<div class="proj-why-box"><span class="proj-why-label">나의 목적</span><div class="proj-why-text">"${esc(c.why)}"</div></div>`;}
+  stages.forEach((s,si)=>{
+    const tasks=s.tasks||[];const sd=tasks.filter(t=>t.done).length;const allDone=tasks.length>0&&sd===tasks.length;
+    h+=`<div class="proj-stage"><div class="proj-stage-hdr"><div class="proj-stage-num ${allDone?'done':''}">${si+1}</div><div class="proj-stage-title">${esc(s.name)}</div></div><div class="proj-task-list">`;
+    tasks.forEach(t=>{h+=`<div class="proj-task ${t.done?'task-done':''}" onclick="readOnlyAlert()"><div class="proj-task-check">${t.done?'✓':''}</div><div class="proj-task-text">${esc(t.name)}</div></div>`;});
+    h+=`</div></div>`;
+  });
+  h+=`<div style="display:flex;align-items:center;gap:8px;padding:12px 0;"><div style="flex:1;height:8px;background:#f1f5f9;border-radius:100px;overflow:hidden;"><div style="height:100%;width:${Math.min(pct,100)}%;background:linear-gradient(90deg,#60a5fa,#6366f1);border-radius:100px;"></div></div><span style="font-family:var(--font-heading);font-size:16px;color:var(--accent);">${pct}%</span></div>`;
+  h+=`<button class="proj-edit-btn" onclick="readOnlyAlert()">✏️ 수정</button>`;
+  h+=`<button class="proj-edit-btn" style="color:var(--danger,#ef4444);border-color:var(--danger,#ef4444);margin-top:8px;" onclick="readOnlyAlert()">🗑 삭제</button>`;
+  body.innerHTML=h;
+  openPubBS();
+}
+
+// ===== SWIPE & TAP INIT =====
+function initPubHabitSwipe(idx){
+  const card=document.getElementById(`hc_${idx}`);if(!card)return;
+  const outer=document.getElementById(`hcO_${idx}`);
+  let sx=0,dx=0,swiping=false,locked=false,touchStartTime=0,totalMove=0;
+  const TH=60;
+  card.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;dx=0;swiping=false;locked=false;touchStartTime=Date.now();totalMove=0;card.classList.remove('snapping');if(outer)outer.classList.remove('swiping-right','swiping-left');},{passive:true});
+  card.addEventListener('touchmove',e=>{if(locked)return;const t=e.touches[0];const dX=t.clientX-sx,dY=t.clientY-(e.touches[0].clientY||0);totalMove=Math.abs(dX);if(!swiping&&Math.abs(t.clientY-sx)>Math.abs(dX)){locked=true;return;}if(Math.abs(dX)>8)swiping=true;if(!swiping)return;e.preventDefault();dx=dX;card.classList.add('swiping');card.style.transform=`translateX(${dx}px)`;if(outer){outer.classList.toggle('swiping-right',dx>10);outer.classList.toggle('swiping-left',dx<-10);}},{passive:false});
+  card.addEventListener('touchend',()=>{if(outer)outer.classList.remove('swiping-right','swiping-left');const elapsed=Date.now()-touchStartTime;if(!swiping){card.style.transform='';card.classList.remove('swiping');if(totalMove<12&&elapsed<600){_viewMonth={year:new Date().getFullYear(),month:new Date().getMonth()+1};openPubHabitBS(idx);}return;}card.classList.remove('swiping');card.classList.add('snapping');if(Math.abs(dx)>=TH){pubAlert('👀 공개 모드에서는 완료/취소할 수 없어요');}card.style.transform='translateX(0)';dx=0;swiping=false;});
+  // PC click
+  card.addEventListener('click',()=>{_viewMonth={year:new Date().getFullYear(),month:new Date().getMonth()+1};openPubHabitBS(idx);});
+  card.style.cursor='pointer';
+}
+
+function initPubBucketSwipe(idx){
+  const card=document.getElementById(`cc_${idx}`);if(!card)return;
+  const outer=card.closest('.challenge-card-outer');
+  let sx=0,dx=0,swiping=false,locked=false,touchStartTime=0,totalMove=0;
+  const TH=60;
+  card.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;dx=0;swiping=false;locked=false;touchStartTime=Date.now();totalMove=0;card.classList.remove('snapping');},{passive:true});
+  card.addEventListener('touchmove',e=>{if(locked)return;const t=e.touches[0];const dX=t.clientX-sx;totalMove=Math.abs(dX);if(Math.abs(dX)>8)swiping=true;if(!swiping)return;e.preventDefault();dx=dX;card.classList.add('swiping');card.style.transform=`translateX(${dx}px)`;},{passive:false});
+  card.addEventListener('touchend',()=>{const elapsed=Date.now()-touchStartTime;if(!swiping){card.style.transform='';card.classList.remove('swiping');return;}card.classList.remove('swiping');card.classList.add('snapping');if(Math.abs(dx)>=TH){pubAlert('👀 공개 모드에서는 완료/취소할 수 없어요');}card.style.transform='translateX(0)';dx=0;swiping=false;});
+}
+
+function initPubProjectTap(idx){
+  const card=document.getElementById(`cc_${idx}`);if(!card)return;
+  card.addEventListener('click',()=>openPubProjectBS(idx));
+  card.style.cursor='pointer';
+}
+
+function initAllInteractions(){
+  _goals.forEach((g,i)=>{if(g&&g.unit)initPubHabitSwipe(i);});
+  _challenges.forEach((c,i)=>{if(!c)return;if(c.type==='bucket'||!c.type)initPubBucketSwipe(i);else if(c.type==='project')initPubProjectTap(i);});
+}
 function buildHamster(container){
   if(typeof THREE==='undefined'){container.innerHTML='🐹';return;}
   let scene,camera,renderer,hamster,handsGroup,seed,clock=new THREE.Clock(),mouse=new THREE.Vector2(),targetRotation=new THREE.Vector2(),eyes=[],isBlinking=false;

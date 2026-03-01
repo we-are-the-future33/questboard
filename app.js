@@ -1009,7 +1009,7 @@ function renderDashboard() {
   if (hPill) { hPill.classList.toggle('active-filter', habitFilter === 'active'); hPill.innerHTML = (habitFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
   const cPill = document.getElementById('challengeFilterPill');
   if (cPill) { cPill.classList.toggle('active-filter', challengeFilter === 'active'); cPill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
-  renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers();
+  renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers(); checkFriendActivity();
   // jin 전용 어드민 메뉴
   const adminEl = document.getElementById('adminMenuItem');
   if (adminEl) adminEl.style.display = (currentUser && currentUser.id === 'jin') ? '' : 'none';
@@ -2644,6 +2644,46 @@ window.openNoticeModal = function () {
 window.closeNoticeModal = function () { document.getElementById('noticeModalOverlay').classList.remove('open'); };
 
 // ===== FRIENDS =====
+let _friendActivityCache = []; // [{fid, nick, emoji, todayCount}]
+
+async function checkFriendActivity() {
+  try {
+    const grpSnap = await get(ref(db, 'groups'));
+    if (!grpSnap.exists()) return;
+    const groups = grpSnap.val();
+    let friendIds = new Set();
+    Object.values(groups).forEach(g => { if (g.members && Object.values(g.members).includes(currentUser.id)) Object.values(g.members).forEach(m => { if (m !== currentUser.id) friendIds.add(m); }); });
+    if (friendIds.size === 0) return;
+
+    const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+    const todayPrefix = `_${y}_${m}_${d}`;
+    _friendActivityCache = [];
+
+    for (const fid of friendIds) {
+      const dSnap = await get(ref(db, `dashboards/${fid}`));
+      const uSnap = await get(ref(db, `users/${fid}`));
+      if (!uSnap.exists()) continue;
+      const u = uSnap.val(), dash = dSnap.exists() ? dSnap.val() : {};
+      const nick = dash.nickname || u.name || fid;
+      const comp = dash.completions || {};
+      const todayCount = Object.entries(comp).filter(([k, v]) => k.endsWith(todayPrefix) && v === true).length;
+      if (todayCount > 0) {
+        _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount });
+      }
+    }
+
+    // Show/hide badge
+    const badge = document.getElementById('friendTabBadge');
+    const lastSeen = localStorage.getItem('kw_friendNotiDate');
+    const today = `${y}-${m}-${d}`;
+    if (_friendActivityCache.length > 0 && lastSeen !== today) {
+      if (badge) badge.style.display = '';
+    } else {
+      if (badge) badge.style.display = 'none';
+    }
+  } catch (e) {}
+}
+
 async function renderFriends() {
   const sec = document.getElementById('friendsSection');
   sec.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">로딩 중...</div>';
@@ -2653,7 +2693,23 @@ async function renderFriends() {
   let friendIds = new Set();
   Object.values(groups).forEach(g => { if (g.members && Object.values(g.members).includes(currentUser.id)) Object.values(g.members).forEach(m => { if (m !== currentUser.id) friendIds.add(m); }); });
   if (friendIds.size === 0) { sec.innerHTML = '<div class="friends-empty">아직 같은 그룹의 친구가 없어요</div>'; return; }
-  let h = '<div class="friend-list">';
+
+  // Clear badge on friends tab entry
+  const now0 = new Date();
+  localStorage.setItem('kw_friendNotiDate', `${now0.getFullYear()}-${now0.getMonth()+1}-${now0.getDate()}`);
+  const badge = document.getElementById('friendTabBadge');
+  if (badge) badge.style.display = 'none';
+
+  // Activity summary card
+  let h = '';
+  if (_friendActivityCache.length > 0) {
+    const summary = _friendActivityCache.map(f => `${f.emoji} ${esc(f.nick)} ${f.todayCount}개`).join(' · ');
+    h += `<div class="friend-activity-card">
+      <div class="friend-activity-text">${summary}</div>
+      <div class="friend-activity-sub">오늘 친구들이 열심히 하고 있어요 💪</div>
+    </div>`;
+  }
+  h += '<div class="friend-list">';
   for (const fid of friendIds) {
     const uSnap = await get(ref(db, `users/${fid}`));
     const dSnap = await get(ref(db, `dashboards/${fid}`));

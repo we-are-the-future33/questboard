@@ -721,7 +721,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 @keyframes pdiscFadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
 /* Wizard slide */
-.wiz-wrap{position:relative;overflow:hidden;min-height:200px;}
+.wiz-wrap{position:relative;overflow:hidden;min-height:260px;transition:min-height .3s ease;}
 .wiz-slide,.cwiz-slide{position:absolute;top:0;left:0;width:100%;opacity:0;transform:translateX(60px);transition:all .3s ease;pointer-events:none;visibility:hidden;}
 .wiz-slide.active,.cwiz-slide.active{position:relative;opacity:1;transform:translateX(0);pointer-events:auto;visibility:visible;}
 .wiz-slide.exit-left,.cwiz-slide.exit-left{opacity:0;transform:translateX(-60px);pointer-events:none;visibility:hidden;}

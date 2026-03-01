@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303c';
+const APP_VERSION = '20260303e';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1276,6 +1276,9 @@ function applyTimeBackground() {
   section.style.position = 'relative';
   section.style.overflow = 'hidden';
   section.insertAdjacentHTML('beforeend', decoHTML);
+  // Sync milestone bar background
+  const msBar = document.getElementById('milestoneBar');
+  if (msBar) msBar.style.background = bg;
 
   // 닉네임/단계 색상
   const nickEl = document.querySelector('.avatar-nickname');

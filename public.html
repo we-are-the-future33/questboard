@@ -6,7 +6,7 @@
 <title>키웁 — 공개 프로필</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20260302s">
 <style>
 body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
 .pub-mobile-wrap{max-width:440px;width:100%;background:var(--bg,#fff);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -134,9 +134,9 @@ function render(user,dash,cheersData,uid){
 
   // Build structure matching app's HTML
   let h='';
-  // Tab bar (나의 목표 / 친구)
+  // Tab bar (나의 투두 / 친구)
   h+=`<div class="tab-bar" id="pubTabBar">`;
-  h+=`<button class="tab-btn active" onclick="pubAlert('공개 모드에서는 확인할 수 없어요')">🎯 나의 목표</button>`;
+  h+=`<button class="tab-btn active" onclick="pubAlert('공개 모드에서는 확인할 수 없어요')">🎯 나의 투두</button>`;
   h+=`<button class="tab-btn" onclick="pubAlert('👀 다른 사람의 프로필이라 친구 탭은 확인할 수 없어요')">👥 친구</button>`;
   h+=`</div>`;
 
@@ -161,7 +161,7 @@ function render(user,dash,cheersData,uid){
 
   // Habit panel
   h+=`<div class="sub-tab-panel active" id="pH">`;
-  h+=`<div class="section-hdr"><div class="section-hdr-left"><div class="section-hdr-title">나의 습관</div><div class="section-hdr-count" id="hCount">0</div></div>`;
+  h+=`<div class="section-hdr"><div class="section-hdr-left"><div class="section-hdr-title">나의 투두</div><div class="section-hdr-count" id="hCount">0</div></div>`;
   h+=`<div style="display:flex;align-items:center;"><select class="view-mode-select" onchange="changePubHView(this.value)"><option value="all">기본 보기</option><option value="time">시간대별</option><option value="category">카테고리별</option></select>`;
   h+=`<button class="filter-pill active-filter" id="hFilterPill" onclick="togglePubHFilter()">진행 중 <span class="filter-dot"></span></button>`;
   h+=`</div></div>`;
@@ -457,7 +457,7 @@ function openPubHabitBS(idx){
   const unitLbl=getUnitLabel(mg);
   const timeLbl=TIME_LABELS[g.time||'any']||'🔄 언제나';
   const catLbl=CAT_LABELS[g.category||'etc']||'📦 기타';
-  el.innerHTML=`<span class="bs-meta-chip accent">${unitLbl}</span><span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
+  el.innerHTML=`<span class="bs-meta-chip">${unitLbl}</span><span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
   renderPubHabitBody(idx);
   openPubBS();
 }

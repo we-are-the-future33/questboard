@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302r';
+const APP_VERSION = '20260302s';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -110,7 +110,7 @@ function setHabitMetaTags(g) {
   const unitLbl = getUnitLabel(g);
   const timeLbl = TIME_LABELS[g.time || 'any'] || '🔄 언제나';
   const catLbl = CAT_LABELS[g.category || 'etc'] || '📦 기타';
-  el.innerHTML = `<span class="bs-meta-chip accent">${unitLbl}</span><span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
+  el.innerHTML = `<span class="bs-meta-chip">${unitLbl}</span><span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
 }
 function setChallengeMetaTags(c) {
   const el = document.getElementById('bsMetaTags');

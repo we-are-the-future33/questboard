@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302b';
+const APP_VERSION = '20260302c';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -2256,7 +2256,7 @@ function pdiscReveal(stepId) {
   }, 100);
 }
 
-function wizGoTo(step) {
+window.wizGoTo = function (step) {
   const slides = document.querySelectorAll('.wiz-slide');
   slides.forEach((s, i) => {
     s.classList.remove('active', 'exit-left');
@@ -2264,9 +2264,11 @@ function wizGoTo(step) {
     else if (i === step) s.classList.add('active');
   });
   _wizStep = step;
+  const summaryEl = document.getElementById('hAddSummary');
+  if (summaryEl) summaryEl.style.display = step === 4 ? 'none' : 'flex';
   renderHAddSummary();
   renderHAddDots();
-}
+};
 
 function renderHAddSummary() {
   const el = document.getElementById('hAddSummary');
@@ -2513,7 +2515,12 @@ window.hAddSelectCat = function (val) {
     if (_workoutType) cycleLbl += ` (${_workoutType})`;
     const tl = { any:'🔄 언제나', dawn:'🌅 새벽', morning:'🌤 아침', midday:'🏞 낮', afternoon:'🌇 오후', evening:'🌟 저녁', night:'🦉 밤' };
     const cl = { health:'💪 건강', diet:'🥗 식단', study:'📚 학습', work:'💼 업무', finance:'💰 재무', life:'🌱 생활', home:'🧹 집안일', hobby:'🎨 취미', social:'🤝 관계', mental:'🧘 멘탈', etc:'📦 기타' };
-    tagsEl.innerHTML = [cycleLbl, tl[_habitTime], cl[_habitCat]].filter(Boolean).map(t => `<span class="wiz-chip" style="cursor:default;">${t}</span>`).join('');
+    const tags = [
+      { label: cycleLbl, step: 1 },
+      { label: tl[_habitTime], step: 2 },
+      { label: cl[_habitCat], step: 3 }
+    ].filter(t => t.label);
+    tagsEl.innerHTML = tags.map(t => `<span class="wiz-chip" onclick="wizGoTo(${t.step})">${t.label}</span>`).join('');
   }
   wizGoTo(4);
 };

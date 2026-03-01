@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302d';
+const APP_VERSION = '20260302g';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -526,7 +526,7 @@ window.openSettings = function () {
   // Public profile link
   h += `<div style="border-top:1px solid var(--border);margin-top:20px;padding-top:20px;">`;
   h += `<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">🔗 공개 프로필</div>`;
-  h += `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">링크를 공유하면 누구나 나의 목표 현황을 볼 수 있어요</div>`;
+  h += `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">링크를 공유하면 누구나 나의 투두 현황을 볼 수 있어요</div>`;
   h += `<button onclick="copyPublicLink()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;">📋 공개 링크 복사</button>`;
   h += `</div>`;
   document.getElementById('bsBody').innerHTML = h;
@@ -1225,7 +1225,7 @@ window.switchSubTab = function (tab) {
   document.getElementById('subTabChallenge').classList.toggle('active', tab === 'challenge');
   document.getElementById('panelHabit').classList.toggle('active', tab === 'habit');
   document.getElementById('panelChallenge').classList.toggle('active', tab === 'challenge');
-  // Scroll so "나의 습관/도전" header is visible right below sticky sub-tab-bar
+  // Scroll so "나의 투두" header is visible right below sticky sub-tab-bar
   requestAnimationFrame(() => {
     const scroll = document.querySelector('.dash-scroll');
     const subBar = document.querySelector('.sub-tab-bar');
@@ -3294,30 +3294,32 @@ function renderMainFriendActivity() {
   const el = document.getElementById('mainFriendActivity');
   if (!el) return;
 
-  // My progress
+  // My progress (left)
   const { total, done } = getMyTodayProgress();
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  const myHtml = total > 0
-    ? `<div class="main-progress-chip" onclick="switchTab('home')">✅ ${done}/${total} (${pct}%) 달성 중 🔥</div>`
-    : '';
-
-  // Friend activity
-  let friendHtml = '';
-  if (_friendTotalCount === 0) {
-    el.innerHTML = myHtml ? `<div class="main-banner-row">${myHtml}</div>` : '';
-    return;
+  let myHtml;
+  if (total === 0) {
+    myHtml = `<div class="main-progress-chip" onclick="switchTab('home')">✅ 시작해볼까요? 🌱</div>`;
+  } else if (done >= total) {
+    myHtml = `<div class="main-progress-chip" onclick="switchTab('home')">✅ ${done}/${total} (100%) 모두 클리어 🎉</div>`;
+  } else {
+    myHtml = `<div class="main-progress-chip" onclick="switchTab('home')">✅ ${done}/${total} (${pct}%) 달성 중 🔥</div>`;
   }
 
+  // Friend activity (right)
+  let friendHtml;
   if (_friendActivityCache.length > 0) {
     const show = _friendActivityCache.slice(0, 3);
     const rest = _friendActivityCache.length - show.length;
     let summary = show.map(f => `${f.emoji} ${f.nick} (${f.todayCount})`).join(' · ');
     if (rest > 0) summary += ` 외 ${rest}명`;
-    friendHtml = `<div class="main-friend-chip active" onclick="switchTab('friends')">${summary} 🔥</div>`;
-  } else if (_friendHasHabitsCount > 0) {
-    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">친구들 아직 😴</div>`;
+    friendHtml = `<div class="main-friend-chip active" onclick="switchTab('friends')">${summary} 달성 중 🔥</div>`;
+  } else if (_friendTotalCount > 0 && _friendHasHabitsCount > 0) {
+    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">아직 아무도 달성 못함 😴</div>`;
+  } else if (_friendTotalCount > 0) {
+    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">투두 등록한 친구가 없음! 알려주기 📢</div>`;
   } else {
-    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">친구 초대 📢</div>`;
+    friendHtml = `<div class="main-friend-chip idle" onclick="switchTab('friends')">아직 친구 없음! 추가해봐요 👋</div>`;
   }
 
   el.innerHTML = `<div class="main-banner-row">${myHtml}${friendHtml}</div>`;

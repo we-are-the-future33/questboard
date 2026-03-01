@@ -34,7 +34,7 @@
   font-weight: bold;
 }
 </style>
-<link rel="stylesheet" href="style.css?v=20260302d">
+<link rel="stylesheet" href="style.css?v=20260302g">
 </head>
 <body>
 
@@ -219,7 +219,7 @@
       </div>
     </nav>
     <div class="tab-bar" id="dashTabBar" style="display:none;">
-      <button class="tab-btn active" onclick="switchTab('my')" id="tabBtnMy">🎯 나의 목표</button>
+      <button class="tab-btn active" onclick="switchTab('my')" id="tabBtnMy">🎯 나의 투두</button>
       <button class="tab-btn" onclick="switchTab('friends')" id="tabBtnFriends">👥 친구<span id="friendTabBadge" class="friend-tab-badge" style="display:none;"></span></button>
     </div>
     <div class="dash-scroll">
@@ -228,7 +228,7 @@
         <span class="notice-banner-title" id="noticeBannerTitle"></span>
         <span class="notice-banner-arrow">›</span>
       </div>
-      <!-- 나의 목표 탭 -->
+      <!-- 나의 투두 탭 -->
       <div class="tab-panel active" id="tabMy">
         <div class="avatar-section">
           <div class="avatar-art" id="avatarArt"></div>
@@ -250,7 +250,7 @@
         <div class="sub-tab-panel active" id="panelHabit">
           <div class="section-hdr">
             <div class="section-hdr-left">
-              <div class="section-hdr-title">나의 습관</div>
+              <div class="section-hdr-title">나의 투두</div>
               <div class="section-hdr-count" id="habitCount">0</div>
             </div>
             <div style="display:flex;align-items:center;">
@@ -333,7 +333,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script type="module" src="app.js?v=20260302d"></script>
+<script type="module" src="app.js?v=20260302g"></script>
 <script>
 /* 로그인 배경 애니메이션 */
 (function(){

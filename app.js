@@ -43,6 +43,14 @@ const AVATARS = [
   `<svg viewBox="0 0 80 80"><defs><linearGradient id="ugrd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f8b4d4"/><stop offset="50%" style="stop-color:#c8f135"/><stop offset="100%" style="stop-color:#35c8f1"/></linearGradient></defs><circle cx="40" cy="46" r="22" fill="url(#ugrd)"/><circle cx="40" cy="28" r="15" fill="url(#ugrd)"/><path d="M40,6 L36,22 L44,22Z" fill="#f1c835"/><circle cx="34" cy="26" r="3.5" fill="#1a1a1a"/><circle cx="46" cy="26" r="3.5" fill="#1a1a1a"/></svg>`
 ];
 
+// Friend animal emojis - deterministic per user ID
+const FRIEND_ANIMALS = ['🐶','🐱','🐻','🦊','🐰','🐼','🐨','🦁','🐯','🐮','🐷','🐸','🐵','🦄','🐺','🦝','🦒','🐘','🦩','🦉','🐧','🐬','🦋','🐢','🦈'];
+function getFriendEmoji(fid) {
+  let hash = 0;
+  for (let i = 0; i < fid.length; i++) { hash = ((hash << 5) - hash) + fid.charCodeAt(i); hash |= 0; }
+  return FRIEND_ANIMALS[Math.abs(hash) % FRIEND_ANIMALS.length];
+}
+
 // ===== STATE =====
 let currentUser = null;
 let localDash = null;
@@ -2636,7 +2644,7 @@ async function renderFriends() {
     }
     const fpct = ftm > 0 ? Math.round(ftd / ftm * 100) : 0;
     const fstage = Math.min(9, Math.floor(fpct / 10));
-    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${AVATARS[fstage]}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계</div></div><div class="friend-pct">${fpct}%</div></div>`;
+    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar" style="font-size:36px;display:flex;align-items:center;justify-content:center;">${getFriendEmoji(fid)}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계</div></div><div class="friend-pct">${fpct}%</div></div>`;
   }
   h += '</div><div id="friendDetailArea"></div>';
   sec.innerHTML = h;
@@ -2651,7 +2659,7 @@ window.openFriendDetail = async function (fid) {
   const nick = d.nickname || u.name || fid;
   const goals = d.goals || [], comp = d.completions || {};
   const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
-  let h = `<div class="friend-detail"><div class="friend-detail-hdr"><div class="friend-detail-name">${esc(nick)}</div></div><div class="fgoal-grid">`;
+  let h = `<div class="friend-detail"><div class="friend-detail-hdr"><span style="font-size:24px;margin-right:8px;">${getFriendEmoji(fid)}</span><div class="friend-detail-name">${esc(nick)}</div></div><div class="fgoal-grid">`;
   for (let i = 0; i < MAX_HABITS; i++) {
     const g = goals[i]; if (!g || !g.unit) continue;
     const mg = migrateGoal(g);

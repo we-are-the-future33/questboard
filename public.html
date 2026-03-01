@@ -210,7 +210,7 @@ function render(user,dash,cheersData,uid){
   const banner=document.createElement('div');
   banner.className='pub-float-banner';
   banner.id='pubFloatBanner';
-  banner.innerHTML=`🐹 ${esc(nick)}의 공개 대시보드 <span class="pub-float-dot">·</span> 체험만 가능해요 <span class="pub-float-dot">·</span> 가입은 별도 문의`;
+  banner.innerHTML=`🐹 ${esc(nick)}의 공개 대시보드입니다<br><span style="opacity:.7">체험만 가능</span> <span class="pub-float-dot">·</span> <span style="opacity:.7">가입은 별도 문의</span>`;
   document.body.appendChild(banner);
 
   // 3D hamster

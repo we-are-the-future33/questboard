@@ -26,8 +26,8 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // ===== CONSTANTS =====
-const MAX_HABITS = 50;
-const MAX_CHALLENGES = 10;
+const MAX_HABITS = 25;
+const MAX_CHALLENGES = 25;
 const TUT_STEPS = 5;
 const LEGACY_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
 const AVATARS = [
@@ -48,16 +48,16 @@ let currentUser = null;
 let localDash = null;
 let activeGoalIdx = null;
 let viewMonth = null;
-let habitFilter = 'all'; // 'all' | 'active'
-let challengeFilter = 'all';
-let habitViewMode = 'all'; // 'all' | 'time' | 'category'
-let challengeViewMode = 'all'; // 'all' | 'type' | 'category' | 'month'
+let habitFilter = localStorage.getItem('kw_habitFilter') || 'active';
+let challengeFilter = localStorage.getItem('kw_challengeFilter') || 'active';
+let habitViewMode = localStorage.getItem('kw_habitViewMode') || 'all';
+let challengeViewMode = localStorage.getItem('kw_challengeViewMode') || 'all';
 let _createType = 'bucket';
 let _createCat = 'etc';
 let _createMonth = 'someday';
 let _createStages = [];
 
-const TIME_LABELS = { any: '🕒 시간 무관', morning: '🌅 아침 루틴', afternoon: '☀️ 오후 루틴', evening: '🌙 저녁 루틴' };
+const TIME_LABELS = { any: '🔄 언제나', dawn: '🌅 새벽', morning: '🌤 아침', midday: '🏞 낮', afternoon: '🌇 오후', evening: '🌟 저녁', night: '🦉 밤' };
 const CAT_LABELS = { health: '💪 건강 & 체력', diet: '🥗 식단 & 영양', study: '📚 학습 & 성장', work: '💼 업무 & 커리어', finance: '💰 재무 & 자산', life: '🌱 생활 & 루틴', home: '🧹 집안일 & 정리', hobby: '🎨 취미 & 창작', social: '🤝 관계 & 소셜', mental: '🧘 휴식 & 멘탈', etc: '📦 기타' };
 const TYPE_LABELS = { bucket: '🎯 버킷리스트', project: '📋 프로젝트' };
 function formatTargetMonth(tm) {
@@ -69,9 +69,10 @@ function formatTargetMonth(tm) {
 function setHabitMetaTags(g) {
   const el = document.getElementById('bsMetaTags');
   if (!el) return;
-  const timeLbl = TIME_LABELS[g.time || 'any'] || '🕒 시간 무관';
+  const unitLbl = getUnitLabel(g);
+  const timeLbl = TIME_LABELS[g.time || 'any'] || '🔄 언제나';
   const catLbl = CAT_LABELS[g.category || 'etc'] || '📦 기타';
-  el.innerHTML = `<span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
+  el.innerHTML = `<span class="bs-meta-chip accent">${unitLbl}</span><span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
 }
 function setChallengeMetaTags(c) {
   const el = document.getElementById('bsMetaTags');
@@ -100,7 +101,7 @@ function getGoalFreq(g) {
   if (!g) return 1; g = migrateGoal(g);
   if (g.unit === 'once') return 0;
   if (g.unit === 'daily' || g.unit === 'health_sleep') return 7;
-  if (g.unit === 'health_workout') return 2;
+  if (g.unit === 'health_workout') return 7;
   return g.freq || 1;
 }
 function getUnitLabel(g) {
@@ -119,7 +120,7 @@ function getMonthWeeks(y, m) { return Math.ceil(getMonthDays(y, m) / 7); }
 function goalModulus(g, gi, y, m) {
   if (!g || !g.unit || g.unit === 'once') return 1; g = migrateGoal(g);
   if (g.unit === 'daily' || g.unit === 'health_sleep') return getMonthDays(y, m);
-  if (g.unit === 'health_workout') return 2 * getMonthWeeks(y, m);
+  if (g.unit === 'health_workout') return getMonthDays(y, m);
   if (g.unit === 'weekly') return (g.freq || 1) * getMonthWeeks(y, m);
   if (g.unit === 'biweekly') return (g.freq || 1) * Math.ceil(getMonthDays(y, m) / 14);
   if (g.unit === 'multiweek') return (g.freq || 1) * Math.ceil(getMonthDays(y, m) / ((g.weeks||3) * 7));
@@ -159,7 +160,7 @@ function calcStreak(g, gi) {
   if (!g || !g.unit || g.unit === 'once') return 0;
   g = migrateGoal(g);
   const now = new Date();
-  if (g.unit === 'daily' || g.unit === 'health_sleep') {
+  if (g.unit === 'daily' || g.unit === 'health_sleep' || g.unit === 'health_workout') {
     let streak = 0;
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     for (let i = 0; i < 365; i++) {
@@ -169,8 +170,8 @@ function calcStreak(g, gi) {
     }
     return streak;
   }
-  if (g.unit === 'weekly' || g.unit === 'health_workout') {
-    const freq = g.unit === 'health_workout' ? 2 : (g.freq || 1);
+  if (g.unit === 'weekly') {
+    const freq = g.freq || 1;
     let streak = 0;
     const dow = now.getDay();
     const sun = new Date(now); sun.setDate(now.getDate() - dow);
@@ -201,8 +202,8 @@ function calcStreak(g, gi) {
 }
 function getStreakLabel(g, streak) {
   if (!g) return ''; g = migrateGoal(g);
-  if (g.unit === 'daily' || g.unit === 'health_sleep') return `${streak}일째`;
-  if (g.unit === 'weekly' || g.unit === 'health_workout') return `${streak}주째`;
+  if (g.unit === 'daily' || g.unit === 'health_sleep' || g.unit === 'health_workout') return `${streak}일째`;
+  if (g.unit === 'weekly') return `${streak}주째`;
   if (g.unit === 'biweekly') return `${streak}주기째`;
   return `${streak}`;
 }
@@ -335,7 +336,7 @@ function summarizeMyData() {
     const unitLbl = getUnitLabel(mg);
     const streak = calcStreak(mg, parseInt(key));
     const { pct } = goalPct(mg, parseInt(key), y, m);
-    const timeLbl = (TIME_LABELS[g.time || 'any'] || '시간 무관').replace(/[^\w가-힣\s&]/g, '').trim();
+    const timeLbl = (TIME_LABELS[g.time || 'any'] || '언제나').replace(/[^\w가-힣\s&]/g, '').trim();
     const catLbl = (CAT_LABELS[g.category || 'etc'] || '기타').replace(/[^\w가-힣\s&]/g, '').trim();
     habitLines.push(`- "${g.title}" (${unitLbl}, ${timeLbl}, ${catLbl}) — 이번달 달성률 ${pct}%, 연속 ${streak}일`);
   });
@@ -518,8 +519,8 @@ window.openServiceInfo = function () {
   </div>`;
   document.getElementById('bsBody').innerHTML = h;
   openBS();
-  // GitHub API로 마지막 커밋 날짜 조회
-  fetch('https://api.github.com/repos/we-are-the-future33/we-are-the-future33.github.io/commits?per_page=1')
+  // GitHub API로 마지막 커밋 날짜 조회 (questboard 폴더)
+  fetch('https://api.github.com/repos/we-are-the-future33/we-are-the-future33.github.io/commits?per_page=1&path=questboard')
     .then(r => r.json())
     .then(data => {
       const el = document.getElementById('serviceUpdateDate');
@@ -600,14 +601,13 @@ window.switchTab = function (tab) {
       const avatarSection = document.querySelector('.avatar-section');
       isSnapping = true;
       if (target > 0) {
-        // 아래로 스냅: 탭바 숨기기
         tabBar.style.display = 'none';
-        // 탭바 제거 후 레이아웃 재계산
-        const newTarget = avatarSection ? (avatarSection.offsetTop + avatarSection.offsetHeight) : subBar.offsetTop;
+        // 아바타 끝 위치에서 서브탭 margin 고려하여 약간 위로
+        const raw = avatarSection ? (avatarSection.offsetTop + avatarSection.offsetHeight) : subBar.offsetTop;
+        const newTarget = Math.max(0, raw - 16);
         snappedDown = true;
         scroll.scrollTo({ top: newTarget, behavior: 'instant' });
       } else {
-        // 위로 스냅: 탭바 보이기
         tabBar.style.display = '';
         snappedDown = false;
         scroll.scrollTo({ top: 0, behavior: 'instant' });
@@ -623,6 +623,15 @@ window.switchTab = function (tab) {
 function renderDashboard() {
   const now = new Date();
   if (!viewMonth) viewMonth = { year: now.getFullYear(), month: now.getMonth() + 1 };
+  // localStorage 저장값 UI 반영
+  const hSelect = document.getElementById('habitViewModeSelect');
+  if (hSelect) hSelect.value = habitViewMode;
+  const cSelect = document.getElementById('challengeViewModeSelect');
+  if (cSelect) cSelect.value = challengeViewMode;
+  const hPill = document.getElementById('habitFilterPill');
+  if (hPill) { hPill.classList.toggle('active-filter', habitFilter === 'active'); hPill.innerHTML = (habitFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
+  const cPill = document.getElementById('challengeFilterPill');
+  if (cPill) { cPill.classList.toggle('active-filter', challengeFilter === 'active'); cPill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
   renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers();
   // jin 전용 어드민 메뉴
   const adminEl = document.getElementById('adminMenuItem');
@@ -653,11 +662,17 @@ function applyTimeBackground() {
     bg = 'linear-gradient(180deg, #1a1650 0%, #302a78 50%, #4a42a0 100%)';
     nickColor = '#e2e8f0'; stageColor = '#a5b4fc'; stageBg = 'rgba(165,180,252,.15)';
     decoHTML = `
-      <div class="sky-deco star" style="top:12%;left:15%;font-size:8px;animation-delay:0s;">✦</div>
-      <div class="sky-deco star" style="top:8%;left:55%;font-size:6px;animation-delay:1.2s;">✦</div>
+      <div class="sky-deco star" style="top:5%;left:8%;font-size:5px;animation-delay:0s;">✦</div>
+      <div class="sky-deco star" style="top:12%;left:15%;font-size:8px;animation-delay:0.3s;">✦</div>
+      <div class="sky-deco star" style="top:3%;left:30%;font-size:4px;animation-delay:1.8s;">✦</div>
+      <div class="sky-deco star" style="top:8%;left:48%;font-size:6px;animation-delay:1.2s;">✦</div>
+      <div class="sky-deco star" style="top:18%;left:55%;font-size:3px;animation-delay:2.8s;">✦</div>
       <div class="sky-deco star" style="top:22%;left:80%;font-size:10px;animation-delay:0.6s;">✦</div>
-      <div class="sky-deco star" style="top:5%;left:35%;font-size:5px;animation-delay:1.8s;">✦</div>
-      <div class="sky-deco star" style="top:18%;left:65%;font-size:7px;animation-delay:2.4s;">✦</div>
+      <div class="sky-deco star" style="top:6%;left:72%;font-size:5px;animation-delay:2.0s;">✦</div>
+      <div class="sky-deco star" style="top:28%;left:20%;font-size:4px;animation-delay:3.2s;">✦</div>
+      <div class="sky-deco star" style="top:15%;left:90%;font-size:6px;animation-delay:1.5s;">✦</div>
+      <div class="sky-deco star" style="top:25%;left:42%;font-size:3px;animation-delay:2.4s;">✦</div>
+      <div class="sky-deco star" style="top:10%;left:65%;font-size:7px;animation-delay:0.9s;">✦</div>
       <div class="sky-deco moon" style="top:2%;right:12%;font-size:26px;">🌙</div>`;
   } else if (h >= 5 && h < 9) {
     // 🌅 아침
@@ -696,12 +711,18 @@ function applyTimeBackground() {
     nickColor = '#e2e8f0'; stageColor = '#93c5fd'; stageBg = 'rgba(147,197,253,.15)';
     decoHTML = `
       <div class="sky-deco moon" style="top:3%;right:15%;font-size:28px;">🌙</div>
-      <div class="sky-deco star" style="top:10%;left:12%;font-size:8px;animation-delay:0s;">✦</div>
-      <div class="sky-deco star" style="top:6%;left:40%;font-size:6px;animation-delay:0.8s;">✦</div>
-      <div class="sky-deco star" style="top:20%;left:70%;font-size:10px;animation-delay:1.6s;">✦</div>
+      <div class="sky-deco star" style="top:5%;left:8%;font-size:6px;animation-delay:0s;">✦</div>
+      <div class="sky-deco star" style="top:10%;left:18%;font-size:8px;animation-delay:0.5s;">✦</div>
+      <div class="sky-deco star" style="top:3%;left:35%;font-size:4px;animation-delay:1.8s;">✦</div>
+      <div class="sky-deco star" style="top:7%;left:52%;font-size:6px;animation-delay:0.8s;">✦</div>
       <div class="sky-deco star" style="top:15%;left:25%;font-size:5px;animation-delay:2.2s;">✦</div>
+      <div class="sky-deco star" style="top:20%;left:70%;font-size:10px;animation-delay:1.6s;">✦</div>
       <div class="sky-deco star" style="top:25%;right:25%;font-size:7px;animation-delay:1.2s;">✦</div>
-      <div class="sky-deco star" style="top:4%;left:60%;font-size:4px;animation-delay:3s;">✦</div>`;
+      <div class="sky-deco star" style="top:4%;left:65%;font-size:4px;animation-delay:3s;">✦</div>
+      <div class="sky-deco star" style="top:12%;left:85%;font-size:5px;animation-delay:2.5s;">✦</div>
+      <div class="sky-deco star" style="top:28%;left:45%;font-size:3px;animation-delay:1.0s;">✦</div>
+      <div class="sky-deco star" style="top:8%;left:92%;font-size:6px;animation-delay:3.5s;">✦</div>
+      <div class="sky-deco star" style="top:22%;left:10%;font-size:4px;animation-delay:2.8s;">✦</div>`;
   }
 
   section.style.background = bg;
@@ -731,22 +752,25 @@ window.switchSubTab = function (tab) {
 // ===== HABIT FILTER =====
 window.toggleHabitFilter = function () {
   habitFilter = habitFilter === 'all' ? 'active' : 'all';
+  localStorage.setItem('kw_habitFilter', habitFilter);
   const pill = document.getElementById('habitFilterPill');
   pill.classList.toggle('active-filter', habitFilter === 'active');
-  pill.innerHTML = (habitFilter === 'active' ? '진행 중' : '모든 목표') + ' <span class="filter-dot"></span>';
+  pill.innerHTML = (habitFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>';
   renderHabitCards();
 };
 window.toggleChallengeFilter = function () {
   challengeFilter = challengeFilter === 'all' ? 'active' : 'all';
+  localStorage.setItem('kw_challengeFilter', challengeFilter);
   const pill = document.getElementById('challengeFilterPill');
   pill.classList.toggle('active-filter', challengeFilter === 'active');
-  pill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '모든 목표') + ' <span class="filter-dot"></span>';
+  pill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>';
   renderChallengeCards();
 };
 
 // ===== HABIT CARDS (2-col grid, grouped) =====
 window.changeViewMode = function(mode) {
   habitViewMode = mode;
+  localStorage.setItem('kw_habitViewMode', mode);
   renderHabitCards();
 };
 
@@ -843,7 +867,7 @@ function renderHabitCards() {
   let html = '';
 
   if (habitViewMode === 'time') {
-    const groups = { morning: [], afternoon: [], evening: [], any: [] };
+    const groups = { dawn: [], morning: [], midday: [], afternoon: [], evening: [], night: [], any: [] };
     filtered.forEach(v => { const t = v.g.time || 'any'; if (groups[t]) groups[t].push(v); else groups['any'].push(v); });
     let gIdx = 0;
     Object.keys(groups).forEach(key => {
@@ -946,7 +970,7 @@ function initHabitSwipe(idx) {
       card.style.transform = '';
       card.classList.remove('swiping');
       // 명확한 탭: 이동량 적고, 너무 짧지 않은 터치
-      if (totalMove < 10 && elapsed > 80 && elapsed < 500) {
+      if (totalMove < 12 && elapsed < 600) {
         openGoalBottomSheet(idx);
       }
       return;
@@ -996,7 +1020,7 @@ async function habitMarkUndo(idx) {
 }
 
 // ===== CHALLENGE CARDS (2-col grid) =====
-window.changeChallengeViewMode = function(mode) { challengeViewMode = mode; renderChallengeCards(); };
+window.changeChallengeViewMode = function(mode) { challengeViewMode = mode; localStorage.setItem('kw_challengeViewMode', mode); renderChallengeCards(); };
 
 function generateChallengeCardHtml(c, idx) {
   if (c.type === 'bucket') {
@@ -1113,11 +1137,15 @@ function renderChallengeCards() {
 
   wrapper.innerHTML = html;
   document.getElementById('challengeSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
-  // Staggered entrance
-  filtered.forEach(({ c, idx }, i) => {
-    const el = document.getElementById(`cc_${idx}`);
-    if (el) el.style.animationDelay = `${i * 0.06}s`;
-    if (c.type === 'bucket') initBucketSwipe(idx);
+  // Init swipe + staggered entrance for ALL bucket cards
+  wrapper.querySelectorAll('.challenge-card.type-bucket').forEach((el, i) => {
+    const idx = parseInt(el.dataset.idx);
+    el.style.animationDelay = `${i * 0.06}s`;
+    if (!isNaN(idx)) initBucketSwipe(idx);
+  });
+  // Staggered entrance for project cards
+  wrapper.querySelectorAll('.challenge-card.type-project').forEach((el, i) => {
+    el.style.animationDelay = `${i * 0.06}s`;
   });
 }
 
@@ -1166,7 +1194,7 @@ function initBucketSwipe(idx) {
     else {
       card.style.transform = 'translateX(0)';
       const totalMove = Math.abs(sx - (dx + sx));
-      if (!swiping && elapsed > 80 && elapsed < 500 && totalMove < 10) openBucketDetail(idx);
+      if (!swiping && elapsed < 600 && totalMove < 12) openBucketDetail(idx);
     }
     dx = 0; swiping = false;
   }
@@ -1208,17 +1236,40 @@ window.openBucketEdit = function (idx) {
   if (!c) return;
   document.getElementById('bsTitle').textContent = '버킷리스트 수정';
   clearMetaTags();
+  const deadline = c.deadline || '';
+  const cat = c.category || 'etc';
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">이름</div>`;
   h += `<input class="proj-edit-input" id="editBucketName" value="${esc(c.title)}" maxlength="30">`;
-  h += `<div class="proj-save-row" style="margin-top:20px;"><button class="proj-save-btn cancel" onclick="openBucketDetail(${idx})">취소</button><button class="proj-save-btn save" onclick="saveBucketEdit(${idx})">저장</button></div>`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">🏷 카테고리</div>`;
+  h += `<div class="chip-group" id="bucketCatChips">`;
+  Object.keys(CAT_LABELS).forEach(k => {
+    h += `<div class="chip-opt ${cat === k ? 'selected' : ''}" onclick="selectBucketCat('${k}')">${CAT_LABELS[k]}</div>`;
+  });
+  h += `</div>`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 기한</div>`;
+  h += `<input type="date" class="proj-edit-input" id="editBucketDeadline" value="${deadline}" style="color:var(--text);">`;
+  h += `<div class="proj-save-row" style="margin-top:24px;"><button class="proj-save-btn cancel" onclick="openBucketDetail(${idx})">취소</button><button class="proj-save-btn save" onclick="saveBucketEdit(${idx})">저장</button></div>`;
   document.getElementById('bsBody').innerHTML = h;
   setTimeout(() => document.getElementById('editBucketName')?.focus(), 200);
+};
+
+let _bucketEditCat = 'etc';
+window.selectBucketCat = function (cat) {
+  _bucketEditCat = cat;
+  document.querySelectorAll('#bucketCatChips .chip-opt').forEach(el => el.classList.remove('selected'));
+  event.target.classList.add('selected');
 };
 
 window.saveBucketEdit = async function (idx) {
   const name = document.getElementById('editBucketName')?.value.trim();
   if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
+  const deadline = document.getElementById('editBucketDeadline')?.value || '';
+  const selCat = document.querySelector('#bucketCatChips .chip-opt.selected');
+  const cat = selCat ? [...document.querySelectorAll('#bucketCatChips .chip-opt')].indexOf(selCat) : -1;
+  const catKey = cat >= 0 ? Object.keys(CAT_LABELS)[cat] : 'etc';
   localDash.challenges[idx].title = name;
+  localDash.challenges[idx].deadline = deadline;
+  localDash.challenges[idx].category = catKey;
   await saveDash();
   document.getElementById('bsTitle').textContent = name;
   openBucketDetail(idx);
@@ -1292,6 +1343,8 @@ window.removeCreateStage = function(si) { syncCreateStagesFromDOM(); _createStag
 
 // ===== ADD CHALLENGE SHEET =====
 window.openAddChallengeSheet = function () {
+  const count = Object.values(localDash.challenges || {}).filter(c => c && c.title).length;
+  if (count >= MAX_CHALLENGES) { showToast(`도전은 최대 ${MAX_CHALLENGES}개까지 만들 수 있어요`, 'normal'); return; }
   _createType = 'bucket'; _createCat = 'etc'; _createMonth = 'someday';
   _createStages = [{ name: '첫 번째 단계', tasks: [] }];
   document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
@@ -1356,8 +1409,8 @@ window.saveBucket = async function () {
   if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
   if (!localDash.challenges) localDash.challenges = {};
   let slot = -1;
-  for (let i = 0; i < 50; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
-  if (slot === -1) { showToast('최대 50개까지 등록 가능합니다', 'normal'); return; }
+  for (let i = 0; i < MAX_CHALLENGES; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
+  if (slot === -1) { showToast('최대 25개까지 등록 가능합니다', 'normal'); return; }
   localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat, targetMonth: _createMonth, createdAt: new Date().toISOString() };
   await saveDash(); closeBottomSheet(); renderChallengeCards();
   showToast('⭐ 도전 등록!', 'done');
@@ -1373,8 +1426,8 @@ window.saveProject = async function () {
   });
   if (!localDash.challenges) localDash.challenges = {};
   let slot = -1;
-  for (let i = 0; i < 50; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
-  if (slot === -1) { showToast('최대 50개까지 등록 가능합니다', 'normal'); return; }
+  for (let i = 0; i < MAX_CHALLENGES; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
+  if (slot === -1) { showToast('최대 25개까지 등록 가능합니다', 'normal'); return; }
   localDash.challenges[slot] = { type: 'project', title: name, category: _createCat, targetMonth: _createMonth, stages: _createStages, createdAt: new Date().toISOString() };
   await saveDash(); closeBottomSheet(); renderChallengeCards();
   showToast('🗺️ 프로젝트 시작!', 'done');
@@ -1431,12 +1484,16 @@ window.toggleProjectTask = async function (cIdx, sIdx, tIdx) {
 window.openProjectEdit = function (idx) {
   const c = localDash.challenges[idx], body = document.getElementById('bsBody');
   document.getElementById('bsTitle').textContent = '프로젝트 수정';
+  const deadline = c.deadline || '';
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>`;
   h += `<input class="proj-edit-input" id="peTitle" value="${esc(c.title)}" maxlength="30">`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">나의 궁극적인 목적 (WHY)</div>`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 기한</div>`;
+  h += `<input type="date" class="proj-edit-input" id="peDeadline" value="${deadline}" style="color:var(--text);">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">나의 궁극적인 목적 (WHY)</div>`;
   h += `<textarea class="proj-edit-input proj-edit-textarea" id="peWhy" maxlength="100">${esc(c.why || '')}</textarea>`;
-  // Stages
-  (c.stages || []).forEach((s, si) => {
+  // Stages with task checkboxes
+  const origStages = c.stages || [];
+  origStages.forEach((s, si) => {
     h += `<div class="proj-edit-stage-box" id="peStage_${si}">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <div class="proj-stage-num">${si + 1}</div>
@@ -1444,7 +1501,12 @@ window.openProjectEdit = function (idx) {
         <button class="proj-edit-task-del" onclick="removeEditStage(${si})" title="단계 삭제">✕</button>
       </div>`;
     (s.tasks || []).forEach((t, ti) => {
-      h += `<div class="proj-edit-task-row"><input class="proj-edit-task-input" id="peTask_${si}_${ti}" value="${esc(t.name)}" placeholder="세부 항목"><button class="proj-edit-task-del" onclick="removeEditTask(${si},${ti})">✕</button></div>`;
+      const checked = t.done ? 'checked' : '';
+      h += `<div class="proj-edit-task-row">
+        <label class="task-check-label"><input type="checkbox" class="task-check" id="peTaskDone_${si}_${ti}" ${checked}><span class="task-check-mark"></span></label>
+        <input class="proj-edit-task-input" id="peTask_${si}_${ti}" value="${esc(t.name)}" placeholder="세부 항목" style="${t.done ? 'text-decoration:line-through;color:var(--text-dim);' : ''}">
+        <button class="proj-edit-task-del" onclick="removeEditTask(${si},${ti})">✕</button>
+      </div>`;
     });
     h += `<button class="proj-add-task-btn" onclick="addEditTask(${si})">+ 세부 항목 추가</button></div>`;
   });
@@ -1463,7 +1525,8 @@ function getEditStagesFromDOM() {
     const tasks = [];
     let ti = 0;
     while (document.getElementById(`peTask_${si}_${ti}`)) {
-      tasks.push({ name: document.getElementById(`peTask_${si}_${ti}`).value, done: false });
+      const done = document.getElementById(`peTaskDone_${si}_${ti}`)?.checked || false;
+      tasks.push({ name: document.getElementById(`peTask_${si}_${ti}`).value, done });
       ti++;
     }
     stages.push({ name, tasks });
@@ -1473,17 +1536,8 @@ function getEditStagesFromDOM() {
 }
 
 window.addEditTask = function (si) {
-  // Save current state then re-render
-  const c = { ...localDash.challenges[activeGoalIdx] };
   const stages = getEditStagesFromDOM();
   stages[si].tasks.push({ name: '', done: false });
-  // Preserve done states from original
-  const orig = localDash.challenges[activeGoalIdx].stages || [];
-  stages.forEach((s, i) => {
-    s.tasks.forEach((t, j) => {
-      if (orig[i] && orig[i].tasks && orig[i].tasks[j]) t.done = orig[i].tasks[j].done;
-    });
-  });
   _editStages = stages;
   rebuildEditUI();
 };
@@ -1510,11 +1564,14 @@ function rebuildEditUI() {
   const c = localDash.challenges[activeGoalIdx];
   const title = document.getElementById('peTitle')?.value || c.title;
   const why = document.getElementById('peWhy')?.value || c.why || '';
+  const deadline = document.getElementById('peDeadline')?.value || c.deadline || '';
   const stages = _editStages;
   const body = document.getElementById('bsBody');
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>`;
   h += `<input class="proj-edit-input" id="peTitle" value="${esc(title)}" maxlength="30">`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">나의 궁극적인 목적 (WHY)</div>`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 기한</div>`;
+  h += `<input type="date" class="proj-edit-input" id="peDeadline" value="${deadline}" style="color:var(--text);">`;
+  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">나의 궁극적인 목적 (WHY)</div>`;
   h += `<textarea class="proj-edit-input proj-edit-textarea" id="peWhy" maxlength="100">${esc(why)}</textarea>`;
   stages.forEach((s, si) => {
     h += `<div class="proj-edit-stage-box" id="peStage_${si}">
@@ -1524,7 +1581,12 @@ function rebuildEditUI() {
         <button class="proj-edit-task-del" onclick="removeEditStage(${si})">✕</button>
       </div>`;
     (s.tasks || []).forEach((t, ti) => {
-      h += `<div class="proj-edit-task-row"><input class="proj-edit-task-input" id="peTask_${si}_${ti}" value="${esc(t.name)}" placeholder="세부 항목"><button class="proj-edit-task-del" onclick="removeEditTask(${si},${ti})">✕</button></div>`;
+      const checked = t.done ? 'checked' : '';
+      h += `<div class="proj-edit-task-row">
+        <label class="task-check-label"><input type="checkbox" class="task-check" id="peTaskDone_${si}_${ti}" ${checked}><span class="task-check-mark"></span></label>
+        <input class="proj-edit-task-input" id="peTask_${si}_${ti}" value="${esc(t.name)}" placeholder="세부 항목" style="${t.done ? 'text-decoration:line-through;color:var(--text-dim);' : ''}">
+        <button class="proj-edit-task-del" onclick="removeEditTask(${si},${ti})">✕</button>
+      </div>`;
     });
     h += `<button class="proj-add-task-btn" onclick="addEditTask(${si})">+ 세부 항목 추가</button></div>`;
   });
@@ -1543,17 +1605,15 @@ window.saveProjectEdit = async function (idx) {
   const title = document.getElementById('peTitle').value.trim();
   if (!title) { showToast('이름을 입력하세요', 'normal'); return; }
   const why = document.getElementById('peWhy').value.trim();
+  const deadline = document.getElementById('peDeadline')?.value || '';
   const stages = getEditStagesFromDOM();
-  // Preserve done states
-  const orig = localDash.challenges[idx].stages || [];
   stages.forEach((s, i) => {
     s.tasks.forEach((t, j) => {
-      if (orig[i] && orig[i].tasks && orig[i].tasks[j]) t.done = orig[i].tasks[j].done;
       if (!t.name.trim()) t.name = '항목';
     });
     if (!s.name.trim()) s.name = `단계 ${i + 1}`;
   });
-  localDash.challenges[idx] = { ...localDash.challenges[idx], title, why, stages };
+  localDash.challenges[idx] = { ...localDash.challenges[idx], title, why, deadline, stages };
   await saveDash();
   _editStages = [];
   document.getElementById('bsTitle').textContent = title;
@@ -1572,6 +1632,8 @@ window.deleteChallenge = async function (idx) {
 
 // ===== ADD HABIT =====
 window.openAddHabitSheet = function () {
+  const count = getAllGoals().filter(g => g && g.title).length;
+  if (count >= MAX_HABITS) { showToast(`습관은 최대 ${MAX_HABITS}개까지 만들 수 있어요`, 'normal'); return; }
   document.getElementById('bsTitle').textContent = '습관 추가';
   clearMetaTags();
   document.getElementById('bsBody').innerHTML = `
@@ -1685,7 +1747,7 @@ function renderBSBody(idx) {
     if (curDone >= freq) {
       html += `<div class="week-status-banner success">
         <div>
-          <div class="wsb-title"><span class="wsb-badge" style="background:#10b981;">${unitLabel}</span> 목표 달성! 🎉</div>
+<div class="wsb-title">목표 달성! 🎉</div>
           <div class="wsb-desc">이번 주 할당량(${freq}회)을 모두 채웠어요.</div>
         </div>
         <div class="wsb-icon">🏆</div>
@@ -1693,10 +1755,9 @@ function renderBSBody(idx) {
     } else {
       html += `<div class="week-status-banner">
         <div>
-          <div class="wsb-title"><span class="wsb-badge" style="background:var(--accent);">${unitLabel}</span> 진행 중 🏃</div>
+<div class="wsb-title">진행 중</div>
           <div class="wsb-desc">현재 ${curDone}회 완료! (앞으로 ${freq - curDone}번 더)</div>
         </div>
-        <div class="wsb-icon">🏃</div>
       </div>`;
     }
   }
@@ -1711,6 +1772,15 @@ function renderBSBody(idx) {
 
   // 6개월 통계
   html += renderStats6Month(idx, g);
+  // 헬스 연동 정보 (health_sleep, health_workout)
+  if (g.unit === 'health_sleep' || g.unit === 'health_workout') {
+    const wType = g.workoutType ? ` (${g.workoutType})` : '';
+    html += `<div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;padding:12px;margin:12px 0;">
+      <div style="font-size:12px;font-weight:700;color:#0284c7;margin-bottom:4px;">⌚ 자동 기록 연동</div>
+      <div style="font-size:11px;color:#475569;">단축어에서 사용할 키: <b style="color:#0284c7;font-size:13px;">g${idx}</b>${wType}</div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:4px;">단축어가 completions/g${idx}_년_월_일 에 기록하면 자동 반영됩니다</div>
+    </div>`;
+  }
   // 수정 / 삭제 버튼 (도전 카드와 통일)
   html += `<button class="proj-edit-btn" onclick="openHabitEdit(${idx})">✏️ 수정</button>`;
   html += `<button class="proj-edit-btn" style="color:var(--danger);border-color:var(--danger);margin-top:8px;" onclick="deleteGoalFromBS(${idx})">🗑 삭제</button>`;
@@ -1821,8 +1891,9 @@ function renderStats6Month(idx, g) {
 
 // ===== ADD HABIT FLOW =====
 let _habitAddName = '';
-let _habitCycle1 = null; // 'daily','once','w1','w2','w3','w4'
+let _habitCycle1 = null; // 'daily','w1','w2','w3','w4','health_sleep','health_workout'
 let _habitCycle2 = null; // number of times
+let _workoutType = null; // workout subtype
 
 window.habitAddStep2 = function () {
   const v = document.getElementById('newGoalInput').value.trim();
@@ -1830,6 +1901,7 @@ window.habitAddStep2 = function () {
   _habitAddName = v;
   _habitCycle1 = null;
   _habitCycle2 = null;
+  _workoutType = null;
   document.getElementById('bsTitle').textContent = '주기 설정';
   clearMetaTags();
   renderCycleStep();
@@ -1842,13 +1914,24 @@ function renderCycleStep() {
     { label: '2주에', val: 'w2' },
     { label: '3주에', val: 'w3' },
     { label: '4주에', val: 'w4' },
-    { label: '한 번', val: 'once' },
+  ];
+  const healthOpts = [
+    { label: '🌙 수면', val: 'health_sleep' },
+    { label: '💪 운동', val: 'health_workout' },
   ];
   let h = `<div style="font-size:14px;font-weight:700;margin-bottom:4px;">${esc(_habitAddName)}</div>`;
   h += `<div style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">얼마나 자주 수행할 건가요?</div>`;
   // depth 1
-  h += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">`;
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">`;
   depth1Opts.forEach(o => {
+    const sel = _habitCycle1 === o.val;
+    h += `<div class="unit-opt ${sel?'selected':''}" onclick="selectCycle1('${o.val}')">${o.label}</div>`;
+  });
+  h += `</div>`;
+  // 애플 헬스 연동
+  h += `<div style="font-size:11px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">⌚ 애플 헬스 연동 (단축어 자동 기록)</div>`;
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">`;
+  healthOpts.forEach(o => {
     const sel = _habitCycle1 === o.val;
     h += `<div class="unit-opt ${sel?'selected':''}" onclick="selectCycle1('${o.val}')">${o.label}</div>`;
   });
@@ -1856,12 +1939,28 @@ function renderCycleStep() {
   // depth 2 (only for w1~w4)
   h += `<div id="cycle2Area"></div>`;
 
+  // 운동 종류 선택 (health_workout일 때)
+  if (_habitCycle1 === 'health_workout') {
+    const workoutTypes = [
+      ['🏃 달리기','달리기'],['🚴 자전거','자전거'],['🏊 수영','수영'],['🧘 요가','요가'],
+      ['🏋️ 웨이트','웨이트'],['🥾 등산','등산'],['🚶 걷기','걷기'],['⚽ 구기','구기'],
+      ['🏸 라켓','라켓'],['🤸 기타','기타']
+    ];
+    h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">운동 종류</div>`;
+    h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
+    workoutTypes.forEach(([lbl, val]) => {
+      const sel = _workoutType === val;
+      h += `<div class="unit-opt" style="font-size:12px;padding:6px 10px;${sel?'background:var(--accent-light);border-color:var(--accent);color:var(--accent);':''}" onclick="_workoutType='${val}';renderCycleStep();">${lbl}</div>`;
+    });
+    h += `</div>`;
+  }
+
   // 시간대 선택
-  const canConfirm = _habitCycle1 === 'daily' || _habitCycle1 === 'once' || (_habitCycle1 && _habitCycle2);
+  const canConfirm = _habitCycle1 === 'daily' || _habitCycle1 === 'health_sleep' || _habitCycle1 === 'health_workout' || (_habitCycle1 && _habitCycle2);
   if (canConfirm) {
     h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">시간대</div>`;
     h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
-    const timeOpts = [['any','🕒 무관'],['morning','🌅 아침'],['afternoon','☀️ 오후'],['evening','🌙 저녁']];
+    const timeOpts = [['any','🔄 언제나'],['dawn','🌅 새벽'],['morning','🌤 아침'],['midday','🏞 낮'],['afternoon','🌇 오후'],['evening','🌟 저녁'],['night','🦉 밤']];
     timeOpts.forEach(([val, lbl], i) => {
       h += `<label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#4b5563;cursor:pointer;">
         <input type="radio" name="habitTime" value="${val}" ${i===0?'checked':''} style="margin:0;"> ${lbl}</label>`;
@@ -1881,7 +1980,7 @@ function renderCycleStep() {
 
   h += `<button class="unit-confirm-btn" id="cycleConfirmBtn" onclick="confirmHabitAdd()" ${canConfirm?'':'disabled'}>확인</button>`;
   document.getElementById('bsBody').innerHTML = h;
-  if (_habitCycle1 && _habitCycle1 !== 'daily' && _habitCycle1 !== 'once') {
+  if (_habitCycle1 && _habitCycle1 !== 'daily' && _habitCycle1 !== 'health_sleep' && _habitCycle1 !== 'health_workout') {
     renderCycle2();
   }
 }
@@ -1938,18 +2037,19 @@ window.applyCycle2Custom = function () {
 
 window.confirmHabitAdd = async function () {
   if (!_habitCycle1) return;
-  if (_habitCycle1 !== 'daily' && _habitCycle1 !== 'once' && !_habitCycle2) return;
+  if (_habitCycle1 !== 'daily' && _habitCycle1 !== 'health_sleep' && _habitCycle1 !== 'health_workout' && !_habitCycle2) return;
 
   // find empty slot
   let slot = -1;
   for (let i = 0; i < MAX_HABITS; i++) {
     if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; }
   }
-  if (slot === -1) { showToast('습관 최대 50개!', 'normal'); return; }
+  if (slot === -1) { showToast('습관 최대 25개!', 'normal'); return; }
 
   let unit, freq, weeks;
   if (_habitCycle1 === 'daily') { unit = 'daily'; freq = 7; }
-  else if (_habitCycle1 === 'once') { unit = 'once'; freq = 0; }
+  else if (_habitCycle1 === 'health_sleep') { unit = 'health_sleep'; freq = 7; }
+  else if (_habitCycle1 === 'health_workout') { unit = 'health_workout'; freq = 7; }
   else {
     const weekNum = parseInt(_habitCycle1.slice(1));
     if (weekNum === 1) { unit = 'weekly'; }
@@ -1964,11 +2064,17 @@ window.confirmHabitAdd = async function () {
 
   const goalData = { title: _habitAddName, unit, freq, time, category };
   if (weeks) goalData.weeks = weeks;
+  if (unit === 'health_workout' && _workoutType) goalData.workoutType = _workoutType;
   localDash.goals[slot] = goalData;
   await saveDash();
-  _habitAddName = ''; _habitCycle1 = null; _habitCycle2 = null;
+  const isHealth = unit === 'health_sleep' || unit === 'health_workout';
+  _habitAddName = ''; _habitCycle1 = null; _habitCycle2 = null; _workoutType = null;
   closeBottomSheet(); renderHabitCards(); renderAvatar();
-  showToast('✅ 습관 등록 완료!', 'done');
+  if (isHealth) {
+    showToast(`✅ 등록 완료! 단축어 키: g${slot}`, 'done');
+  } else {
+    showToast('✅ 습관 등록 완료!', 'done');
+  }
 };
 
 // unit setup (for existing goals without unit - backward compat)
@@ -1982,10 +2088,11 @@ function openUnitSetupSheet(idx) {
   const origConfirm = window.confirmHabitAdd;
   window.confirmHabitAdd = async function () {
     if (!_habitCycle1) return;
-    if (_habitCycle1 !== 'daily' && _habitCycle1 !== 'once' && !_habitCycle2) return;
+    if (_habitCycle1 !== 'daily' && _habitCycle1 !== 'health_sleep' && _habitCycle1 !== 'health_workout' && !_habitCycle2) return;
     let unit, freq;
     if (_habitCycle1 === 'daily') { unit = 'daily'; freq = 7; }
-    else if (_habitCycle1 === 'once') { unit = 'once'; freq = 0; }
+    else if (_habitCycle1 === 'health_sleep') { unit = 'health_sleep'; freq = 7; }
+    else if (_habitCycle1 === 'health_workout') { unit = 'health_workout'; freq = 7; }
     else {
       const weekNum = parseInt(_habitCycle1.slice(1));
       if (weekNum === 1) { unit = 'weekly'; }
@@ -2036,7 +2143,7 @@ window.openHabitEdit = function (idx) {
   if (!g) return;
   document.getElementById('bsTitle').textContent = '습관 수정';
   clearMetaTags();
-  const timeOpts = [['any','🕒 무관'],['morning','🌅 아침'],['afternoon','☀️ 오후'],['evening','🌙 저녁']];
+  const timeOpts = [['any','🔄 언제나'],['dawn','🌅 새벽'],['morning','🌤 아침'],['midday','🏞 낮'],['afternoon','🌇 오후'],['evening','🌟 저녁'],['night','🦉 밤']];
   const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">습관 이름</div>`;
   h += `<input class="proj-edit-input" id="editGoalName" value="${esc(g.title)}" maxlength="20">`;
@@ -2685,15 +2792,15 @@ function buildHamster(container) {
   container.appendChild(renderer.domElement);
 
   // --- Lighting ---
-  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-  const dirLight = new THREE.DirectionalLight(0xfff5e6, 0.8);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+  const dirLight = new THREE.DirectionalLight(0xfff5e6, 0.9);
   dirLight.position.set(2, 5, 4);
   scene.add(dirLight);
 
   // --- Materials ---
-  const orangeMat = new THREE.MeshToonMaterial({ color: 0xf9c288 });
-  const creamMat  = new THREE.MeshToonMaterial({ color: 0xfff9ef });
-  const pinkMat   = new THREE.MeshToonMaterial({ color: 0xffb8c6 });
+  const orangeMat = new THREE.MeshToonMaterial({ color: 0xfdd5a0 });
+  const creamMat  = new THREE.MeshToonMaterial({ color: 0xfffdf5 });
+  const pinkMat   = new THREE.MeshToonMaterial({ color: 0xffc4d0 });
   const darkMat   = new THREE.MeshBasicMaterial({ color: 0x332a26 });
 
   hamster = new THREE.Group();
@@ -2913,18 +3020,21 @@ function showConfetti() {
   const c = document.getElementById('confettiContainer');
   const colors = ['#1952f5', '#ff5e7d', '#f5c518', '#00b96b', '#a78bfa', '#ff9f43', '#38bdf8', '#e879f9'];
   const shapes = ['square', 'circle', 'strip'];
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 280; i++) {
     const p = document.createElement('div'); p.className = 'confetti-piece';
     const shape = shapes[Math.floor(Math.random() * shapes.length)];
-    const size = 5 + Math.random() * 10;
+    const size = 6 + Math.random() * 12;
     p.style.left = Math.random() * 100 + '%';
     p.style.background = colors[Math.floor(Math.random() * colors.length)];
     if (shape === 'circle') { p.style.width = size + 'px'; p.style.height = size + 'px'; p.style.borderRadius = '50%'; }
-    else if (shape === 'strip') { p.style.width = (3 + Math.random() * 4) + 'px'; p.style.height = (12 + Math.random() * 16) + 'px'; p.style.borderRadius = '2px'; }
+    else if (shape === 'strip') { p.style.width = (3 + Math.random() * 5) + 'px'; p.style.height = (14 + Math.random() * 20) + 'px'; p.style.borderRadius = '2px'; }
     else { p.style.width = size + 'px'; p.style.height = size + 'px'; }
-    p.style.animationDuration = (1.8 + Math.random() * 2.5) + 's';
-    p.style.animationDelay = Math.random() * 0.6 + 's';
-    c.appendChild(p); setTimeout(() => p.remove(), 5000);
+    // 더 긴 비행시간 + 다양한 딜레이
+    p.style.animationDuration = (2.5 + Math.random() * 3.5) + 's';
+    p.style.animationDelay = Math.random() * 1.2 + 's';
+    // 좌우 흩뿌리기
+    p.style.setProperty('--drift', (Math.random() * 200 - 100) + 'px');
+    c.appendChild(p); setTimeout(() => p.remove(), 8000);
   }
   triggerHaptic('heavy');
   shakeScreen();
@@ -2933,16 +3043,17 @@ function showConfetti() {
 function showConfettiSmall() {
   const c = document.getElementById('confettiContainer');
   const colors = ['#1952f5', '#a78bfa', '#ff5e7d', '#f5c518', '#00b96b', '#38bdf8'];
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 100; i++) {
     const p = document.createElement('div'); p.className = 'confetti-piece';
-    const size = 4 + Math.random() * 8;
-    p.style.left = (20 + Math.random() * 60) + '%';
+    const size = 5 + Math.random() * 9;
+    p.style.left = (15 + Math.random() * 70) + '%';
     p.style.background = colors[Math.floor(Math.random() * colors.length)];
     p.style.width = size + 'px'; p.style.height = size + 'px';
     if (Math.random() > 0.5) p.style.borderRadius = '50%';
-    p.style.animationDuration = (1.2 + Math.random() * 1.8) + 's';
-    p.style.animationDelay = Math.random() * 0.3 + 's';
-    c.appendChild(p); setTimeout(() => p.remove(), 3500);
+    p.style.animationDuration = (1.8 + Math.random() * 2.5) + 's';
+    p.style.animationDelay = Math.random() * 0.6 + 's';
+    p.style.setProperty('--drift', (Math.random() * 120 - 60) + 'px');
+    c.appendChild(p); setTimeout(() => p.remove(), 5000);
   }
   triggerHaptic('light');
 }

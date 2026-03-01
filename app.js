@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303h';
+const APP_VERSION = '20260303i';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');

@@ -120,7 +120,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .gb-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.25) 0%,transparent 60%);border-radius:100px;}
 
 /* 아바타 */
-.avatar-section{padding:0 20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
+.avatar-section{padding:50px 20px 20px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:0;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
 .avatar-section::before{content:'';position:absolute;top:0;left:0;right:0;height:24px;background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,transparent 100%);z-index:2;pointer-events:none;}
 .avatar-art{width:180px;height:180px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-top:0px;margin-bottom:-30px;}
 .avatar-art canvas{width:180px!important;height:180px!important;}
@@ -740,7 +740,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 /* ===== COOKING SYSTEM ===== */
 
 /* Stage Message */
-.stage-msg-wrap { text-align: center; padding: 2px 0; margin-bottom: 2px; position: relative; z-index: 5; }
+.stage-msg-wrap { text-align: center; padding: 2px 0; margin-bottom: 0; position: relative; z-index: 5; }
 .stage-msg {
   display: inline-block;
   font-size: 13px; font-weight: 500; padding: 10px 22px; border-radius: 30px;
@@ -890,24 +890,25 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 
 /* Milestone Progress Bar - Pill Style */
 .ms-bar-wrap {
-  position: relative; margin: 6px -20px 0; padding: 0;
+  position: relative; margin: 0; padding: 0 0px; width: 100%;
+  box-sizing: border-box;
 }
 .ms-bar-pill {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 16px; height: 56px; margin: 0 12px;
+  padding: 0 20px; height: 64px; margin: 0;
   background: rgba(255,255,255,.08); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-  border-radius: 30px; border: 1px solid rgba(255,255,255,.1);
+  border-radius: 32px; border: 1px solid rgba(255,255,255,.1);
   position: relative;
 }
 .ms-bar-track {
-  position: absolute; left: 40px; right: 40px; top: 50%;
+  position: absolute; left: 45px; right: 45px; top: 50%;
   height: 2px; background: rgba(255,255,255,.15); border-radius: 100px;
-  transform: translateY(-50%); z-index: 0; overflow: hidden;
+  transform: translateY(-50%); z-index: 0;
 }
 .ms-bar-fill {
-  height: 100%; border-radius: 100px;
+  position: absolute; left: 0; top: 0; height: 100%; border-radius: 100px;
   background: #ffffff;
-  box-shadow: 0 0 8px rgba(255,255,255,.5);
+  box-shadow: 0 0 10px rgba(255,255,255,.5);
   transition: width .6s ease;
 }
 .ms-bar-icons {
@@ -915,17 +916,18 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
   align-items: center; width: 100%; z-index: 1;
 }
 .ms-bar-icon {
-  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: rgba(30,41,59,.5);
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(15,23,42,.6);
+  border: 1px solid rgba(255,255,255,.1);
   transition: all .4s cubic-bezier(.175,.885,.32,1.275); flex-shrink: 0;
 }
 .ms-bar-icon.active {
   background: #ffffff;
   transform: scale(1.15);
-  box-shadow: 0 4px 15px rgba(255,255,255,.3);
+  box-shadow: 0 0 20px rgba(255,255,255,.3);
 }
 .ms-bar-icon.bounce { animation: msBounce .5s ease; }
-.ms-bar-emoji { font-size: 18px; line-height: 1; }
+.ms-bar-emoji { font-size: 20px; line-height: 1; }
 @keyframes msBounce {
   0%, 100% { transform: scale(1.15); }
   50% { transform: scale(1.4); }

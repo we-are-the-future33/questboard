@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301p';
+const APP_VERSION = '20260301q';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -2797,7 +2797,7 @@ function renderMainFriendActivity() {
   if (_friendActivityCache.length > 0) {
     const show = _friendActivityCache.slice(0, 3);
     const rest = _friendActivityCache.length - show.length;
-    let summary = show.map(f => `${f.emoji} ${f.nick}`).join(' · ');
+    let summary = show.map(f => `${f.emoji} ${f.nick} (${f.todayCount})`).join(' · ');
     if (rest > 0) summary += ` 외 ${rest}명`;
     html = `<div class="main-friend-banner active" onclick="switchTab('friends')">
       <span>${summary} 오늘 달성 중 🔥</span></div>`;

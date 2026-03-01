@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301x';
+const APP_VERSION = '20260301y';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -2324,30 +2324,29 @@ window.openAddHabitSheet = function () {
   h += `<div class="wiz-slide active" id="hWiz0">
     <div class="pdisc-label">습관 이름</div>
     <input class="proj-edit-input" id="hAddName" placeholder="예: 매일 독서 20분" maxlength="20">
-    <div class="wiz-nav"><div></div><div class="wiz-dots" id="hAddDots"></div><button class="unit-confirm-btn" style="width:auto;padding:10px 28px;" onclick="hWizNameNext()">다음</button></div>
+    <div class="wiz-nav" style="flex-direction:column;gap:10px;"><div class="wiz-dots" id="hAddDots"></div><button class="unit-confirm-btn" style="width:100%;padding:12px 28px;" onclick="hWizNameNext()">다음</button></div>
   </div>`;
 
   // Slide 1: Cycle
   h += `<div class="wiz-slide" id="hWiz1">
-    <div class="pdisc-label">주기</div>
-    <div class="pdisc-desc">얼마나 자주 수행할 건가요?</div>
+    <div class="pdisc-label">주기 <span style="font-weight:500;color:var(--text-dim);font-size:11px;margin-left:4px;">얼마나 자주 수행할 건가요?</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;" id="hAddCycle1Area"></div>
     <div id="hAddCycle2Area"></div>
-    <div class="wiz-nav"><button class="wiz-nav-back" onclick="wizGoTo(0)">◀ 이전</button><div class="wiz-dots" id="hAddDots"></div><div></div></div>
+    <div class="wiz-nav" style="flex-direction:column;gap:10px;"><div class="wiz-dots" id="hAddDots"></div><button class="wiz-nav-back" onclick="wizGoTo(0)">◀ 이전</button></div>
   </div>`;
 
   // Slide 2: Time
   h += `<div class="wiz-slide" id="hWiz2">
     <div class="pdisc-label">시간대</div>
     <div id="hAddTimeArea"></div>
-    <div class="wiz-nav"><button class="wiz-nav-back" onclick="wizGoTo(1)">◀ 이전</button><div class="wiz-dots" id="hAddDots"></div><div></div></div>
+    <div class="wiz-nav" style="flex-direction:column;gap:10px;"><div class="wiz-dots" id="hAddDots"></div><button class="wiz-nav-back" onclick="wizGoTo(1)">◀ 이전</button></div>
   </div>`;
 
   // Slide 3: Category
   h += `<div class="wiz-slide" id="hWiz3">
     <div class="pdisc-label">카테고리</div>
     <div id="hAddCatArea"></div>
-    <div class="wiz-nav"><button class="wiz-nav-back" onclick="wizGoTo(2)">◀ 이전</button><div class="wiz-dots" id="hAddDots"></div><div></div></div>
+    <div class="wiz-nav" style="flex-direction:column;gap:10px;"><div class="wiz-dots" id="hAddDots"></div><button class="wiz-nav-back" onclick="wizGoTo(2)">◀ 이전</button></div>
   </div>`;
 
   // Slide 4: Confirm
@@ -2358,7 +2357,7 @@ window.openAddHabitSheet = function () {
       <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px;" id="hWizConfirmTags"></div>
     </div>
     <button class="unit-confirm-btn" onclick="habitAddSave()">습관 등록하기</button>
-    <div class="wiz-nav" style="border:none;margin-top:8px;"><button class="wiz-nav-back" onclick="wizGoTo(3)">◀ 이전</button><div class="wiz-dots" id="hAddDots"></div><div></div></div>
+    <div class="wiz-nav" style="border:none;margin-top:8px;flex-direction:column;gap:10px;"><div class="wiz-dots" id="hAddDots"></div><button class="wiz-nav-back" onclick="wizGoTo(3)">◀ 이전</button></div>
   </div>`;
 
   h += `</div>`;

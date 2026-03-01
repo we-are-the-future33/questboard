@@ -2640,8 +2640,10 @@ function renderStats6Month(idx, g) {
 
 // ===== ADD HABIT FLOW =====
 let _habitAddName = '';
-let _habitCycle1 = null; // 'daily','w1','w2','w3','w4','health_sleep','health_workout'
-let _habitCycle2 = null; // number of times
+let _habitCycle1 = null; // 'daily','w1','w2','w3','w4','auto'
+let _habitCycle2 = null; // number of times or 'health_sleep'/'health_workout'
+let _habitTime = 'any';
+let _habitCat = 'etc';
 let _workoutType = null; // workout subtype
 
 window.habitAddStep2 = function () {

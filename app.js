@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302l';
+const APP_VERSION = '20260302m';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1881,18 +1881,55 @@ window.removeCreateTask = function(si, ti) { syncCreateStagesFromDOM(); _createS
 window.addCreateStage = function() { syncCreateStagesFromDOM(); _createStages.push({name:'', tasks:[]}); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
 window.removeCreateStage = function(si) { syncCreateStagesFromDOM(); _createStages.splice(si, 1); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
 
-// ===== ADD CHALLENGE SHEET =====
+// ===== ADD CHALLENGE SHEET (Wizard Slide) =====
+let _cwizStep = 0;
+let _cwizTotalSteps = 5; // bucket: 5, project: 6
+
+function cwizGoTo(step) {
+  const slides = document.querySelectorAll('.cwiz-slide');
+  slides.forEach((s, i) => {
+    s.classList.remove('active', 'exit-left');
+    if (i < step) s.classList.add('exit-left');
+    else if (i === step) s.classList.add('active');
+  });
+  _cwizStep = step;
+  const summaryEl = document.getElementById('cAddSummary');
+  const lastStep = _createType === 'project' ? 5 : 4;
+  if (summaryEl) summaryEl.style.display = step === lastStep ? 'none' : 'flex';
+  renderCAddDots();
+}
+
+window.cwizGoTo = cwizGoTo;
+
+function renderCAddDots() {
+  const els = document.querySelectorAll('.cAddDotsBar');
+  const total = _createType === 'project' ? 6 : 5;
+  let h = '';
+  for (let i = 0; i < total; i++) {
+    const cls = i === _cwizStep ? 'active' : i < _cwizStep ? 'done' : '';
+    h += `<div class="wiz-dot ${cls}" onclick="cwizDotTap(${i})" style="cursor:pointer;"></div>`;
+  }
+  els.forEach(el => { el.innerHTML = h; });
+}
+
+window.cwizDotTap = function (step) {
+  if (step < _cwizStep) cwizGoTo(step);
+};
+
 window.openAddChallengeSheet = function () {
   const count = Object.values(localDash.challenges || {}).filter(c => c && c.title).length;
   if (count >= MAX_CHALLENGES) { showToast(`도전은 최대 ${MAX_CHALLENGES}개까지 만들 수 있어요`, 'normal'); return; }
-  _createType = null; _createCat = 'etc'; _createMonth = 'someday';
-  _createStages = [{ name: '첫 번째 단계', tasks: [] }];
+  _createType = null; _createCat = null; _createMonth = null;
+  _createStages = [{ name: '', tasks: [] }, { name: '', tasks: [] }];
+  _cwizStep = 0;
   document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
   clearMetaTags();
 
-  let h = '';
-  // Step 1: Type
-  h += `<div class="pdisc-step" id="cAddStep1">
+  let h = `<div class="wiz-summary" id="cAddSummary"></div>`;
+  h += `<div class="wiz-wrap">`;
+
+  // Slide 0: Type
+  h += `<div class="cwiz-slide active" id="cWiz0">
     <div class="pdisc-label">유형</div>
     <div class="challenge-type-grid">
       <div class="challenge-type-card" id="ctBucket2" onclick="cAddSelectType('bucket')">
@@ -1906,54 +1943,67 @@ window.openAddChallengeSheet = function () {
         <div class="challenge-type-desc">단계별 로드맵이<br>필요한 목표</div>
       </div>
     </div>
+    <div class="wiz-nav"><div class="wiz-dots cAddDotsBar"></div></div>
   </div>`;
 
-  // Step 2: Name
-  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep2">
+  // Slide 1: Name
+  h += `<div class="cwiz-slide" id="cWiz1">
     <div class="pdisc-label">도전의 이름</div>
-    <input class="proj-edit-input" id="cAddName" placeholder="어떤 도전을 시작하시나요?" maxlength="30" oninput="cAddCheckName()">
+    <input class="proj-edit-input" id="cAddName" placeholder="어떤 도전을 시작하시나요?" maxlength="30">
+    <div class="wiz-nav" style="flex-direction:column;gap:10px;"><div class="wiz-dots cAddDotsBar"></div><button class="unit-confirm-btn" style="width:100%;padding:12px 28px;" onclick="cWizNameNext()">다음</button></div>
   </div>`;
 
-  // Step 3: Category
-  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep3">
+  // Slide 2: Category
+  h += `<div class="cwiz-slide" id="cWiz2">
     <div class="pdisc-label">카테고리</div>
     <div id="cAddCatArea"></div>
+    <div class="wiz-nav"><div class="wiz-dots cAddDotsBar"></div></div>
   </div>`;
 
-  // Step 4: Target month
-  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep4">
+  // Slide 3: Target month
+  h += `<div class="cwiz-slide" id="cWiz3">
     <div class="pdisc-label">목표 시기</div>
     <div id="cAddMonthArea"></div>
+    <div class="wiz-nav"><div class="wiz-dots cAddDotsBar"></div></div>
   </div>`;
 
-  // Step 5: Stages (project only)
-  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep5">
-    <div class="pdisc-label">프로젝트 단계 설정</div>
-    <div id="createStagesArea"></div>
+  // Slide 4: Stages (project only) — will be skipped for bucket
+  h += `<div class="cwiz-slide" id="cWiz4">
+    <div class="pdisc-label">단계 설정</div>
+    <div id="cAddStagesArea"></div>
+    <div class="wiz-nav" style="flex-direction:column;gap:10px;"><div class="wiz-dots cAddDotsBar"></div><button class="unit-confirm-btn" style="width:100%;padding:12px 28px;" onclick="cWizStagesNext()">다음</button></div>
   </div>`;
 
-  // Step 6: Confirm
-  h += `<div class="pdisc-step pdisc-hidden" id="cAddStep6">
-    <button class="unit-confirm-btn" id="cAddConfirmBtn" onclick="cAddSave()">도전 시작하기</button>
+  // Slide 5: Confirm (project) / Slide 4: Confirm (bucket)
+  h += `<div class="cwiz-slide" id="cWiz5">
+    <div style="text-align:center;padding:16px 0;">
+      <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;" id="cWizConfirmTags"></div>
+    </div>
+    <button class="unit-confirm-btn" onclick="cAddSave()">도전 시작하기</button>
+    <div class="wiz-nav" style="border:none;margin-top:8px;"><div class="wiz-dots cAddDotsBar"></div></div>
   </div>`;
+
+  h += `</div>`;
 
   document.getElementById('bsBody').innerHTML = h;
   openBS();
   renderCAddCat();
   renderCAddMonth();
+  renderCAddDots();
 };
 
 window.cAddSelectType = function (type) {
   _createType = type;
   document.getElementById('ctBucket2').classList.toggle('selected', type === 'bucket');
   document.getElementById('ctProject2').classList.toggle('selected', type === 'project');
-  pdiscReveal('cAddStep2');
+  cwizGoTo(1);
   setTimeout(() => document.getElementById('cAddName')?.focus(), 200);
 };
 
-window.cAddCheckName = function () {
-  const v = document.getElementById('cAddName').value.trim();
-  if (v.length > 0) pdiscReveal('cAddStep3');
+window.cWizNameNext = function () {
+  const v = document.getElementById('cAddName')?.value.trim();
+  if (!v) { showToast('이름을 입력해주세요', 'normal'); document.getElementById('cAddName')?.focus(); return; }
+  cwizGoTo(2);
 };
 
 function renderCAddCat() {
@@ -1971,7 +2021,7 @@ function renderCAddCat() {
 window.cAddSelectCat = function (val) {
   _createCat = val;
   renderCAddCat();
-  pdiscReveal('cAddStep4');
+  cwizGoTo(3);
 };
 
 function renderCAddMonth() {
@@ -1996,12 +2046,78 @@ window.cAddSelectMonth = function (val) {
   _createMonth = val;
   renderCAddMonth();
   if (_createType === 'project') {
-    pdiscReveal('cAddStep5');
-    const stArea = document.getElementById('createStagesArea');
-    if (stArea) stArea.innerHTML = getCreateStagesHTML();
+    renderCAddStages();
+    cwizGoTo(4);
+  } else {
+    renderCWizConfirm();
+    // For bucket, slide 4 is stages (skip), go to 5 which is confirm
+    // But we need to map: bucket confirm = slide index 5
+    cwizGoTo(5);
   }
-  pdiscReveal('cAddStep6');
 };
+
+function renderCAddStages() {
+  const area = document.getElementById('cAddStagesArea');
+  if (!area) return;
+  let h = '';
+  _createStages.forEach((s, i) => {
+    h += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div class="proj-stage-num">${i + 1}</div>
+      <input class="proj-edit-task-input" id="cStageName_${i}" value="${esc(s.name)}" placeholder="${i + 1}단계 이름" style="flex:1;">
+      ${_createStages.length > 1 ? `<button class="proj-edit-task-del" onclick="cRemoveStage(${i})">✕</button>` : ''}
+    </div>`;
+  });
+  if (_createStages.length < 10) {
+    h += `<button class="proj-add-stage-btn" onclick="cAddStage()">＋ 단계 추가</button>`;
+  }
+  area.innerHTML = h;
+}
+
+window.cAddStage = function () {
+  syncCStagesFromDOM();
+  _createStages.push({ name: '', tasks: [] });
+  renderCAddStages();
+  setTimeout(() => document.getElementById(`cStageName_${_createStages.length - 1}`)?.focus(), 100);
+};
+
+window.cRemoveStage = function (i) {
+  syncCStagesFromDOM();
+  _createStages.splice(i, 1);
+  renderCAddStages();
+};
+
+function syncCStagesFromDOM() {
+  _createStages.forEach((s, i) => {
+    const el = document.getElementById(`cStageName_${i}`);
+    if (el) s.name = el.value;
+  });
+}
+
+window.cWizStagesNext = function () {
+  syncCStagesFromDOM();
+  renderCWizConfirm();
+  cwizGoTo(5);
+};
+
+function renderCWizConfirm() {
+  const tagsEl = document.getElementById('cWizConfirmTags');
+  if (!tagsEl) return;
+  const name = document.getElementById('cAddName')?.value.trim() || '';
+  const typeLbl = _createType === 'bucket' ? '⭐ 버킷리스트' : '🗺️ 프로젝트';
+  const cl = { health:'💪 건강', diet:'🥗 식단', study:'📚 학습', work:'💼 업무', finance:'💰 재무', life:'🌱 생활', home:'🧹 집안일', hobby:'🎨 취미', social:'🤝 관계', mental:'🧘 멘탈', etc:'📦 기타' };
+  const monthLbl = _createMonth === 'someday' ? '언젠가' : _createMonth;
+  const tags = [
+    { label: name, step: 1 },
+    { label: typeLbl, step: 0 },
+    { label: cl[_createCat], step: 2 },
+    { label: monthLbl, step: 3 }
+  ];
+  if (_createType === 'project') {
+    syncCStagesFromDOM();
+    tags.push({ label: `${_createStages.length}단계`, step: 4 });
+  }
+  tagsEl.innerHTML = tags.filter(t => t.label).map(t => `<span class="wiz-chip" onclick="cwizGoTo(${t.step})">${t.label}</span>`).join('');
+}
 
 window.cAddSave = async function () {
   const name = document.getElementById('cAddName')?.value.trim();
@@ -2013,14 +2129,13 @@ window.cAddSave = async function () {
   if (slot === -1) { showToast('최대 25개까지 등록 가능합니다', 'normal'); return; }
 
   if (_createType === 'bucket') {
-    localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat, targetMonth: _createMonth, createdAt: new Date().toISOString() };
+    localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat || 'etc', targetMonth: _createMonth || 'someday', createdAt: new Date().toISOString() };
   } else {
-    syncCreateStagesFromDOM();
+    syncCStagesFromDOM();
     _createStages.forEach((s, i) => {
-      s.tasks.forEach(t => { if (!t.name.trim()) t.name = '항목'; });
-      if (!s.name.trim()) s.name = `단계 ${i+1}`;
+      if (!s.name.trim()) s.name = `${i+1}단계`;
     });
-    localDash.challenges[slot] = { type: 'project', title: name, category: _createCat, targetMonth: _createMonth, stages: _createStages, createdAt: new Date().toISOString() };
+    localDash.challenges[slot] = { type: 'project', title: name, category: _createCat || 'etc', targetMonth: _createMonth || 'someday', stages: _createStages, createdAt: new Date().toISOString() };
   }
   closeBottomSheet(); renderChallengeCards();
   showToast(_createType === 'bucket' ? '⭐ 도전 등록!' : '🗺️ 프로젝트 시작!', 'done');

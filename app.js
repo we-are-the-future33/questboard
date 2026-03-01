@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302w';
+const APP_VERSION = '20260302x';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1171,7 +1171,24 @@ function renderDashboard() {
 function renderAvatar() {
   const p = globalPct(), stage = Math.min(9, Math.floor(p / 10));
   const artEl = document.getElementById('avatarArt');
-  if (!artEl._hamsterInit) { artEl._hamsterInit = true; initHamsterAvatar(artEl); }
+  const { total, done } = getMyTodayProgress();
+  const todayPct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const showHouse = todayPct < 25;
+  // Track current mode
+  const currentMode = artEl._avatarMode;
+  const needMode = showHouse ? 'house' : 'hamster';
+  if (currentMode !== needMode) {
+    artEl._avatarMode = needMode;
+    artEl._hamsterInit = false;
+    artEl.innerHTML = '';
+    // Cancel existing animation loops
+    if (artEl._animId) { cancelAnimationFrame(artEl._animId); artEl._animId = null; }
+    if (needMode === 'house') {
+      initHamsterHouse(artEl);
+    } else {
+      initHamsterAvatar(artEl);
+    }
+  }
   document.getElementById('avatarStage').textContent = `${stage + 1}단계`;
   const nick = localDash.nickname || currentUser.name || '나의 캐릭터';
   document.getElementById('avatarNickname').textContent = nick;
@@ -4070,6 +4087,203 @@ window.tutFinish = async function () {
 };
 
 // ===== 3D HAMSTER (Three.js) =====
+// ===== HAMSTER HOUSE (sleeping mode, <25%) =====
+function initHamsterHouse(container) {
+  if (typeof THREE !== 'undefined') { buildHamsterHouse(container); return; }
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js';
+  script.onload = () => buildHamsterHouse(container);
+  document.head.appendChild(script);
+}
+
+function buildHamsterHouse(container) {
+  if (typeof THREE === 'undefined') { container.innerHTML = '🏠'; return; }
+  let scene, camera, renderer, leftEyeMesh, rightEyeMesh;
+  let blinkState = { active: false, progress: 0 };
+  const creamColor = 0xfffcf2;
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 3.5, 10);
+  camera.lookAt(0, 2.5, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(280, 280);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.innerHTML = '';
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+  dl.position.set(3, 10, 8);
+  dl.castShadow = true;
+  dl.shadow.mapSize.set(1024, 1024);
+  scene.add(dl);
+
+  const houseGroup = new THREE.Group();
+
+  // Floor
+  const floor = new THREE.Mesh(
+    new THREE.CircleGeometry(8, 64),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, transparent: true, opacity: 0.1 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // House body
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 3.5, 4),
+    new THREE.MeshStandardMaterial({ color: creamColor, roughness: 0.8 })
+  );
+  base.position.y = 1.75;
+  base.castShadow = true;
+  base.receiveShadow = true;
+  houseGroup.add(base);
+
+  // Door (arch)
+  const doorShape = new THREE.Shape();
+  const dw = 2.4, dh = 3.6;
+  doorShape.moveTo(-dw/2, 0);
+  doorShape.lineTo(dw/2, 0);
+  doorShape.lineTo(dw/2, dh * 0.6);
+  doorShape.absarc(0, dh * 0.6, dw/2, 0, Math.PI, false);
+  doorShape.lineTo(-dw/2, 0);
+  const door = new THREE.Mesh(
+    new THREE.ShapeGeometry(doorShape),
+    new THREE.MeshBasicMaterial({ color: 0x1e293b })
+  );
+  door.position.set(0, 0, 2.01);
+  houseGroup.add(door);
+
+  // Sunflower seed on top
+  const seedGroup = new THREE.Group();
+  const seedShape = new THREE.Shape();
+  seedShape.moveTo(0, 0.5);
+  seedShape.quadraticCurveTo(0.35, 0.4, 0.35, -0.1);
+  seedShape.quadraticCurveTo(0.35, -0.5, 0, -0.5);
+  seedShape.quadraticCurveTo(-0.35, -0.5, -0.35, -0.1);
+  seedShape.quadraticCurveTo(-0.35, 0.4, 0, 0.5);
+  seedGroup.add(new THREE.Mesh(new THREE.ShapeGeometry(seedShape), new THREE.MeshBasicMaterial({ color: 0x2d2d2d })));
+  const mkStripe = (x, r) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.7, 0.01), new THREE.MeshBasicMaterial({ color: 0xfafafa }));
+    m.position.set(x, -0.05, 0.01); m.rotation.z = r; return m;
+  };
+  seedGroup.add(mkStripe(0, 0), mkStripe(-0.15, 0.25), mkStripe(0.15, -0.25));
+  seedGroup.position.set(0, 3.85, 2.05);
+  seedGroup.scale.set(0.65, 0.65, 1);
+  houseGroup.add(seedGroup);
+
+  // Inner face (eyes + nose peeking from door)
+  const faceZ = 2.02;
+  // Nose
+  const nose = new THREE.Mesh(new THREE.CircleGeometry(0.04, 32), new THREE.MeshBasicMaterial({ color: 0xdba39a }));
+  nose.position.set(0, 1.85, faceZ);
+  houseGroup.add(nose);
+  // Eyes
+  const mkEye = (x, rot) => {
+    const g = new THREE.Group();
+    const e = new THREE.Mesh(new THREE.CircleGeometry(0.08, 32), new THREE.MeshBasicMaterial({ color: 0x1a1a1a }));
+    e.scale.set(0.85, 1.1, 1);
+    const hl = new THREE.Mesh(new THREE.CircleGeometry(0.025, 16), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    hl.position.set(0.02, 0.04, 0.01);
+    g.add(e, hl);
+    g.position.set(x, 2.1, faceZ);
+    g.rotation.z = rot;
+    return { group: g, mesh: e };
+  };
+  const le = mkEye(-0.35, Math.PI / 12);
+  const re = mkEye(0.35, -Math.PI / 12);
+  leftEyeMesh = le.mesh; rightEyeMesh = re.mesh;
+  houseGroup.add(le.group, re.group);
+
+  // Gable walls
+  const gableShape = new THREE.Shape();
+  const gW = 4.5 / 2, gH = 1.35;
+  gableShape.moveTo(-gW, 0); gableShape.lineTo(gW, 0);
+  gableShape.lineTo(0, gH); gableShape.lineTo(-gW, 0);
+  const gableMat = new THREE.MeshStandardMaterial({ color: creamColor, roughness: 0.8 });
+  const fg = new THREE.Mesh(new THREE.ShapeGeometry(gableShape), gableMat);
+  fg.position.set(0, 3.5, 2); fg.castShadow = true; fg.receiveShadow = true;
+  houseGroup.add(fg);
+  const bg = new THREE.Mesh(new THREE.ShapeGeometry(gableShape), gableMat);
+  bg.position.set(0, 3.5, -2); bg.rotation.y = Math.PI; bg.castShadow = true;
+  houseGroup.add(bg);
+
+  // Roof
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x2196f3, roughness: 0.9, side: THREE.DoubleSide });
+  const roofGeo = new THREE.BoxGeometry(2.9, 0.3, 5.5);
+  const roofAngle = Math.PI / 5.8;
+  const lr = new THREE.Mesh(roofGeo, roofMat);
+  lr.position.set(-1.23, 4.25, 0); lr.rotation.z = roofAngle; lr.castShadow = true;
+  houseGroup.add(lr);
+  const rr = new THREE.Mesh(roofGeo, roofMat);
+  rr.position.set(1.23, 4.25, 0); rr.rotation.z = -roofAngle; rr.castShadow = true;
+  houseGroup.add(rr);
+
+  scene.add(houseGroup);
+
+  // Mouse/touch look
+  let targetRot = { x: 0, y: 0 };
+  container.addEventListener('mousemove', e => {
+    const r = container.getBoundingClientRect();
+    targetRot.y = ((e.clientX - r.left) / r.width * 2 - 1) * 0.15;
+    targetRot.x = -(((e.clientY - r.top) / r.height) * 2 - 1) * 0.1;
+  });
+  container.addEventListener('touchmove', e => {
+    const r = container.getBoundingClientRect(), t = e.touches[0];
+    targetRot.y = ((t.clientX - r.left) / r.width * 2 - 1) * 0.15;
+    targetRot.x = -(((t.clientY - r.top) / r.height) * 2 - 1) * 0.1;
+  });
+
+  // Tap emoji
+  const emojis = ['💤','😴','🌙','⭐','✨','🐹'];
+  container.addEventListener('click', e => {
+    const r = container.getBoundingClientRect();
+    const cx = e.clientX - r.left, cy = e.clientY - r.top;
+    for (let i = 0; i < 4; i++) {
+      const em = document.createElement('div');
+      em.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      em.style.cssText = `position:absolute;font-size:${16+Math.random()*12}px;pointer-events:none;z-index:10;left:${cx-10+(Math.random()-.5)*60}px;top:${cy-10}px;opacity:1;transition:none;`;
+      container.style.position = 'relative';
+      container.appendChild(em);
+      const dx = (Math.random()-.5)*80, dy = -(30+Math.random()*60);
+      requestAnimationFrame(() => {
+        em.style.transition = 'all 1.4s ease-out';
+        em.style.transform = `translate(${dx}px,${dy}px)`;
+        em.style.opacity = '0';
+      });
+      setTimeout(() => em.remove(), 1600);
+    }
+  });
+
+  // Animate
+  const clock = new THREE.Clock();
+  function anim() {
+    container._animId = requestAnimationFrame(anim);
+    const t = clock.getElapsedTime();
+    // Blink
+    if (!blinkState.active && Math.random() < 0.008) { blinkState.active = true; blinkState.progress = 0; }
+    if (blinkState.active) {
+      blinkState.progress += 0.15;
+      let sY = 1;
+      if (blinkState.progress < Math.PI) sY = Math.abs(Math.cos(blinkState.progress));
+      else { blinkState.active = false; sY = 1; }
+      if (leftEyeMesh) leftEyeMesh.scale.y = sY * 1.1;
+      if (rightEyeMesh) rightEyeMesh.scale.y = sY * 1.1;
+    }
+    // Gentle sway
+    houseGroup.rotation.y += (targetRot.y - houseGroup.rotation.y) * 0.05;
+    // Breathing
+    const br = 1 + Math.sin(t * 2) * 0.005;
+    houseGroup.scale.set(br, br, br);
+    renderer.render(scene, camera);
+  }
+  anim();
+}
+
 function initHamsterAvatar(container) {
   // 원본은 ES module import 방식이지만, 기존 CDN 로드 방식 유지
   const script = document.createElement('script');
@@ -4336,7 +4550,7 @@ function buildHamster(container) {
 
   // --- Animate ---
   function animate() {
-    requestAnimationFrame(animate);
+    container._animId = requestAnimationFrame(animate);
     const time = clock.getElapsedTime();
 
     // 눈 깜빡임

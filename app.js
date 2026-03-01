@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302u';
+const APP_VERSION = '20260302v';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4587,7 +4587,7 @@ function renderMilestoneBar() {
   icons.forEach(ic => {
     const active = pct >= ic.ms;
     const justReached = ic.ms > 0 && reached.includes(ic.ms);
-    h += `<div class="ms-bar-icon ${active ? 'active' : ''} ${justReached ? 'bounce' : ''}" style="left:${ic.ms}%">`;
+    h += `<div class="ms-bar-icon ${active ? 'active' : ''} ${justReached ? 'bounce' : ''}">`;
     h += `<span class="ms-bar-emoji">${ic.emoji}</span>`;
     h += `</div>`;
   });

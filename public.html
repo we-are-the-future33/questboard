@@ -10,8 +10,9 @@
 <style>
 body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
 .pub-mobile-wrap{max-width:440px;width:100%;background:var(--bg,#fff);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-.pub-global-bar{padding:18px 20px 4px;display:flex;align-items:center;justify-content:space-between;}
+.pub-global-bar{padding:18px 20px 4px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .pub-global-bar .logo{font-family:var(--font-main);font-size:22px;font-weight:800;color:var(--accent);}
+#content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
 /* Floating bottom banner */
 .pub-float-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);max-width:400px;width:calc(100% - 40px);background:rgba(30,41,59,.92);backdrop-filter:blur(8px);color:#e2e8f0;padding:10px 16px;border-radius:14px;font-size:12px;font-weight:600;text-align:center;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.25);line-height:1.5;}
 .pub-float-banner .pub-float-dot{display:inline;color:#64748b;margin:0 2px;}
@@ -19,7 +20,7 @@ body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
 /* Override sub-tab-bar for public context */
 .pub-scroll .sub-tab-bar{margin:8px 20px 0;position:sticky;top:0;z-index:30;}
 /* Tab bar - reuse style.css .tab-bar but sticky inside pub-mobile-wrap */
-.pub-mobile-wrap .tab-bar{position:sticky;top:0;z-index:40;}
+.pub-mobile-wrap .tab-bar{position:sticky;top:0;z-index:40;flex-shrink:0;}
 /* Footer */
 .pub-footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:20px;}
 .pub-footer a{color:var(--accent);text-decoration:none;font-weight:700;}

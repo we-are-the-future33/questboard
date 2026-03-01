@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301b';
+const APP_VERSION = '20260301c';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1375,10 +1375,12 @@ function initHabitSwipe(idx) {
     const isDone = card.dataset.done === '1';
 
     if (dx >= TH && !isDone) {
+      triggerHaptic('light');
       const cardW = card.offsetWidth || 200;
       card.style.transform = `translateX(${cardW + 20}px)`;
       setTimeout(() => habitMarkDone(idx), 250);
     } else if (dx <= -TH && isDone) {
+      triggerHaptic('light');
       const cardW = card.offsetWidth || 200;
       card.style.transform = `translateX(${-(cardW + 20)}px)`;
       setTimeout(() => habitMarkUndo(idx), 250);
@@ -1591,7 +1593,7 @@ function initBucketSwipe(idx) {
   function onE() {
     card.classList.remove('swiping'); card.classList.add('snapping');
     const elapsed = Date.now() - tapStart;
-    if (Math.abs(dx) >= TH) { const cW = card.offsetWidth || 200; card.style.transform = `translateX(${dx > 0 ? cW + 20 : -(cW + 20)}px)`; setTimeout(() => swipeBucket(idx), 250); }
+    if (Math.abs(dx) >= TH) { triggerHaptic('light'); const cW = card.offsetWidth || 200; card.style.transform = `translateX(${dx > 0 ? cW + 20 : -(cW + 20)}px)`; setTimeout(() => swipeBucket(idx), 250); }
     else {
       card.style.transform = 'translateX(0)';
       const totalMove = Math.abs(sx - (dx + sx));
@@ -2910,7 +2912,7 @@ window.showFriendGoalCal = async function (fid, gi) {
   const cheerInput = document.getElementById('cheerInput');
   if (cheerInput) {
     cheerInput.addEventListener('focus', () => {
-      setTimeout(() => { cheerInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
+      setTimeout(() => { cheerInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 300);
     });
   }
 };

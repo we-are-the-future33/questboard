@@ -538,6 +538,78 @@ window.openServiceInfo = function () {
     });
 };
 
+window.openAndroidGuide = function () {
+  document.getElementById('bsTitle').textContent = '🤖 안드로이드 연동';
+  clearMetaTags();
+  const uid = currentUser?.id || '(로그인 필요)';
+  // Find health_workout goals
+  const goals = getAllGoals();
+  let healthList = '';
+  goals.forEach((g, i) => {
+    if (g && (g.unit === 'health_workout' || g.unit === 'health_sleep')) {
+      const label = getUnitLabel(g);
+      const wType = g.workoutType ? ` (${g.workoutType})` : '';
+      healthList += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+        <span style="font-size:13px;">${esc(g.title)}${wType}</span>
+        <span style="font-size:13px;font-weight:800;color:var(--accent);">g${i}</span>
+      </div>`;
+    }
+  });
+
+  let h = `<div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:16px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#0284c7;margin-bottom:8px;">📌 내 연동 정보</div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span style="font-size:12px;color:#64748b;">유저 ID</span>
+      <span style="font-size:13px;font-weight:800;color:#0284c7;">${esc(uid)}</span>
+    </div>
+    ${healthList || '<div style="font-size:12px;color:#94a3b8;padding:6px 0;">헬스 연동 습관이 없습니다. 습관 추가 시 ⌚ 애플 헬스 연동에서 등록하세요.</div>'}
+  </div>`;
+
+  h += `<div style="font-size:14px;font-weight:800;margin-bottom:12px;">MacroDroid 설정 방법</div>`;
+
+  h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">1️⃣ MacroDroid 설치</div>
+    <div style="font-size:12px;color:#475569;">Play Store에서 <b>MacroDroid</b> 검색 → 설치 (무료)<br>앱 실행 → 알림 접근 권한 허용</div>
+  </div>`;
+
+  h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">2️⃣ 트리거 설정</div>
+    <div style="font-size:12px;color:#475569;">매크로 추가 → 트리거 → <b>Notification</b><br>앱: Samsung Health (또는 사용 중인 건강 앱)<br>텍스트 조건: "운동" 또는 "Exercise" 포함</div>
+  </div>`;
+
+  h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">3️⃣ 액션 설정</div>
+    <div style="font-size:12px;color:#475569;">액션 → <b>HTTP Request</b><br>Method: <b>PUT</b><br>Content Type: application/json<br>Body: <b>true</b></div>
+    <div style="font-size:11px;color:#0284c7;font-weight:700;margin-top:8px;">URL:</div>
+    <div style="font-size:10px;color:#334155;background:#e8f4f8;padding:8px;border-radius:6px;margin-top:4px;word-break:break-all;font-family:monospace;">
+      https://grow-goal-default-rtdb.firebaseio.com/dashboards/<b>${esc(uid)}</b>/completions/<b>g번호</b>_{year}_{month}_{day_of_month}.json
+    </div>
+    <div style="font-size:10px;color:#94a3b8;margin-top:4px;">⚠️ {year}, {month}, {day_of_month}은 MacroDroid 매직 텍스트로 삽입 ({ } 아이콘)</div>
+  </div>`;
+
+  h += `<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">4️⃣ 테스트</div>
+    <div style="font-size:12px;color:#475569;">매크로 저장 후 활성화<br>건강 앱에서 짧은 운동 기록<br>키웁 새로고침 → 자동 체크 확인</div>
+  </div>`;
+
+  h += `<div style="background:#fef3c7;border:1.5px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:10px;">
+    <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">💡 운동 여러 개일 때</div>
+    <div style="font-size:11px;color:#78350f;">운동 종류마다 별도 매크로를 만드세요.<br>알림 텍스트 조건을 "달리기", "수영" 등으로 구분하면<br>각각 다른 g번호 습관에 기록됩니다.</div>
+  </div>`;
+
+  h += `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px;">
+    <div style="font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px;">⚠️ 주의사항</div>
+    <div style="font-size:11px;color:#7f1d1d;">
+      • MacroDroid 배터리 최적화 해제 필수<br>
+      • 설정 → 앱 → MacroDroid → 배터리 → 제한 없음<br>
+      • 무료 버전은 매크로 5개 제한
+    </div>
+  </div>`;
+
+  document.getElementById('bsBody').innerHTML = h;
+  openBS();
+};
+
 // ===== TAB =====
 window.switchTab = function (tab) {
   document.getElementById('tabBtnMy').classList.toggle('active', tab === 'my');

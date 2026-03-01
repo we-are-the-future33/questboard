@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301c';
+const APP_VERSION = '20260301d';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -943,76 +943,7 @@ window.switchTab = function (tab) {
 };
 
 // ===== SCROLL SNAP (avatar ↔ sub-tab zone) =====
-(function initScrollSnap() {
-  let ready = false;
-  function setup() {
-    const scroll = document.querySelector('.dash-scroll');
-    const subBar = document.querySelector('.sub-tab-bar');
-    const tabBar = document.getElementById('dashTabBar');
-    if (!scroll || !subBar || !tabBar) return;
-    if (ready) return;
-    ready = true;
-
-    let snapTimer = null;
-    let lastDir = 0;
-    let lastY = 0;
-    let snappedDown = false;
-    let isSnapping = false;
-
-    scroll.addEventListener('scroll', function () {
-      if (isSnapping) return;
-      const curY = scroll.scrollTop;
-      if (curY > lastY + 2) lastDir = 1;
-      else if (curY < lastY - 2) lastDir = -1;
-      lastY = curY;
-      clearTimeout(snapTimer);
-      snapTimer = setTimeout(() => doSnap(), 100);
-    }, { passive: true });
-
-    function doSnap() {
-      const avatarSection = document.querySelector('.avatar-section');
-      // 아바타 섹션 끝 = 서브탭 바로 위
-      const snapPoint = avatarSection ? (avatarSection.offsetTop + avatarSection.offsetHeight) : subBar.offsetTop;
-      const curY = scroll.scrollTop;
-
-      // 이미 스냅된 상태에서 위로 조금 올리면 → 위로 복귀
-      if (snappedDown && lastDir < 0 && curY < snapPoint - 5) {
-        snapTo(0);
-        return;
-      }
-      // 위에 있는 상태에서 아래로 조금 내리면 → 서브탭으로 스냅
-      if (!snappedDown && lastDir > 0 && curY > 30) {
-        snapTo(snapPoint);
-        return;
-      }
-      // 중간 위치에 멈춘 경우
-      if (curY > 0 && curY < snapPoint) {
-        if (curY > snapPoint * 0.35) snapTo(snapPoint);
-        else snapTo(0);
-      }
-    }
-
-    function snapTo(target) {
-      const avatarSection = document.querySelector('.avatar-section');
-      isSnapping = true;
-      if (target > 0) {
-        tabBar.style.display = 'none';
-        // 아바타 끝 위치에서 서브탭 margin 고려하여 약간 위로
-        const raw = avatarSection ? (avatarSection.offsetTop + avatarSection.offsetHeight) : subBar.offsetTop;
-        const newTarget = Math.max(0, raw - 16);
-        snappedDown = true;
-        scroll.scrollTo({ top: newTarget, behavior: 'instant' });
-      } else {
-        tabBar.style.display = '';
-        snappedDown = false;
-        scroll.scrollTo({ top: 0, behavior: 'instant' });
-      }
-      setTimeout(() => { isSnapping = false; lastY = scroll.scrollTop; }, 100);
-    }
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
-  else setTimeout(setup, 500);
-})();
+// Scroll snap removed — free scroll with sticky tab bars
 
 // ===== DASHBOARD =====
 function renderDashboard() {

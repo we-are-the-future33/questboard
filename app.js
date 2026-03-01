@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302p';
+const APP_VERSION = '20260302q';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -91,8 +91,8 @@ let challengeFilter = localStorage.getItem('kw_challengeFilter') || 'active';
 let habitViewMode = localStorage.getItem('kw_habitViewMode') || 'all';
 let challengeViewMode = localStorage.getItem('kw_challengeViewMode') || 'all';
 let _createType = 'bucket';
-let _createCat = 'etc';
-let _createMonth = 'someday';
+let _createCat = null;
+let _createMonth = null;
 let _createStages = [];
 
 const TIME_LABELS = { any: '🔄 언제나', dawn: '🌅 새벽', morning: '🌤 아침', midday: '🏞 낮', afternoon: '🌇 오후', evening: '🌟 저녁', night: '🦉 밤' };
@@ -1922,7 +1922,7 @@ window.openAddChallengeSheet = function () {
   const count = Object.values(localDash.challenges || {}).filter(c => c && c.title).length;
   if (count >= MAX_CHALLENGES) { showToast(`도전은 최대 ${MAX_CHALLENGES}개까지 만들 수 있어요`, 'normal'); return; }
   _createType = null; _createCat = null; _createMonth = null;
-  _createStages = [{ name: '', tasks: [] }, { name: '', tasks: [] }];
+  _createStages = [{ name: '', tasks: [] }];
   _cwizStep = 0;
   document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
   clearMetaTags();
@@ -2063,17 +2063,41 @@ function renderCAddStages() {
   if (!area) return;
   let h = '';
   _createStages.forEach((s, i) => {
-    h += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-      <div class="proj-stage-num">${i + 1}</div>
-      <input class="proj-edit-task-input" id="cStageName_${i}" value="${esc(s.name)}" placeholder="${i + 1}단계 이름" style="flex:1;">
-      ${_createStages.length > 1 ? `<button class="proj-edit-task-del" onclick="cRemoveStage(${i})">✕</button>` : ''}
-    </div>`;
+    h += `<div style="margin-bottom:12px;padding:10px;background:var(--surface2);border-radius:10px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div class="proj-stage-num">${i + 1}</div>
+        <input class="proj-edit-task-input" id="cStageName_${i}" value="${esc(s.name)}" placeholder="${i + 1}단계 이름" style="flex:1;">
+        ${_createStages.length > 1 ? `<button class="proj-edit-task-del" onclick="cRemoveStage(${i})">✕</button>` : ''}
+      </div>`;
+    // Sub-tasks
+    (s.tasks || []).forEach((t, ti) => {
+      h += `<div style="display:flex;align-items:center;gap:6px;margin-left:36px;margin-bottom:4px;">
+        <input class="proj-edit-task-input" id="cTask_${i}_${ti}" value="${esc(t.name)}" placeholder="세부 항목" style="flex:1;font-size:12px;">
+        <button class="proj-edit-task-del" onclick="cRemoveTask(${i},${ti})" style="font-size:11px;">✕</button>
+      </div>`;
+    });
+    h += `<button class="proj-add-task-btn" style="margin-left:36px;font-size:11px;" onclick="cAddTask(${i})">＋ 세부 단계 추가</button>`;
+    h += `</div>`;
   });
   if (_createStages.length < 10) {
     h += `<button class="proj-add-stage-btn" onclick="cAddStage()">＋ 단계 추가</button>`;
   }
   area.innerHTML = h;
 }
+
+window.cAddTask = function (si) {
+  syncCStagesFromDOM();
+  _createStages[si].tasks.push({ name: '', done: false });
+  renderCAddStages();
+  const ti = _createStages[si].tasks.length - 1;
+  setTimeout(() => document.getElementById(`cTask_${si}_${ti}`)?.focus(), 100);
+};
+
+window.cRemoveTask = function (si, ti) {
+  syncCStagesFromDOM();
+  _createStages[si].tasks.splice(ti, 1);
+  renderCAddStages();
+};
 
 window.cAddStage = function () {
   syncCStagesFromDOM();
@@ -2090,8 +2114,12 @@ window.cRemoveStage = function (i) {
 
 function syncCStagesFromDOM() {
   _createStages.forEach((s, i) => {
-    const el = document.getElementById(`cStageName_${i}`);
-    if (el) s.name = el.value;
+    const nameEl = document.getElementById(`cStageName_${i}`);
+    if (nameEl) s.name = nameEl.value;
+    (s.tasks || []).forEach((t, ti) => {
+      const taskEl = document.getElementById(`cTask_${i}_${ti}`);
+      if (taskEl) t.name = taskEl.value;
+    });
   });
 }
 
@@ -2136,6 +2164,7 @@ window.cAddSave = async function () {
     syncCStagesFromDOM();
     _createStages.forEach((s, i) => {
       if (!s.name.trim()) s.name = `${i+1}단계`;
+      (s.tasks || []).forEach(t => { if (!t.name.trim()) t.name = '항목'; });
     });
     localDash.challenges[slot] = { type: 'project', title: name, category: _createCat || 'etc', targetMonth: _createMonth || 'someday', stages: _createStages, createdAt: new Date().toISOString() };
   }
@@ -2433,7 +2462,6 @@ window.openAddHabitSheet = function () {
   _habitTime = null;
   _habitCat = null;
   _wizStep = 0;
-  console.log('[KIWUP] openAddHabitSheet: _habitTime=', _habitTime, '_habitCat=', _habitCat);
   document.getElementById('bsTitle').textContent = '습관 추가';
   clearMetaTags();
 

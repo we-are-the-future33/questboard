@@ -8,41 +8,40 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-/* === PUBLIC PAGE OVERRIDES === */
-/* Reset layout - don't use app's mobile-wrap/dash-scroll */
 body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
-.pub-wrap{max-width:440px;width:100%;background:var(--bg,#fff);min-height:100vh;overflow-x:hidden;overflow-y:auto;}
-.pub-top{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;position:sticky;top:0;z-index:50;background:var(--bg,#fff);border-bottom:1px solid var(--border,#e2e8f0);}
-.pub-top .logo{font-family:'IBM Plex Sans KR',sans-serif;font-size:22px;font-weight:800;color:var(--accent,#1952f5);}
-.pub-badge{font-size:10px;font-weight:700;background:var(--accent,#1952f5);color:#fff;padding:3px 10px;border-radius:20px;}
-/* Override sub-tab-bar margin for public (no dash-scroll container) */
-.pub-wrap .sub-tab-bar{margin:8px 20px 0;position:sticky;top:52px;}
-/* Panel toggle */
-.pub-panel{display:none;padding:14px 0 0;}
-.pub-panel.active{display:block;}
-/* Section header for public */
-.pub-section-hdr{display:flex;align-items:center;gap:8px;padding:0 20px;margin-bottom:10px;}
-.pub-section-hdr .title{font-family:'IBM Plex Sans KR',sans-serif;font-size:16px;font-weight:800;color:var(--text,#111827);}
-.pub-section-hdr .count{font-size:16px;font-weight:800;color:var(--accent,#1952f5);}
-/* Cheers */
-.pub-cheers{padding:16px 20px;border-top:2px solid var(--border,#e2e8f0);margin-top:10px;}
-.pub-cheers-title{font-size:15px;font-weight:800;margin-bottom:14px;}
-.pub-cheer-item{background:var(--surface,#f8fafc);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border,#e2e8f0);}
-.pub-cheer-from{font-size:12px;font-weight:700;color:var(--accent,#1952f5);margin-bottom:2px;}
-.pub-cheer-text{font-size:14px;font-weight:600;}
-.pub-cheer-time{font-size:11px;color:var(--text-dim,#64748b);margin-top:4px;}
-.pub-empty{text-align:center;color:var(--text-dim,#64748b);font-size:13px;padding:30px 0;}
+.pub-mobile-wrap{max-width:440px;width:100%;background:var(--bg,#fff);min-height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.pub-global-bar{padding:18px 20px 4px;display:flex;align-items:center;justify-content:space-between;}
+.pub-global-bar .logo{font-family:var(--font-main);font-size:22px;font-weight:800;color:var(--accent);}
+.pub-badge{font-size:10px;font-weight:700;background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;}
+.pub-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:40px;}
+/* Override sub-tab-bar for public context */
+.pub-scroll .sub-tab-bar{margin:8px 20px 0;position:sticky;top:0;z-index:30;}
+/* Tab bar - reuse style.css .tab-bar but sticky inside pub-mobile-wrap */
+.pub-mobile-wrap .tab-bar{position:sticky;top:0;z-index:40;}
 /* Footer */
-.pub-footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--text-dim,#64748b);border-top:1px solid var(--border,#e2e8f0);margin-top:20px;}
-.pub-footer a{color:var(--accent,#1952f5);text-decoration:none;font-weight:700;}
+.pub-footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:20px;}
+.pub-footer a{color:var(--accent);text-decoration:none;font-weight:700;}
 /* Loading/Error */
-.pub-loading{text-align:center;padding:80px 20px;font-size:14px;color:var(--text-dim,#64748b);}
+.pub-loading{text-align:center;padding:80px 20px;font-size:14px;color:var(--text-dim);}
 .pub-error{text-align:center;padding:80px 20px;font-size:14px;color:#ff5e7d;}
+/* Cheers */
+.pub-cheers{padding:16px 20px;border-top:2px solid var(--border);margin-top:10px;}
+.pub-cheers-title{font-size:15px;font-weight:800;margin-bottom:14px;}
+.pub-cheer-item{background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);}
+.pub-cheer-from{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:2px;}
+.pub-cheer-text{font-size:14px;font-weight:600;}
+.pub-cheer-time{font-size:11px;color:var(--text-dim);margin-top:4px;}
+.pub-empty{text-align:center;color:var(--text-dim);font-size:13px;padding:30px 0;}
+/* Alert */
+.pub-alert{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:999;}
+.pub-alert-box{background:#fff;border-radius:16px;padding:24px;max-width:300px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.pub-alert-box p{font-size:14px;font-weight:700;margin-bottom:16px;line-height:1.5;}
+.pub-alert-box button{background:var(--accent);color:#fff;border:none;padding:10px 28px;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;}
 </style>
 </head>
 <body>
-<div class="pub-wrap">
-  <div class="pub-top">
+<div class="pub-mobile-wrap" id="appWrap">
+  <div class="pub-global-bar">
     <div class="logo">키웁</div>
     <div class="pub-badge">👀 공개 프로필</div>
   </div>
@@ -68,44 +67,24 @@ const db = getDatabase(app);
 
 const MAX_HABITS = 25;
 const LEGACY_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
+const TIME_LABELS = { any:'🔄 언제나', dawn:'🌅 새벽', morning:'🌤 아침', midday:'🏞 낮', afternoon:'🌇 오후', evening:'🌟 저녁', night:'🦉 밤' };
+const CAT_LABELS = { health:'💪 건강 & 체력', diet:'🥗 식단 & 영양', study:'📚 학습 & 성장', work:'💼 업무 & 커리어', finance:'💰 재무 & 자산', life:'🌱 생활 & 루틴', home:'🧹 집안일 & 정리', hobby:'🎨 취미 & 창작', social:'🤝 관계 & 소셜', mental:'🧘 휴식 & 멘탈', etc:'📦 기타' };
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 function migrateGoal(g){if(!g)return g;if(LEGACY_MAP[g.unit])return Object.assign({},g,LEGACY_MAP[g.unit]);return g;}
-function getUnitLabel(g){
-  if(!g)return '';g=migrateGoal(g);
-  if(g.unit==='once')return'한 번';if(g.unit==='daily')return'매일';
-  if(g.unit==='health_sleep')return'🌙 수면';if(g.unit==='health_workout')return'💪 운동';
-  if(g.unit==='weekly')return`주 ${g.freq}회`;return g.unit;
-}
+function getUnitLabel(g){if(!g)return '';g=migrateGoal(g);if(g.unit==='once')return'한 번';if(g.unit==='daily')return'매일';if(g.unit==='health_sleep')return'🌙 수면';if(g.unit==='health_workout')return'💪 운동';if(g.unit==='weekly')return`주 ${g.freq}회`;return g.unit;}
 function getMonthDays(y,m){return new Date(y,m,0).getDate();}
 function getMonthWeeks(y,m){return Math.ceil(getMonthDays(y,m)/7);}
-function goalModulus(g,gi,y,m){
-  if(!g||!g.unit||g.unit==='once')return 1;g=migrateGoal(g);
-  if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout')return getMonthDays(y,m);
-  if(g.unit==='weekly')return(g.freq||1)*getMonthWeeks(y,m);
-  if(g.unit==='biweekly')return(g.freq||1)*Math.ceil(getMonthDays(y,m)/14);
-  if(g.unit==='multiweek')return(g.freq||1)*Math.ceil(getMonthDays(y,m)/((g.weeks||3)*7));
-  return 1;
-}
-function goalDone(g,gi,y,m,c){
-  if(!g||!g.unit)return 0;
-  if(g.unit==='once')return c[`g${gi}_once`]===true?1:0;
-  return Object.entries(c).filter(([k,v])=>k.startsWith(`g${gi}_${y}_${m}_`)&&v===true).length;
-}
-function goalPct(g,gi,y,m,c){
-  const mod=goalModulus(g,gi,y,m),done=goalDone(g,gi,y,m,c);
-  return{done,mod,pct:mod>0?Math.round(done/mod*100):0};
-}
-function calcStreak(g,gi,c){
-  if(!g||!g.unit||g.unit==='once')return 0;g=migrateGoal(g);
-  if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout'){
-    const now=new Date();let s=0;
-    if(c[`g${gi}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`])s++;
-    for(let d=1;d<=365;d++){const dt=new Date(now);dt.setDate(dt.getDate()-d);if(c[`g${gi}_${dt.getFullYear()}_${dt.getMonth()+1}_${dt.getDate()}`])s++;else break;}
-    return s;
-  }
-  return 0;
-}
+function goalModulus(g,gi,y,m){if(!g||!g.unit||g.unit==='once')return 1;g=migrateGoal(g);if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout')return getMonthDays(y,m);if(g.unit==='weekly')return(g.freq||1)*getMonthWeeks(y,m);if(g.unit==='biweekly')return(g.freq||1)*Math.ceil(getMonthDays(y,m)/14);if(g.unit==='multiweek')return(g.freq||1)*Math.ceil(getMonthDays(y,m)/((g.weeks||3)*7));return 1;}
+function goalDone(g,gi,y,m,c){if(!g||!g.unit)return 0;if(g.unit==='once')return c[`g${gi}_once`]===true?1:0;return Object.entries(c).filter(([k,v])=>k.startsWith(`g${gi}_${y}_${m}_`)&&v===true).length;}
+function goalPct(g,gi,y,m,c){const mod=goalModulus(g,gi,y,m),done=goalDone(g,gi,y,m,c);return{done,mod,pct:mod>0?Math.round(done/mod*100):0};}
+function calcStreak(g,gi,c){if(!g||!g.unit||g.unit==='once')return 0;g=migrateGoal(g);if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout'){const now=new Date();let s=0;if(c[`g${gi}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`])s++;for(let d=1;d<=365;d++){const dt=new Date(now);dt.setDate(dt.getDate()-d);if(c[`g${gi}_${dt.getFullYear()}_${dt.getMonth()+1}_${dt.getDate()}`])s++;else break;}return s;}return 0;}
 function getStreakLabel(g,streak){g=migrateGoal(g);if(g&&(g.unit==='weekly'||g.unit==='biweekly'||g.unit==='multiweek'))return`${streak}주째`;return`${streak}일째`;}
+
+function pubAlert(msg){
+  const d=document.createElement('div');d.className='pub-alert';
+  d.innerHTML=`<div class="pub-alert-box"><p>${msg}</p><button onclick="this.closest('.pub-alert').remove()">확인</button></div>`;
+  document.body.appendChild(d);
+}
 
 const hash=new URLSearchParams(location.search).get('id');
 if(!hash){document.getElementById('content').innerHTML='<div class="pub-error">잘못된 링크예요.</div>';}
@@ -122,144 +101,209 @@ async function loadProfile(hash){
   }catch(e){console.error(e);document.getElementById('content').innerHTML='<div class="pub-error">데이터를 불러오지 못했어요.</div>';}
 }
 
+let pubViewMode = 'all';
+let pubCViewMode = 'all';
+let _goals, _comp, _challenges;
+
 function render(user,dash,cheersData){
   const src=dash.goals||{};
   if(!Array.isArray(src)){const a=[];Object.keys(src).forEach(k=>{a[parseInt(k)]=src[k];});dash.goals=a;}
-  const goals=[];for(let i=0;i<MAX_HABITS;i++)goals.push((dash.goals||[])[i]||null);
-  const comp=dash.completions||{};
+  _goals=[];for(let i=0;i<MAX_HABITS;i++)_goals.push((dash.goals||[])[i]||null);
+  _comp=dash.completions||{};
   const rawC=dash.challenges||[];
-  const challenges=Array.isArray(rawC)?rawC:Object.values(rawC);
+  _challenges=Array.isArray(rawC)?rawC:Object.values(rawC);
   const nick=dash.nickname||user.name||'익명';
-  const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
 
-  let td=0,tm=0;
-  goals.forEach((g,i)=>{if(!g||!g.unit)return;const r=goalPct(g,i,y,m,comp);td+=r.done;tm+=r.mod;});
-  const gPct=tm>0?Math.round(td/tm*100):0;
-  const stage=Math.min(9,Math.floor(gPct/10));
-
+  // Build structure matching app's HTML
   let h='';
+  // Tab bar (나의 목표 / 친구)
+  h+=`<div class="tab-bar" id="pubTabBar">`;
+  h+=`<button class="tab-btn active" onclick="pubAlert('공개 모드에서는 확인할 수 없어요')">🎯 나의 목표</button>`;
+  h+=`<button class="tab-btn" onclick="pubAlert('공개 모드에서는 확인할 수 없어요')">👥 친구</button>`;
+  h+=`</div>`;
 
-  // === AVATAR (uses style.css .avatar-section, .avatar-art, etc.) ===
-  h+=`<div class="avatar-section">`;
+  // Scrollable area
+  h+=`<div class="pub-scroll" id="pubScroll">`;
+
+  // Avatar section
+  h+=`<div class="avatar-section" id="avatarSection">`;
   h+=`<div class="avatar-art" id="avatarArt"></div>`;
-  h+=`<div class="avatar-stage">${stage+1}단계</div>`;
-  h+=`<div class="avatar-nickname">${esc(nick)}</div>`;
+  h+=`<div class="avatar-stage" id="avatarStage">1단계</div>`;
+  h+=`<div class="avatar-nickname" id="avatarNickname">${esc(nick)}</div>`;
   h+=`</div>`;
 
-  // === SUB TAB BAR (uses style.css) ===
+  // Sub tab bar
   h+=`<div class="sub-tab-bar">`;
-  h+=`<button class="sub-tab-btn active" id="stHabit" onclick="switchTab('habit')">습관</button>`;
-  h+=`<button class="sub-tab-btn" id="stChallenge" onclick="switchTab('challenge')">도전</button>`;
+  h+=`<button class="sub-tab-btn active" id="stH" onclick="switchPubTab('habit')">습관</button>`;
+  h+=`<button class="sub-tab-btn" id="stC" onclick="switchPubTab('challenge')">도전</button>`;
   h+=`</div>`;
 
-  // === HABIT PANEL ===
-  const activeGoals=[];
-  goals.forEach((g,i)=>{if(g&&g.unit)activeGoals.push({g,idx:i});});
-
-  h+=`<div class="pub-panel active" id="pHabit">`;
-  h+=`<div class="pub-section-hdr"><span class="title">습관</span><span class="count">${activeGoals.length}</span></div>`;
-  if(activeGoals.length===0){h+=`<div class="pub-empty">등록된 습관이 없어요</div>`;}
-  else{
-    h+=`<div class="card-grid">`;
-    activeGoals.forEach(({g,idx})=>{
-      const mg=migrateGoal(g);
-      const{pct}=goalPct(mg,idx,y,m,comp);
-      const todayK=`g${idx}_${y}_${m}_${now.getDate()}`;
-      const todayDone=comp[todayK]===true;
-      const isOnce=mg.unit==='once';
-      const isCompleted=pct>=100;
-      const isOver=pct>100;
-      const isDone=todayDone||(isOnce&&comp[`g${idx}_once`]);
-      const streak=calcStreak(mg,idx,comp);
-      const streakLbl=getStreakLabel(mg,streak);
-      // Same HTML structure as app.js generateHabitCardHtml
-      h+=`<div class="habit-card-outer">`;
-      h+=`<div class="habit-card ${isCompleted?'completed':''} ${isDone?'today-done':''}" style="cursor:default;">`;
-      if(isDone)h+=`<div class="habit-card-done-badge">✓</div>`;
-      h+=`<div><div class="habit-card-title">${esc(g.title)}</div>`;
-      h+=`<div class="habit-card-mid"><div class="habit-card-unit">${getUnitLabel(mg)}</div>`;
-      h+=`<div class="habit-card-streak ${streak>0?'':'zero'}"><span class="streak-num">${streakLbl}</span></div></div></div>`;
-      h+=`<div class="habit-card-bot"><div class="habit-card-bar"><div class="habit-card-bar-fill ${isOver?'over100':''}" style="width:${Math.min(pct,100)}%"></div></div>`;
-      h+=`<div class="habit-card-pct">${pct}%</div></div>`;
-      h+=`</div></div>`;
-    });
-    h+=`</div>`;
-  }
+  // Habit panel
+  h+=`<div class="sub-tab-panel active" id="pH">`;
+  h+=`<div class="section-hdr"><div class="section-hdr-left"><div class="section-hdr-title">나의 습관</div><div class="section-hdr-count" id="hCount">0</div></div>`;
+  h+=`<div style="display:flex;align-items:center;"><select class="view-mode-select" onchange="changePubHView(this.value)"><option value="all">기본 보기</option><option value="time">시간대별</option><option value="category">카테고리별</option></select></div></div>`;
+  h+=`<div id="hList"></div>`;
   h+=`</div>`;
 
-  // === CHALLENGE PANEL ===
-  const activeC=challenges.filter(c=>c);
-  h+=`<div class="pub-panel" id="pChallenge">`;
-  h+=`<div class="pub-section-hdr"><span class="title">도전</span><span class="count">${activeC.length}</span></div>`;
-  if(activeC.length===0){h+=`<div class="pub-empty">등록된 도전이 없어요</div>`;}
-  else{
-    h+=`<div class="card-grid">`;
-    activeC.forEach((c,idx)=>{
-      if(c.type==='bucket'||!c.type){
-        const done=c.done===true;
-        // Same HTML structure as app.js generateChallengeCardHtml (bucket)
-        h+=`<div class="challenge-card-outer">`;
-        h+=`<div class="challenge-card type-bucket ${done?'bucket-done':''}" style="cursor:default;">`;
-        if(done)h+=`<div class="challenge-card-done-badge">✓</div>`;
-        h+=`<div><div class="challenge-card-title">${esc(c.title)}</div>`;
-        h+=`<span class="challenge-card-type bucket">버킷리스트</span></div>`;
-        if(done)h+=`<div><div class="challenge-card-achieve">달성 완료</div></div>`;
-        else h+=`<div></div>`;
-        h+=`</div></div>`;
-      }else{
-        const stages=c.stages||[];
-        const all=stages.flatMap(s=>s.tasks||[]);
-        const dn=all.filter(t=>t.done).length;
-        const total=all.length;
-        const pct=total>0?Math.round(dn/total*100):0;
-        const projDone=pct>=100;
-        // Same HTML structure as app.js generateChallengeCardHtml (project)
-        h+=`<div class="challenge-card type-project ${projDone?'project-done':''}" style="cursor:default;">`;
-        if(projDone)h+=`<div class="challenge-card-done-badge">✓</div>`;
-        h+=`<div><div class="challenge-card-title">${esc(c.title)}</div>`;
-        h+=`<div class="challenge-card-meta-row"><span class="challenge-card-type project">프로젝트</span>`;
-        h+=`<span class="challenge-card-stage">${dn}/${total} 단계</span></div></div>`;
-        h+=`<div><div style="display:flex;align-items:center;gap:6px;">`;
-        h+=`<div class="challenge-card-bar" style="flex:1;"><div class="challenge-card-bar-fill project" style="width:${Math.min(pct,100)}%"></div></div>`;
-        h+=`<div class="challenge-card-pct project">${pct}%</div></div></div>`;
-        h+=`</div>`;
-      }
-    });
-    h+=`</div>`;
-  }
+  // Challenge panel
+  h+=`<div class="sub-tab-panel" id="pC">`;
+  h+=`<div class="section-hdr"><div class="section-hdr-left"><div class="section-hdr-title">나의 도전</div><div class="section-hdr-count" id="cCount">0</div></div>`;
+  h+=`<div style="display:flex;align-items:center;"><select class="view-mode-select" onchange="changePubCView(this.value)"><option value="all">기본 보기</option><option value="type">유형별</option><option value="category">카테고리별</option></select></div></div>`;
+  h+=`<div id="cList"></div>`;
   h+=`</div>`;
 
-  // === CHEERS ===
+  // Divider
+  h+=`<div style="height:2px;background:var(--border);margin:20px 20px 0;"></div>`;
+
+  // Cheers
   let allCheers=[];
-  Object.entries(cheersData).forEach(([gi,msgs])=>{
-    Object.entries(msgs).forEach(([ts,msg])=>{
-      allCheers.push({...msg,ts:parseInt(ts)});
-    });
-  });
+  Object.entries(cheersData).forEach(([gi,msgs])=>{Object.entries(msgs).forEach(([ts,msg])=>{allCheers.push({...msg,ts:parseInt(ts)});});});
   allCheers.sort((a,b)=>b.ts-a.ts);
   h+=`<div class="pub-cheers"><div class="pub-cheers-title">💬 받은 응원 (${allCheers.length})</div>`;
   if(allCheers.length===0){h+=`<div class="pub-empty">아직 받은 응원이 없어요</div>`;}
-  else{allCheers.slice(0,10).forEach(c=>{
-    const d=new Date(c.ts);
-    h+=`<div class="pub-cheer-item"><div class="pub-cheer-from">${esc(c.from)}</div><div class="pub-cheer-text">${esc(c.text)}</div>`;
-    h+=`<div class="pub-cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
-  });}
+  else{allCheers.slice(0,10).forEach(c=>{const d=new Date(c.ts);h+=`<div class="pub-cheer-item"><div class="pub-cheer-from">${esc(c.from)}</div><div class="pub-cheer-text">${esc(c.text)}</div><div class="pub-cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;});}
   h+=`</div>`;
 
   h+=`<div class="pub-footer">🐹 <a href="./">키웁</a>에서 나만의 목표를 키워보세요</div>`;
+  h+=`</div>`; // close pub-scroll
+
   document.getElementById('content').innerHTML=h;
+
+  // Compute stage
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
+  let td=0,tm=0;
+  _goals.forEach((g,i)=>{if(!g||!g.unit)return;const r=goalPct(g,i,y,m,_comp);td+=r.done;tm+=r.mod;});
+  const gPct=tm>0?Math.round(td/tm*100):0;
+  const stage=Math.min(9,Math.floor(gPct/10));
+  document.getElementById('avatarStage').textContent=`${stage+1}단계`;
+
+  renderHabits();
+  renderChallenges();
+  applyTimeBackground();
 
   // 3D hamster
   const artEl=document.getElementById('avatarArt');
   if(artEl){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js';s.onload=()=>buildHamster(artEl);document.head.appendChild(s);}
 }
 
-window.switchTab=function(t){
-  document.getElementById('stHabit').classList.toggle('active',t==='habit');
-  document.getElementById('stChallenge').classList.toggle('active',t==='challenge');
-  document.getElementById('pHabit').classList.toggle('active',t==='habit');
-  document.getElementById('pChallenge').classList.toggle('active',t==='challenge');
+function renderHabits(){
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
+  const activeGoals=[];
+  _goals.forEach((g,i)=>{if(g&&g.unit)activeGoals.push({g,idx:i});});
+  document.getElementById('hCount').textContent=activeGoals.length;
+
+  // Sort: today-done last
+  const sorted=activeGoals.map(({g,idx})=>{
+    const mg=migrateGoal(g);const todayK=`g${idx}_${y}_${m}_${now.getDate()}`;
+    const isDone=_comp[todayK]===true||(mg.unit==='once'&&_comp[`g${idx}_once`]);
+    return{g,idx,isDone};
+  }).sort((a,b)=>a.isDone===b.isDone?0:a.isDone?1:-1);
+
+  let html='';
+  if(pubViewMode==='time'){
+    const groups={dawn:[],morning:[],midday:[],afternoon:[],evening:[],night:[],any:[]};
+    sorted.forEach(v=>{const t=v.g.time||'any';(groups[t]||groups.any).push(v);});
+    Object.keys(groups).forEach(key=>{
+      if(!groups[key].length)return;
+      html+=`<div class="group-header"><div class="group-header-left">${TIME_LABELS[key]||key} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div></div>`;
+      html+=`<div class="card-grid">`;
+      groups[key].forEach(v=>{html+=habitCard(v.g,v.idx);});
+      html+=`</div>`;
+    });
+  }else if(pubViewMode==='category'){
+    const groups={};Object.keys(CAT_LABELS).forEach(k=>{groups[k]=[];});
+    sorted.forEach(v=>{const c=v.g.category||'etc';(groups[c]||groups.etc).push(v);});
+    Object.keys(groups).forEach(key=>{
+      if(!groups[key].length)return;
+      html+=`<div class="group-header"><div class="group-header-left">${CAT_LABELS[key]||key} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div></div>`;
+      html+=`<div class="card-grid">`;
+      groups[key].forEach(v=>{html+=habitCard(v.g,v.idx);});
+      html+=`</div>`;
+    });
+  }else{
+    if(sorted.length===0){html=`<div class="pub-empty">등록된 습관이 없어요</div>`;}
+    else{html+=`<div class="card-grid">`;sorted.forEach(v=>{html+=habitCard(v.g,v.idx);});html+=`</div>`;}
+  }
+  document.getElementById('hList').innerHTML=html;
+}
+
+function habitCard(g,idx){
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
+  const mg=migrateGoal(g),{pct}=goalPct(mg,idx,y,m,_comp);
+  const todayK=`g${idx}_${y}_${m}_${now.getDate()}`;
+  const todayDone=_comp[todayK]===true;
+  const isOnce=mg.unit==='once';
+  const isCompleted=pct>=100;const isOver=pct>100;
+  const isDone=todayDone||(isOnce&&_comp[`g${idx}_once`]);
+  const streak=calcStreak(mg,idx,_comp);
+  const streakLbl=getStreakLabel(mg,streak);
+  return `<div class="habit-card-outer">
+    <div class="habit-card ${isCompleted?'completed':''} ${isDone?'today-done':''}" style="cursor:default;">
+      ${isDone?'<div class="habit-card-done-badge">✓</div>':''}
+      <div><div class="habit-card-title">${esc(g.title)}</div>
+      <div class="habit-card-mid"><div class="habit-card-unit">${getUnitLabel(mg)}</div>
+      <div class="habit-card-streak ${streak>0?'':'zero'}"><span class="streak-num">${streakLbl}</span></div></div></div>
+      <div class="habit-card-bot"><div class="habit-card-bar"><div class="habit-card-bar-fill ${isOver?'over100':''}" style="width:${Math.min(pct,100)}%"></div></div>
+      <div class="habit-card-pct">${pct}%</div></div>
+    </div></div>`;
+}
+
+function renderChallenges(){
+  const activeC=_challenges.filter(c=>c);
+  document.getElementById('cCount').textContent=activeC.length;
+  let html='';
+  if(pubCViewMode==='type'){
+    const buckets=activeC.filter(c=>c.type==='bucket'||!c.type);
+    const projects=activeC.filter(c=>c.type==='project');
+    if(buckets.length){html+=`<div class="group-header"><div class="group-header-left">🎯 버킷리스트 <span style="font-size:12px;color:var(--accent);">${buckets.length}</span></div></div><div class="card-grid">`;buckets.forEach((c,i)=>{html+=challengeCard(c);});html+=`</div>`;}
+    if(projects.length){html+=`<div class="group-header"><div class="group-header-left">📋 프로젝트 <span style="font-size:12px;color:var(--accent);">${projects.length}</span></div></div><div class="card-grid">`;projects.forEach((c,i)=>{html+=challengeCard(c);});html+=`</div>`;}
+  }else if(pubCViewMode==='category'){
+    const groups={};Object.keys(CAT_LABELS).forEach(k=>{groups[k]=[];});
+    activeC.forEach(c=>{const cat=c.category||'etc';(groups[cat]||groups.etc).push(c);});
+    Object.keys(groups).forEach(key=>{if(!groups[key].length)return;html+=`<div class="group-header"><div class="group-header-left">${CAT_LABELS[key]} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div></div><div class="card-grid">`;groups[key].forEach(c=>{html+=challengeCard(c);});html+=`</div>`;});
+  }else{
+    if(activeC.length===0){html=`<div class="pub-empty">등록된 도전이 없어요</div>`;}
+    else{html+=`<div class="card-grid">`;activeC.forEach(c=>{html+=challengeCard(c);});html+=`</div>`;}
+  }
+  document.getElementById('cList').innerHTML=html;
+}
+
+function challengeCard(c){
+  if(c.type==='bucket'||!c.type){
+    const done=c.done===true;
+    return `<div class="challenge-card-outer"><div class="challenge-card type-bucket ${done?'bucket-done':''}" style="cursor:default;">${done?'<div class="challenge-card-done-badge">✓</div>':''}<div><div class="challenge-card-title">${esc(c.title)}</div><span class="challenge-card-type bucket">버킷리스트</span></div>${done?'<div><div class="challenge-card-achieve">달성 완료</div></div>':'<div></div>'}</div></div>`;
+  }else{
+    const stages=c.stages||[];const all=stages.flatMap(s=>s.tasks||[]);const dn=all.filter(t=>t.done).length;const total=all.length;
+    const pct=total>0?Math.round(dn/total*100):0;const projDone=pct>=100;
+    return `<div class="challenge-card type-project ${projDone?'project-done':''}" style="cursor:default;">${projDone?'<div class="challenge-card-done-badge">✓</div>':''}<div><div class="challenge-card-title">${esc(c.title)}</div><div class="challenge-card-meta-row"><span class="challenge-card-type project">프로젝트</span><span class="challenge-card-stage">${dn}/${total} 단계</span></div></div><div><div style="display:flex;align-items:center;gap:6px;"><div class="challenge-card-bar" style="flex:1;"><div class="challenge-card-bar-fill project" style="width:${Math.min(pct,100)}%"></div></div><div class="challenge-card-pct project">${pct}%</div></div></div></div>`;
+  }
+}
+
+function applyTimeBackground(){
+  const section=document.getElementById('avatarSection');if(!section)return;
+  const h=new Date().getHours();
+  let bg,decoHTML='',nickColor='#111827',stageColor='var(--accent)',stageBg='var(--accent-light)';
+  if(h>=0&&h<5){bg='linear-gradient(180deg,#1a1650 0%,#302a78 50%,#4a42a0 100%)';nickColor='#e2e8f0';stageColor='#a5b4fc';stageBg='rgba(165,180,252,.15)';decoHTML=`<div class="sky-deco star" style="top:5%;left:8%;font-size:5px;">✦</div><div class="sky-deco star" style="top:12%;left:15%;font-size:8px;animation-delay:.3s;">✦</div><div class="sky-deco star" style="top:8%;left:48%;font-size:6px;animation-delay:1.2s;">✦</div><div class="sky-deco star" style="top:22%;left:80%;font-size:10px;animation-delay:.6s;">✦</div><div class="sky-deco moon" style="top:2%;right:12%;font-size:26px;">🌙</div>`;}
+  else if(h>=5&&h<9){bg='linear-gradient(180deg,#ffecd2 0%,#fcb69f 40%,#ff9a9e 100%)';decoHTML=`<div class="sky-deco sun-rise" style="bottom:25%;left:50%;transform:translateX(-50%);font-size:36px;">☀️</div><div class="sky-deco cloud" style="top:12%;left:10%;font-size:20px;">☁️</div><div class="sky-deco cloud" style="top:20%;right:15%;font-size:16px;animation-delay:2s;">☁️</div>`;}
+  else if(h>=9&&h<13){bg='linear-gradient(180deg,#89CFF0 0%,#a0d2f0 50%,#d4ecfc 100%)';decoHTML=`<div class="sky-deco" style="top:6%;right:18%;font-size:32px;">☀️</div><div class="sky-deco cloud" style="top:15%;left:8%;font-size:22px;">☁️</div><div class="sky-deco cloud" style="top:25%;right:10%;font-size:14px;animation-delay:3s;">☁️</div>`;}
+  else if(h>=13&&h<17){bg='linear-gradient(180deg,#74b9ff 0%,#a0c4ff 50%,#d0e8ff 100%)';decoHTML=`<div class="sky-deco" style="top:8%;right:22%;font-size:28px;">⛅</div><div class="sky-deco cloud" style="top:18%;left:12%;font-size:18px;">☁️</div>`;}
+  else if(h>=17&&h<20){bg='linear-gradient(180deg,#3d2a7a 0%,#d4336e 40%,#ff8534 70%,#ffbb5c 100%)';nickColor='#fef3c7';stageColor='#fbbf24';stageBg='rgba(251,191,36,.15)';decoHTML=`<div class="sky-deco cloud" style="top:10%;left:15%;font-size:18px;opacity:.6;">☁️</div><div class="sky-deco star" style="top:5%;left:25%;font-size:5px;animation-delay:.8s;">✦</div>`;}
+  else{bg='linear-gradient(180deg,#111d3a 0%,#1a2d52 40%,#24396a 100%)';nickColor='#e2e8f0';stageColor='#93c5fd';stageBg='rgba(147,197,253,.15)';decoHTML=`<div class="sky-deco moon" style="top:3%;right:15%;font-size:28px;">🌙</div><div class="sky-deco star" style="top:5%;left:8%;font-size:6px;">✦</div><div class="sky-deco star" style="top:10%;left:18%;font-size:8px;animation-delay:.5s;">✦</div><div class="sky-deco star" style="top:7%;left:52%;font-size:6px;animation-delay:.8s;">✦</div><div class="sky-deco star" style="top:20%;left:70%;font-size:10px;animation-delay:1.6s;">✦</div><div class="sky-deco star" style="top:25%;right:25%;font-size:7px;animation-delay:1.2s;">✦</div><div class="sky-deco star" style="top:12%;left:85%;font-size:5px;animation-delay:2.5s;">✦</div>`;}
+  section.style.background=bg;section.style.position='relative';section.style.overflow='hidden';
+  section.insertAdjacentHTML('beforeend',decoHTML);
+  const nickEl=document.getElementById('avatarNickname');if(nickEl)nickEl.style.color=nickColor;
+  const stageEl=document.getElementById('avatarStage');if(stageEl){stageEl.style.color=stageColor;stageEl.style.background=stageBg;}
+  const isDark=(h>=0&&h<9)||h>=17;section.classList.toggle('dark-bg',isDark);
+}
+
+window.switchPubTab=function(t){
+  document.getElementById('stH').classList.toggle('active',t==='habit');
+  document.getElementById('stC').classList.toggle('active',t==='challenge');
+  document.getElementById('pH').classList.toggle('active',t==='habit');
+  document.getElementById('pC').classList.toggle('active',t==='challenge');
 };
+window.changePubHView=function(v){pubViewMode=v;renderHabits();};
+window.changePubCView=function(v){pubCViewMode=v;renderChallenges();};
 
 // ===== 3D HAMSTER =====
 function buildHamster(container){
@@ -275,11 +319,8 @@ function buildHamster(container){
   hamster=new THREE.Group();scene.add(hamster);
   const bG=new THREE.SphereGeometry(1.2,64,64),b=new THREE.Mesh(bG,oM);b.scale.set(1.05,0.95,0.95);b.add(outline(bG,0.025,0x5a3e2b));hamster.add(b);
   const blG=new THREE.SphereGeometry(1.05,64,64),bl=new THREE.Mesh(blG,cM);bl.position.set(0,-0.2,0.2);bl.scale.set(1.05,0.95,1.0);bl.add(outline(blG,0.02,0x5a3e2b));hamster.add(bl);
-  const ckG=new THREE.SphereGeometry(0.5,32,32);
-  const lC=new THREE.Mesh(ckG,cM);lC.position.set(-0.55,-0.25,0.7);lC.scale.set(1.1,0.9,0.8);lC.add(outline(ckG,0.03,0x5a3e2b));hamster.add(lC);
-  const rC=new THREE.Mesh(ckG,cM);rC.position.set(0.55,-0.25,0.7);rC.scale.set(1.1,0.9,0.8);rC.add(outline(ckG,0.03,0x5a3e2b));hamster.add(rC);
+  const ckG=new THREE.SphereGeometry(0.5,32,32);const lC=new THREE.Mesh(ckG,cM);lC.position.set(-0.55,-0.25,0.7);lC.scale.set(1.1,0.9,0.8);lC.add(outline(ckG,0.03,0x5a3e2b));hamster.add(lC);const rC=new THREE.Mesh(ckG,cM);rC.position.set(0.55,-0.25,0.7);rC.scale.set(1.1,0.9,0.8);rC.add(outline(ckG,0.03,0x5a3e2b));hamster.add(rC);
   const mzG=new THREE.SphereGeometry(0.35,32,32),mz=new THREE.Mesh(mzG,cM);mz.scale.set(1.2,0.8,0.8);mz.position.set(0,-0.15,0.95);mz.add(outline(mzG,0.025,0x5a3e2b));hamster.add(mz);
-  hamster.add(new THREE.Mesh(new THREE.SphereGeometry(0.06,16,16),pM).translateX(0)||Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.06,16,16),pM),{position:new THREE.Vector3(0,0.02,1.22)}));
   const ns=new THREE.Mesh(new THREE.SphereGeometry(0.06,16,16),pM);ns.position.set(0,0.02,1.22);hamster.add(ns);
   const mt=new THREE.Mesh(new THREE.SphereGeometry(0.035,16,16),dM);mt.scale.set(1,0.8,0.5);mt.position.set(0,-0.06,1.25);hamster.add(mt);
   function mkEye(x){const g=new THREE.Group(),e=new THREE.Mesh(new THREE.SphereGeometry(0.12,32,32),dM);e.scale.set(1,1.25,0.5);const hl=new THREE.Mesh(new THREE.SphereGeometry(0.035,16,16),new THREE.MeshBasicMaterial({color:0xffffff}));hl.position.set(0.03,0.05,0.06);g.add(e,hl);g.position.set(x,0.35,1.02);eyes.push(g);return g;}
@@ -287,25 +328,14 @@ function buildHamster(container){
   function mkEar(x,rz){const g=new THREE.Group(),eG=new THREE.SphereGeometry(0.25,32,16),eo=new THREE.Mesh(eG,oM);eo.scale.set(1,1,0.3);eo.add(outline(eG,0.05,0x5a3e2b));const ei=new THREE.Mesh(new THREE.SphereGeometry(0.15,32,16),pM);ei.scale.set(1,1,0.3);ei.position.z=0.05;g.add(eo,ei);g.position.set(x,0.85,0.2);g.rotation.z=rz;return g;}
   hamster.add(mkEar(-0.65,0.3));hamster.add(mkEar(0.65,-0.3));
   handsGroup=new THREE.Group();handsGroup.position.set(0,-0.35,1.35);hamster.add(handsGroup);
-  const hG=new THREE.SphereGeometry(0.1,16,16);
-  const lH=new THREE.Mesh(hG,pM);lH.position.set(-0.16,0,0);lH.add(outline(hG,0.08,0x5a3e2b));handsGroup.add(lH);
-  const rH=new THREE.Mesh(hG,pM);rH.position.set(0.16,0,0);rH.add(outline(hG,0.08,0x5a3e2b));handsGroup.add(rH);
-  const sG=new THREE.SphereGeometry(0.08,16,16);sG.scale(1,2.2,0.6);seed=new THREE.Mesh(sG,dM);seed.position.set(0,0.05,0.05);seed.rotation.x=-0.1;
-  const stG=new THREE.SphereGeometry(0.02,16,16);stG.scale(1,2.3,0.7);const st=new THREE.Mesh(stG,cM);st.position.z=0.03;seed.add(st);handsGroup.add(seed);
-  const fG=new THREE.SphereGeometry(0.12,16,16);
-  const lF=new THREE.Mesh(fG,pM);lF.scale.set(1,0.6,1.3);lF.position.set(-0.35,-1.05,0.6);lF.add(outline(fG,0.08,0x5a3e2b));hamster.add(lF);
-  const rF=new THREE.Mesh(fG,pM);rF.scale.set(1,0.6,1.3);rF.position.set(0.35,-1.05,0.6);rF.add(outline(fG,0.08,0x5a3e2b));hamster.add(rF);
+  const hG=new THREE.SphereGeometry(0.1,16,16);const lH=new THREE.Mesh(hG,pM);lH.position.set(-0.16,0,0);lH.add(outline(hG,0.08,0x5a3e2b));handsGroup.add(lH);const rH=new THREE.Mesh(hG,pM);rH.position.set(0.16,0,0);rH.add(outline(hG,0.08,0x5a3e2b));handsGroup.add(rH);
+  const sG=new THREE.SphereGeometry(0.08,16,16);sG.scale(1,2.2,0.6);seed=new THREE.Mesh(sG,dM);seed.position.set(0,0.05,0.05);seed.rotation.x=-0.1;const stG=new THREE.SphereGeometry(0.02,16,16);stG.scale(1,2.3,0.7);const st=new THREE.Mesh(stG,cM);st.position.z=0.03;seed.add(st);handsGroup.add(seed);
+  const fG=new THREE.SphereGeometry(0.12,16,16);const lF=new THREE.Mesh(fG,pM);lF.scale.set(1,0.6,1.3);lF.position.set(-0.35,-1.05,0.6);lF.add(outline(fG,0.08,0x5a3e2b));hamster.add(lF);const rF=new THREE.Mesh(fG,pM);rF.scale.set(1,0.6,1.3);rF.position.set(0.35,-1.05,0.6);rF.add(outline(fG,0.08,0x5a3e2b));hamster.add(rF);
   container.addEventListener('mousemove',e=>{const r=container.getBoundingClientRect();targetRotation.y=((e.clientX-r.left)/r.width*2-1)*0.25;targetRotation.x=-(((e.clientY-r.top)/r.height)*2-1)*0.15;});
   container.addEventListener('touchmove',e=>{const r=container.getBoundingClientRect(),t=e.touches[0];targetRotation.y=((t.clientX-r.left)/r.width*2-1)*0.25;targetRotation.x=-(((t.clientY-r.top)/r.height)*2-1)*0.15;});
   function onTap(e){const r=container.getBoundingClientRect();const cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left,cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;spawnEmoji(cx,cy);hamster._jt=clock.getElapsedTime();}
   container.addEventListener('click',onTap);container.addEventListener('touchstart',e=>{if(e.touches.length===1)onTap(e);},{passive:true});
-  (function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();
-    if(Math.random()>0.995&&!isBlinking){isBlinking=true;eyes.forEach(e=>e.scale.y=0.1);setTimeout(()=>{eyes.forEach(e=>e.scale.y=1);isBlinking=false;},120);}
-    const br=1+Math.sin(t*3)*0.015;hamster.scale.set(br,br,br);
-    if(hamster._jt){const d=t-hamster._jt;if(d<0.4)hamster.position.y=Math.sin(d/0.4*Math.PI)*0.3;else{hamster.position.y=0;hamster._jt=null;}}
-    handsGroup.position.y=-0.35+Math.sin(t*40)*0.015;seed.rotation.z=Math.sin(t*30)*0.05;
-    hamster.rotation.y+=(targetRotation.y-hamster.rotation.y)*0.08;hamster.rotation.x+=(targetRotation.x-hamster.rotation.x)*0.08;
-    renderer.render(scene,camera);})();
+  (function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();if(Math.random()>0.995&&!isBlinking){isBlinking=true;eyes.forEach(e=>e.scale.y=0.1);setTimeout(()=>{eyes.forEach(e=>e.scale.y=1);isBlinking=false;},120);}const br=1+Math.sin(t*3)*0.015;hamster.scale.set(br,br,br);if(hamster._jt){const d=t-hamster._jt;if(d<0.4)hamster.position.y=Math.sin(d/0.4*Math.PI)*0.3;else{hamster.position.y=0;hamster._jt=null;}}handsGroup.position.y=-0.35+Math.sin(t*40)*0.015;seed.rotation.z=Math.sin(t*30)*0.05;hamster.rotation.y+=(targetRotation.y-hamster.rotation.y)*0.08;hamster.rotation.x+=(targetRotation.x-hamster.rotation.x)*0.08;renderer.render(scene,camera);})();
 }
 </script>
 </body>

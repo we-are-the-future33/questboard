@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260302j';
+const APP_VERSION = '20260302l';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -293,8 +293,7 @@ async function init() {
         document.getElementById('navUserName').textContent = u.name;
         if (u.role === 'admin') { clearTimeout(_safetyTimer); showScreen('adminScreen'); renderAdminList(); return; }
         await loadDash();
-        if (!localDash.tutorialDone) { initTutorial(); showScreen('tutorialScreen'); }
-        else { activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(saved.id); renderDashboard(); }
+        activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(saved.id); renderDashboard();
         clearTimeout(_safetyTimer); return;
       }
     } catch (e) {}
@@ -329,8 +328,7 @@ window.doLogin = async function () {
       else {
         document.getElementById('navUserName').textContent = u.name;
         await loadDash();
-        if (!localDash.tutorialDone) { initTutorial(); showScreen('tutorialScreen'); }
-        else { activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(id); renderDashboard(); }
+        activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(id); renderDashboard();
       }
     }
   } catch (e) { showToast('❌ 연결 오류'); }
@@ -2354,7 +2352,6 @@ window.openAddHabitSheet = function () {
   // Slide 4: Confirm
   h += `<div class="wiz-slide" id="hWiz4">
     <div style="text-align:center;padding:16px 0;">
-      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;" id="hWizConfirmName"></div>
       <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px;" id="hWizConfirmTags"></div>
     </div>
     <button class="unit-confirm-btn" onclick="habitAddSave()">습관 등록하기</button>
@@ -2506,10 +2503,9 @@ window.hAddSelectCat = function (val) {
   _habitCat = val;
   renderHAddCat();
   // Render confirm slide
-  const nameEl = document.getElementById('hWizConfirmName');
   const tagsEl = document.getElementById('hWizConfirmTags');
-  if (nameEl) nameEl.textContent = _habitAddName || document.getElementById('hAddName')?.value.trim() || '';
   if (tagsEl) {
+    const name = _habitAddName || document.getElementById('hAddName')?.value.trim() || '';
     const cycleLabels = { daily:'매일', w1:'1주에', w2:'2주에', w3:'3주에', w4:'4주에', auto:'자동' };
     let cycleLbl = cycleLabels[_habitCycle1] || '';
     if (_habitCycle1 === 'auto' && _habitCycle2) cycleLbl = _habitCycle2 === 'health_sleep' ? '🌙 수면' : '💪 운동';
@@ -2518,6 +2514,7 @@ window.hAddSelectCat = function (val) {
     const tl = { any:'🔄 언제나', dawn:'🌅 새벽', morning:'🌤 아침', midday:'🏞 낮', afternoon:'🌇 오후', evening:'🌟 저녁', night:'🦉 밤' };
     const cl = { health:'💪 건강', diet:'🥗 식단', study:'📚 학습', work:'💼 업무', finance:'💰 재무', life:'🌱 생활', home:'🧹 집안일', hobby:'🎨 취미', social:'🤝 관계', mental:'🧘 멘탈', etc:'📦 기타' };
     const tags = [
+      { label: name, step: 0 },
       { label: cycleLbl, step: 1 },
       { label: tl[_habitTime], step: 2 },
       { label: cl[_habitCat], step: 3 }
@@ -2888,7 +2885,7 @@ function renderCycleStep() {
     h += `</div>`;
 
     // 카테고리 선택
-    h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">카테고리</div>`;
+    h += `<div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">카테고리</div>`;
     h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">`;
     const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
     catOpts.forEach(([val, lbl], i) => {
@@ -3065,10 +3062,10 @@ window.openHabitEdit = function (idx) {
   clearMetaTags();
   const timeOpts = [['any','🔄 언제나'],['dawn','🌅 새벽'],['morning','🌤 아침'],['midday','🏞 낮'],['afternoon','🌇 오후'],['evening','🌟 저녁'],['night','🦉 밤']];
   const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
-  let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">습관 이름</div>`;
+  let h = `<div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">습관 이름</div>`;
   h += `<input class="proj-edit-input" id="editGoalName" value="${esc(g.title)}" maxlength="20">`;
   h += `<div style="font-size:12px;color:var(--text-dim);font-weight:700;margin:12px 0 4px;">주기: ${getUnitLabel(migrateGoal(g))}</div>`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">시간대</div>`;
+  h += `<div style="font-size:12px;color:var(--text-dim);font-weight:700;margin:16px 0 8px;">시간대</div>`;
   h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
   timeOpts.forEach(([val, lbl]) => {
     const sel = (g.time || 'any') === val;
@@ -3076,7 +3073,7 @@ window.openHabitEdit = function (idx) {
       <input type="radio" name="editTime" value="${val}" ${sel?'checked':''} style="margin:0;"> ${lbl}</label>`;
   });
   h += `</div>`;
-  h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">카테고리</div>`;
+  h += `<div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">카테고리</div>`;
   h += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">`;
   catOpts.forEach(([val, lbl]) => {
     const sel = (g.category || 'etc') === val;

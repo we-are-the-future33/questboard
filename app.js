@@ -1341,7 +1341,7 @@ function initHabitSwipe(idx) {
       card.style.transform = '';
       card.classList.remove('swiping');
       // 명확한 탭: 이동량 적고, 너무 짧지 않은 터치
-      if (totalMove < 12 && elapsed < 600) {
+      if (totalMove < 20 && elapsed < 600) {
         openGoalBottomSheet(idx);
       }
       return;
@@ -1573,7 +1573,7 @@ function initBucketSwipe(idx) {
     else {
       card.style.transform = 'translateX(0)';
       const totalMove = Math.abs(sx - (dx + sx));
-      if (!swiping && elapsed < 600 && totalMove < 12) openBucketDetail(idx);
+      if (!swiping && elapsed < 600 && totalMove < 20) openBucketDetail(idx);
     }
     dx = 0; swiping = false;
   }

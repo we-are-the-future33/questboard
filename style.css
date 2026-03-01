@@ -110,7 +110,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 
 /* DASHBOARD */
 #dashboardScreen .mobile-wrap{display:flex;flex-direction:column;height:100vh;overflow:hidden;padding-bottom:0;}
-#dashboardScreen .dash-scroll{flex:1;overflow-y:auto;padding-bottom:40px;}
+#dashboardScreen .dash-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:40px;}
 .global-bar{padding:18px 0 20px;background:transparent;}
 .gb-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:12px;}
 .gb-label{font-size:12px;color:#6b7280;font-weight:600;padding-bottom:4px;}
@@ -176,7 +176,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;}
 
 /* 습관 카드 (스와이프) */
-.habit-card-outer{position:relative;overflow:hidden;border-radius:18px;}
+.habit-card-outer{position:relative;overflow:visible;border-radius:18px;}
 .habit-card-swipe-bg-left{position:absolute;top:0;left:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-start;padding-left:18px;border-radius:18px;background:#1952f5;}
 .habit-card-swipe-bg-right{position:absolute;top:0;right:0;bottom:0;width:100%;display:none;align-items:center;justify-content:flex-end;padding-right:18px;border-radius:18px;background:#ff5e7d;}
 .habit-card-outer.swiping-right .habit-card-swipe-bg-left{display:flex;}
@@ -257,7 +257,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .challenge-card.project-done .challenge-card-bar-fill.project{background:#6ee7b7;}
 .challenge-card.project-done .challenge-card-pct.project{color:#34d399;}
 /* 도전 카드 스와이프 (버킷리스트) */
-.challenge-card-outer{position:relative;overflow:hidden;border-radius:18px;}
+.challenge-card-outer{position:relative;overflow:visible;border-radius:18px;}
 .challenge-swipe-bg{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;display:flex;align-items:center;border-radius:18px;z-index:0;}
 .challenge-swipe-bg.todo{background:#1952f5;justify-content:flex-start;padding-left:18px;}
 .challenge-swipe-bg.done{background:#ff5e7d;justify-content:flex-end;padding-right:18px;}

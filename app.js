@@ -2910,7 +2910,7 @@ window.openFriendDetail = async function (fid) {
     const pct = mod > 0 ? Math.round(done / mod * 100) : 0;
     const todayK = `g${i}_${y}_${m}_${day}`;
     const todayDone = comp[todayK] === true || (mg.unit === 'once' && comp[`g${i}_once`] === true);
-    h += `<button class="fgoal-btn ${todayDone ? 'fgoal-today-done' : ''}" id="fgoal_${i}" onclick="selectFriendGoal('${fid}',${i})"><div class="fgoal-name">${todayDone ? '✅ ' : ''}${esc(g.title)}</div><div class="fgoal-pct">${pct}%</div><div class="fgoal-bar"><div class="fgoal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div></button>`;
+    h += `<button class="fgoal-btn ${todayDone ? 'fgoal-today-done' : ''}" id="fgoal_${i}" onclick="selectFriendGoal('${fid}',${i})"><div class="fgoal-name">${esc(g.title)}</div><div class="fgoal-pct">${pct}%</div><div class="fgoal-bar"><div class="fgoal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div></button>`;
   }
   h += `</div><div id="friendGoalCal"></div></div>`;
   area.innerHTML = h;

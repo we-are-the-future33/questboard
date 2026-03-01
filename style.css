@@ -681,3 +681,12 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .main-friend-banner:active{transform:scale(0.97);}
 .main-friend-banner.active{background:rgba(59,130,246,.12);color:#3b82f6;}
 .main-friend-banner.idle{background:rgba(100,116,139,.08);color:#94a3b8;}
+
+/* Cheer bubble badge near avatar */
+.cheer-bubble{position:absolute;top:16px;right:16px;background:#fff;border-radius:16px;padding:6px 12px;box-shadow:0 4px 14px rgba(0,0,0,.12);font-size:12px;font-weight:800;color:var(--accent2);z-index:10;cursor:pointer;animation:cheerBounce 0.4s cubic-bezier(.175,.885,.32,1.275) both;display:flex;align-items:center;gap:4px;}
+.cheer-bubble::after{content:'';position:absolute;bottom:-6px;right:20px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #fff;}
+@keyframes cheerBounce{0%{transform:scale(0);opacity:0;}100%{transform:scale(1);opacity:1;}}
+/* NEW label on cheer cards */
+.cheer-new-badge{display:inline-block;background:var(--accent2);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:middle;letter-spacing:0.5px;}
+/* Cheer title badge count */
+.cheer-count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent2);color:#fff;font-size:10px;font-weight:800;min-width:18px;height:18px;padding:0 5px;border-radius:9px;margin-left:6px;vertical-align:middle;}

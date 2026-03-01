@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301f';
+const APP_VERSION = '20260301g';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -2581,10 +2581,16 @@ window.saveHabitEdit = async function (idx) {
 };
 
 // ===== CHEERS (메인 하단) =====
+let _newCheerCount = 0;
+
 async function renderMainCheers() {
   const el = document.getElementById('myCheersMain');
   const snap = await get(ref(db, `cheers/${currentUser.id}`));
-  if (!snap.exists()) { el.innerHTML = `<div class="my-cheers-main-title">💬 받은 응원</div><div class="my-cheers-empty">아직 받은 응원이 없어요</div>`; return; }
+  if (!snap.exists()) {
+    el.innerHTML = `<div class="my-cheers-main-title">💬 받은 응원</div><div class="my-cheers-empty">아직 받은 응원이 없어요</div>`;
+    updateCheerBubble(0);
+    return;
+  }
   const data = snap.val(); let all = [];
   Object.entries(data).forEach(([gi, msgs]) => {
     Object.entries(msgs).forEach(([ts, msg]) => {
@@ -2594,17 +2600,72 @@ async function renderMainCheers() {
     });
   });
   all.sort((a, b) => b.ts - a.ts);
+
+  // Read tracking
+  const lastCheck = parseInt(localStorage.getItem('kw_lastCheerCheck') || '0');
+  const newCheers = all.filter(c => c.ts > lastCheck);
+  _newCheerCount = newCheers.length;
+  updateCheerBubble(_newCheerCount);
+
   const recent = all.slice(0, 10);
-  let h = `<div class="my-cheers-main-title">💬 받은 응원 <span style="font-size:12px;color:var(--text-dim);">(${all.length})</span></div>`;
+  const badgeHtml = _newCheerCount > 0 ? `<span class="cheer-count-badge">${_newCheerCount}</span>` : '';
+  let h = `<div class="my-cheers-main-title" id="cheersAnchor">💬 받은 응원 <span style="font-size:12px;color:var(--text-dim);">(${all.length})</span>${badgeHtml}</div>`;
   if (recent.length === 0) { h += `<div class="my-cheers-empty">아직 받은 응원이 없어요</div>`; }
   else {
     recent.forEach(c => {
       const d = new Date(c.ts);
-      h += `<div class="my-cheer-card"><div class="my-cheer-goal-tag">🎯 ${esc(c.goalTitle)}</div><div class="my-cheer-from">${esc(c.from)}</div><div class="my-cheer-text">${esc(c.text)}</div><div class="my-cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
+      const isNew = c.ts > lastCheck;
+      const newLabel = isNew ? '<span class="cheer-new-badge">NEW</span>' : '';
+      h += `<div class="my-cheer-card${isNew ? ' cheer-new' : ''}"><div class="my-cheer-goal-tag">🎯 ${esc(c.goalTitle)}${newLabel}</div><div class="my-cheer-from">${esc(c.from)}</div><div class="my-cheer-text">${esc(c.text)}</div><div class="my-cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
     });
   }
   el.innerHTML = h;
+
+  // Intersection observer: mark as read when cheers section is visible
+  if (_newCheerCount > 0) {
+    const anchor = document.getElementById('cheersAnchor');
+    if (anchor) {
+      const obs = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          markCheersRead();
+          obs.disconnect();
+        }
+      }, { threshold: 0.5 });
+      obs.observe(anchor);
+    }
+  }
 }
+
+function updateCheerBubble(count) {
+  const bubble = document.getElementById('cheerBubble');
+  if (!bubble) return;
+  if (count > 0) {
+    bubble.style.display = 'flex';
+    bubble.innerHTML = `💬 새 응원 ${count}건`;
+  } else {
+    bubble.style.display = 'none';
+  }
+}
+
+function markCheersRead() {
+  localStorage.setItem('kw_lastCheerCheck', String(Date.now()));
+  _newCheerCount = 0;
+  updateCheerBubble(0);
+  // Remove badge from title
+  const badge = document.querySelector('.cheer-count-badge');
+  if (badge) badge.remove();
+  // Remove NEW labels with fade
+  document.querySelectorAll('.cheer-new-badge').forEach(el => {
+    el.style.transition = 'opacity 0.5s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 500);
+  });
+}
+
+window.scrollToCheers = function () {
+  const anchor = document.getElementById('cheersAnchor');
+  if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 // ===== NOTICE =====
 async function loadNoticeBanner() {

@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260301r';
+const APP_VERSION = '20260301s';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -3568,7 +3568,11 @@ function buildHamster(container) {
     // iOS gyro 권한 요청 (첫 탭 시)
     if (!hamster._gyroReq && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
       hamster._gyroReq = true;
-      DeviceOrientationEvent.requestPermission().then(r => { if (r === 'granted') enableGyro(); }).catch(() => {});
+      console.log('[GYRO] iOS detected, requesting permission...');
+      DeviceOrientationEvent.requestPermission().then(r => { console.log('[GYRO] permission result:', r); if (r === 'granted') enableGyro(); }).catch(e => { console.log('[GYRO] permission error:', e); });
+    } else if (!hamster._gyroReq) {
+      console.log('[GYRO] tap detected, requestPermission not available, gyroActive:', gyroActive);
+      hamster._gyroReq = true;
     }
   }
   container.addEventListener('click', onTap);
@@ -3577,19 +3581,28 @@ function buildHamster(container) {
   // --- Gyro (Device Orientation) ---
   let gyroTarget = { x: 0, y: 0 };
   let gyroActive = false;
+  let gyroEventCount = 0;
   function enableGyro() {
     if (gyroActive) return;
     gyroActive = true;
+    console.log('[GYRO] enableGyro called, listening for deviceorientation');
     window.addEventListener('deviceorientation', (e) => {
       const gamma = e.gamma || 0; // left-right tilt: -90 to 90
       const beta = e.beta || 0;   // front-back tilt: -180 to 180
       gyroTarget.y = Math.max(-1, Math.min(1, gamma / 30)) * 0.35;
       gyroTarget.x = Math.max(-1, Math.min(1, (beta - 45) / 30)) * -0.2;
+      gyroEventCount++;
+      if (gyroEventCount <= 3 || gyroEventCount % 100 === 0) {
+        console.log(`[GYRO] event #${gyroEventCount} gamma:${gamma.toFixed(1)} beta:${beta.toFixed(1)} → y:${gyroTarget.y.toFixed(3)} x:${gyroTarget.x.toFixed(3)}`);
+      }
     });
   }
   // Android: no permission needed, start right away
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function') {
+    console.log('[GYRO] Android/non-iOS: auto-enabling gyro');
     enableGyro();
+  } else {
+    console.log('[GYRO] iOS detected or DeviceOrientationEvent not available, waiting for tap');
   }
 
   // --- Animate ---

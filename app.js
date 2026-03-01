@@ -2644,7 +2644,7 @@ async function renderFriends() {
     }
     const fpct = ftm > 0 ? Math.round(ftd / ftm * 100) : 0;
     const fstage = Math.min(9, Math.floor(fpct / 10));
-    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar" style="font-size:36px;display:flex;align-items:center;justify-content:center;">${getFriendEmoji(fid)}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계</div></div><div class="friend-pct">${fpct}%</div></div>`;
+    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${getFriendEmoji(fid)}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계</div></div><div class="friend-pct">${fpct}%</div></div>`;
   }
   h += '</div><div id="friendDetailArea"></div>';
   sec.innerHTML = h;

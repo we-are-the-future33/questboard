@@ -399,14 +399,14 @@ async function renderPubFriendBanner(uid){
   const el=document.getElementById('pubFriendBanner');if(!el)return;
   try{
     const grpSnap=await get(ref(db,'groups'));
-    if(!grpSnap.exists()){el.innerHTML='';return;}
+    if(!grpSnap.exists()){el.innerHTML=`<div class="main-friend-banner idle"><span>아직 등록된 친구가 없어요 🐹</span></div>`;return;}
     const groups=grpSnap.val();
     let friendIds=new Set();
     Object.values(groups).forEach(g=>{
       const m=g.members||{};
       if(m[uid]){Object.keys(m).forEach(id=>{if(id!==uid)friendIds.add(id);});}
     });
-    if(friendIds.size===0){el.innerHTML='';return;}
+    if(friendIds.size===0){el.innerHTML=`<div class="main-friend-banner idle"><span>아직 등록된 친구가 없어요 🐹</span></div>`;return;}
     const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1,d=now.getDate();
     const active=[];
     for(const fid of friendIds){
@@ -430,7 +430,8 @@ async function renderPubFriendBanner(uid){
     }else{
       el.innerHTML=`<div class="main-friend-banner idle"><span>아직 아무도 시작 안 했어요 😴</span></div>`;
     }
-  }catch(e){console.error(e);el.innerHTML='';}
+  }catch(e){console.error(e);el.innerHTML=`<div class="main-friend-banner idle"><span>친구 정보를 불러올 수 없어요</span></div>`;}
+}
 }
 
 window.changePubHView=function(v){pubViewMode=v;renderHabits();};

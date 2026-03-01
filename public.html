@@ -133,7 +133,7 @@ function render(user,dash,cheersData,uid){
   // Tab bar (나의 목표 / 친구)
   h+=`<div class="tab-bar" id="pubTabBar">`;
   h+=`<button class="tab-btn active" onclick="pubAlert('공개 모드에서는 확인할 수 없어요')">🎯 나의 목표</button>`;
-  h+=`<button class="tab-btn" onclick="pubAlert('공개 모드에서는 확인할 수 없어요')">👥 친구</button>`;
+  h+=`<button class="tab-btn" onclick="pubAlert('👀 다른 사람의 프로필이라 친구 탭은 확인할 수 없어요')">👥 친구</button>`;
   h+=`</div>`;
 
   // Scrollable area
@@ -530,11 +530,40 @@ function openPubProjectBS(idx){
 function initPubHabitSwipe(idx){
   const card=document.getElementById(`hc_${idx}`);if(!card)return;
   const outer=document.getElementById(`hcO_${idx}`);
-  let sx=0,dx=0,swiping=false,locked=false,touchStartTime=0,totalMove=0;
+  let sx=0,sy=0,dx=0,swiping=false,locked=false,touchStartTime=0,totalMove=0;
   const TH=60;
-  card.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;dx=0;swiping=false;locked=false;touchStartTime=Date.now();totalMove=0;card.classList.remove('snapping');if(outer)outer.classList.remove('swiping-right','swiping-left');},{passive:true});
-  card.addEventListener('touchmove',e=>{if(locked)return;const t=e.touches[0];const dX=t.clientX-sx,dY=t.clientY-(e.touches[0].clientY||0);totalMove=Math.abs(dX);if(!swiping&&Math.abs(t.clientY-sx)>Math.abs(dX)){locked=true;return;}if(Math.abs(dX)>8)swiping=true;if(!swiping)return;e.preventDefault();dx=dX;card.classList.add('swiping');card.style.transform=`translateX(${dx}px)`;if(outer){outer.classList.toggle('swiping-right',dx>10);outer.classList.toggle('swiping-left',dx<-10);}},{passive:false});
-  card.addEventListener('touchend',()=>{if(outer)outer.classList.remove('swiping-right','swiping-left');const elapsed=Date.now()-touchStartTime;if(!swiping){card.style.transform='';card.classList.remove('swiping');if(totalMove<12&&elapsed<600){_viewMonth={year:new Date().getFullYear(),month:new Date().getMonth()+1};openPubHabitBS(idx);}return;}card.classList.remove('swiping');card.classList.add('snapping');if(Math.abs(dx)>=TH){pubAlert('👀 공개 모드에서는 완료/취소할 수 없어요');}card.style.transform='translateX(0)';dx=0;swiping=false;});
+  card.addEventListener('touchstart',e=>{
+    const t=e.touches[0];sx=t.clientX;sy=t.clientY;dx=0;swiping=false;locked=false;
+    touchStartTime=Date.now();totalMove=0;
+    card.classList.remove('snapping');
+    if(outer)outer.classList.remove('swiping-right','swiping-left');
+  },{passive:true});
+  card.addEventListener('touchmove',e=>{
+    if(locked)return;
+    const t=e.touches[0];
+    const dX=t.clientX-sx,dY=t.clientY-sy;
+    totalMove=Math.abs(dX)+Math.abs(dY);
+    if(!swiping&&Math.abs(dY)>Math.abs(dX)){locked=true;return;}
+    if(Math.abs(dX)>8)swiping=true;
+    if(!swiping)return;
+    e.preventDefault();
+    dx=dX;
+    card.classList.add('swiping');
+    card.style.transform=`translateX(${dx}px)`;
+    if(outer){outer.classList.toggle('swiping-right',dx>10);outer.classList.toggle('swiping-left',dx<-10);}
+  },{passive:false});
+  card.addEventListener('touchend',()=>{
+    if(outer)outer.classList.remove('swiping-right','swiping-left');
+    const elapsed=Date.now()-touchStartTime;
+    if(!swiping){
+      card.style.transform='';card.classList.remove('swiping');
+      if(totalMove<12&&elapsed<600){_viewMonth={year:new Date().getFullYear(),month:new Date().getMonth()+1};openPubHabitBS(idx);}
+      return;
+    }
+    card.classList.remove('swiping');card.classList.add('snapping');
+    if(Math.abs(dx)>=TH){pubAlert('👀 공개 모드에서는 완료/취소할 수 없어요');}
+    card.style.transform='translateX(0)';dx=0;swiping=false;
+  });
   // PC click
   card.addEventListener('click',()=>{_viewMonth={year:new Date().getFullYear(),month:new Date().getMonth()+1};openPubHabitBS(idx);});
   card.style.cursor='pointer';
@@ -543,11 +572,33 @@ function initPubHabitSwipe(idx){
 function initPubBucketSwipe(idx){
   const card=document.getElementById(`cc_${idx}`);if(!card)return;
   const outer=card.closest('.challenge-card-outer');
-  let sx=0,dx=0,swiping=false,locked=false,touchStartTime=0,totalMove=0;
+  let sx=0,sy=0,dx=0,swiping=false,locked=false,touchStartTime=0,totalMove=0;
   const TH=60;
-  card.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;dx=0;swiping=false;locked=false;touchStartTime=Date.now();totalMove=0;card.classList.remove('snapping');},{passive:true});
-  card.addEventListener('touchmove',e=>{if(locked)return;const t=e.touches[0];const dX=t.clientX-sx;totalMove=Math.abs(dX);if(Math.abs(dX)>8)swiping=true;if(!swiping)return;e.preventDefault();dx=dX;card.classList.add('swiping');card.style.transform=`translateX(${dx}px)`;},{passive:false});
-  card.addEventListener('touchend',()=>{const elapsed=Date.now()-touchStartTime;if(!swiping){card.style.transform='';card.classList.remove('swiping');return;}card.classList.remove('swiping');card.classList.add('snapping');if(Math.abs(dx)>=TH){pubAlert('👀 공개 모드에서는 완료/취소할 수 없어요');}card.style.transform='translateX(0)';dx=0;swiping=false;});
+  card.addEventListener('touchstart',e=>{
+    const t=e.touches[0];sx=t.clientX;sy=t.clientY;dx=0;swiping=false;locked=false;
+    touchStartTime=Date.now();totalMove=0;card.classList.remove('snapping');
+  },{passive:true});
+  card.addEventListener('touchmove',e=>{
+    if(locked)return;
+    const t=e.touches[0];
+    const dX=t.clientX-sx,dY=t.clientY-sy;
+    totalMove=Math.abs(dX)+Math.abs(dY);
+    if(!swiping&&Math.abs(dY)>Math.abs(dX)){locked=true;return;}
+    if(Math.abs(dX)>8)swiping=true;
+    if(!swiping)return;
+    e.preventDefault();
+    dx=dX;
+    card.classList.add('swiping');
+    card.style.transform=`translateX(${dx}px)`;
+    if(outer){outer.classList.toggle('swiping-right',dx>10);outer.classList.toggle('swiping-left',dx<-10);}
+  },{passive:false});
+  card.addEventListener('touchend',()=>{
+    if(outer)outer.classList.remove('swiping-right','swiping-left');
+    if(!swiping){card.style.transform='';card.classList.remove('swiping');return;}
+    card.classList.remove('swiping');card.classList.add('snapping');
+    if(Math.abs(dx)>=TH){pubAlert('👀 공개 모드에서는 완료/취소할 수 없어요');}
+    card.style.transform='translateX(0)';dx=0;swiping=false;
+  });
 }
 
 function initPubProjectTap(idx){

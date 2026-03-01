@@ -111,7 +111,7 @@ async function loadProfile(hash){
     const uid=ls.val();
     const[uS,dS,cS]=await Promise.all([get(ref(db,`users/${uid}`)),get(ref(db,`dashboards/${uid}`)),get(ref(db,`cheers/${uid}`))]);
     if(!uS.exists()||!dS.exists()){document.getElementById('content').innerHTML='<div class="pub-error">프로필 데이터를 찾을 수 없어요.</div>';return;}
-    render(uS.val(),dS.val(),cS.exists()?cS.val():{});
+    render(uS.val(),dS.val(),cS.exists()?cS.val():{},uid);
   }catch(e){console.error(e);document.getElementById('content').innerHTML='<div class="pub-error">데이터를 불러오지 못했어요.</div>';}
 }
 
@@ -119,7 +119,7 @@ let pubViewMode = 'all';
 let pubCViewMode = 'all';
 let _goals, _comp, _challenges;
 
-function render(user,dash,cheersData){
+function render(user,dash,cheersData,uid){
   const src=dash.goals||{};
   if(!Array.isArray(src)){const a=[];Object.keys(src).forEach(k=>{a[parseInt(k)]=src[k];});dash.goals=a;}
   _goals=[];for(let i=0;i<MAX_HABITS;i++)_goals.push((dash.goals||[])[i]||null);
@@ -144,6 +144,7 @@ function render(user,dash,cheersData){
   h+=`<div class="avatar-art" id="avatarArt"></div>`;
   h+=`<div class="avatar-stage" id="avatarStage">1단계</div>`;
   h+=`<div class="avatar-nickname" id="avatarNickname">${esc(nick)}</div>`;
+  h+=`<div id="pubFriendBanner"></div>`;
   h+=`</div>`;
 
   // Sub tab bar
@@ -155,14 +156,18 @@ function render(user,dash,cheersData){
   // Habit panel
   h+=`<div class="sub-tab-panel active" id="pH">`;
   h+=`<div class="section-hdr"><div class="section-hdr-left"><div class="section-hdr-title">나의 습관</div><div class="section-hdr-count" id="hCount">0</div></div>`;
-  h+=`<div style="display:flex;align-items:center;"><select class="view-mode-select" onchange="changePubHView(this.value)"><option value="all">기본 보기</option><option value="time">시간대별</option><option value="category">카테고리별</option></select></div></div>`;
+  h+=`<div style="display:flex;align-items:center;"><select class="view-mode-select" onchange="changePubHView(this.value)"><option value="all">기본 보기</option><option value="time">시간대별</option><option value="category">카테고리별</option></select>`;
+  h+=`<button class="filter-pill active-filter" id="hFilterPill" onclick="togglePubHFilter()">진행 중 <span class="filter-dot"></span></button>`;
+  h+=`</div></div>`;
   h+=`<div id="hList"></div>`;
   h+=`</div>`;
 
   // Challenge panel
   h+=`<div class="sub-tab-panel" id="pC">`;
   h+=`<div class="section-hdr"><div class="section-hdr-left"><div class="section-hdr-title">나의 도전</div><div class="section-hdr-count" id="cCount">0</div></div>`;
-  h+=`<div style="display:flex;align-items:center;"><select class="view-mode-select" onchange="changePubCView(this.value)"><option value="all">기본 보기</option><option value="type">유형별</option><option value="category">카테고리별</option></select></div></div>`;
+  h+=`<div style="display:flex;align-items:center;"><select class="view-mode-select" onchange="changePubCView(this.value)"><option value="all">기본 보기</option><option value="type">유형별</option><option value="category">카테고리별</option></select>`;
+  h+=`<button class="filter-pill active-filter" id="cFilterPill" onclick="togglePubCFilter()">진행 중 <span class="filter-dot"></span></button>`;
+  h+=`</div></div>`;
   h+=`<div id="cList"></div>`;
   h+=`</div>`;
 
@@ -194,17 +199,39 @@ function render(user,dash,cheersData){
   renderHabits();
   renderChallenges();
   applyTimeBackground();
+  renderPubFriendBanner(uid);
 
   // 3D hamster
   const artEl=document.getElementById('avatarArt');
   if(artEl){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js';s.onload=()=>buildHamster(artEl);document.head.appendChild(s);}
 }
 
+function isGoalActiveThisWeekPub(g,gi){
+  if(!g||!g.unit)return true;g=migrateGoal(g);
+  if(g.unit==='once')return _comp[`g${gi}_once`]!==true;
+  if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout')return true;
+  const freq=g.freq||1,now=new Date(),dow=now.getDay();
+  const ws=new Date(now);ws.setDate(now.getDate()-dow);
+  if(g.unit==='weekly'){
+    let wd=0;for(let d=0;d<7;d++){const dd=new Date(ws);dd.setDate(ws.getDate()+d);if(dd>now)break;if(_comp[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`]===true)wd++;}
+    return wd<freq;
+  }
+  return true;
+}
+function isChallengeCompletePub(c){
+  if(c.type==='bucket'||!c.type)return c.done===true;
+  if(c.type==='project'){const stages=c.stages||[];const all=stages.flatMap(s=>s.tasks||[]);return all.length>0&&all.every(t=>t.done);}
+  return false;
+}
+
 function renderHabits(){
   const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
-  const activeGoals=[];
+  let activeGoals=[];
   _goals.forEach((g,i)=>{if(g&&g.unit)activeGoals.push({g,idx:i});});
   document.getElementById('hCount').textContent=activeGoals.length;
+
+  // Filter
+  if(pubHFilter==='active') activeGoals=activeGoals.filter(({g,idx})=>isGoalActiveThisWeekPub(g,idx));
 
   // Sort: today-done last
   const sorted=activeGoals.map(({g,idx})=>{
@@ -267,8 +294,10 @@ function habitCard(g,idx){
 }
 
 function renderChallenges(){
-  const activeC=[];_challenges.forEach((c,i)=>{if(c)activeC.push({c,idx:i});});
+  let activeC=[];_challenges.forEach((c,i)=>{if(c)activeC.push({c,idx:i});});
   document.getElementById('cCount').textContent=activeC.length;
+  // Filter
+  if(pubCFilter==='active') activeC=activeC.filter(v=>!isChallengeCompletePub(v.c));
   let html='';
   if(pubCViewMode==='type'){
     const buckets=activeC.filter(v=>v.c.type==='bucket'||!v.c.type);
@@ -316,12 +345,82 @@ function applyTimeBackground(){
   const isDark=(h>=0&&h<9)||h>=17;section.classList.toggle('dark-bg',isDark);
 }
 
+let pubHFilter = 'active';
+let pubCFilter = 'active';
+
+window.togglePubHFilter=function(){
+  pubHFilter=pubHFilter==='all'?'active':'all';
+  const pill=document.getElementById('hFilterPill');
+  pill.classList.toggle('active-filter',pubHFilter==='active');
+  pill.innerHTML=(pubHFilter==='active'?'진행 중':'전체')+' <span class="filter-dot"></span>';
+  renderHabits();
+};
+window.togglePubCFilter=function(){
+  pubCFilter=pubCFilter==='all'?'active':'all';
+  const pill=document.getElementById('cFilterPill');
+  pill.classList.toggle('active-filter',pubCFilter==='active');
+  pill.innerHTML=(pubCFilter==='active'?'진행 중':'전체')+' <span class="filter-dot"></span>';
+  renderChallenges();
+};
+
 window.switchPubTab=function(t){
   document.getElementById('stH').classList.toggle('active',t==='habit');
   document.getElementById('stC').classList.toggle('active',t==='challenge');
   document.getElementById('pH').classList.toggle('active',t==='habit');
   document.getElementById('pC').classList.toggle('active',t==='challenge');
+  // Scroll so section-hdr is visible below sticky sub-tab-bar
+  requestAnimationFrame(()=>{
+    const scroll=document.querySelector('.pub-scroll');
+    const subBar=document.querySelector('.sub-tab-bar');
+    const panel=document.getElementById(t==='habit'?'pH':'pC');
+    if(!scroll||!subBar||!panel)return;
+    const sHdr=panel.querySelector('.section-hdr');
+    if(!sHdr)return;
+    const scrollRect=scroll.getBoundingClientRect();
+    const hdrRect=sHdr.getBoundingClientRect();
+    const subBarH=subBar.offsetHeight+8;
+    const target=scroll.scrollTop+(hdrRect.top-scrollRect.top)-subBarH;
+    scroll.scrollTo({top:Math.max(0,target),behavior:'smooth'});
+  });
 };
+async function renderPubFriendBanner(uid){
+  const el=document.getElementById('pubFriendBanner');if(!el)return;
+  try{
+    const grpSnap=await get(ref(db,'groups'));
+    if(!grpSnap.exists()){el.innerHTML='';return;}
+    const groups=grpSnap.val();
+    let friendIds=new Set();
+    Object.values(groups).forEach(g=>{
+      const m=g.members||{};
+      if(m[uid]){Object.keys(m).forEach(id=>{if(id!==uid)friendIds.add(id);});}
+    });
+    if(friendIds.size===0){el.innerHTML='';return;}
+    const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1,d=now.getDate();
+    const active=[];
+    for(const fid of friendIds){
+      const dSnap=await get(ref(db,`dashboards/${fid}`));
+      if(!dSnap.exists())continue;
+      const fd=dSnap.val();
+      const comp=fd.completions||{};
+      let todayCount=0;
+      Object.keys(comp).forEach(k=>{if(k.endsWith(`_${y}_${m}_${d}`)&&comp[k]===true)todayCount++;});
+      if(todayCount>0){
+        const nick=fd.nickname||fid.slice(0,4);
+        active.push({nick,todayCount});
+      }
+    }
+    if(active.length>0){
+      const show=active.slice(0,3);
+      const rest=active.length-show.length;
+      let summary=show.map(f=>`${f.nick} (${f.todayCount})`).join(' · ');
+      if(rest>0)summary+=` 외 ${rest}명`;
+      el.innerHTML=`<div class="main-friend-banner active"><span>${summary} 오늘 달성 중 🔥</span></div>`;
+    }else{
+      el.innerHTML=`<div class="main-friend-banner idle"><span>아직 아무도 시작 안 했어요 😴</span></div>`;
+    }
+  }catch(e){console.error(e);el.innerHTML='';}
+}
+
 window.changePubHView=function(v){pubViewMode=v;renderHabits();};
 window.changePubCView=function(v){pubCViewMode=v;renderChallenges();};
 

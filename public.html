@@ -146,8 +146,10 @@ function render(user,dash,cheersData,uid){
   // Avatar section
   h+=`<div class="avatar-section" id="avatarSection">`;
   h+=`<div class="avatar-art" id="avatarArt"></div>`;
-  h+=`<div class="avatar-stage" id="avatarStage">1단계</div>`;
-  h+=`<div class="avatar-nickname" id="avatarNickname">${esc(nick)}</div>`;
+  h+=`<div class="avatar-info-row">`;
+  h+=`<span class="avatar-stage" id="avatarStage">1단계</span>`;
+  h+=`<span class="avatar-nickname" id="avatarNickname">${esc(nick)}</span>`;
+  h+=`</div>`;
   h+=`<div id="pubFriendBanner"></div>`;
   h+=`</div>`;
 

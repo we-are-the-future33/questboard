@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304w';
+const APP_VERSION = '20260304x';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -213,6 +213,36 @@ async function copyToClipboard(text) {
   }
 }
 
+// 자동 습관 완료 판정 헬퍼
+// value: completions[key] 값 (true | number | {h,kcal,min,km} | undefined)
+// goal: 해당 goal 객체 (auto, autoTarget, autoUnit 포함)
+function isCompDone(value, goal) {
+  if (value === true) return true;
+  if (!value || !goal?.auto) return false;
+  if (typeof value === 'number') return value >= (goal.autoTarget || 0);
+  if (typeof value === 'object') {
+    const unit = goal.autoUnit || (goal.auto === 'sleep' ? 'h' : 'kcal');
+    return (value[unit] || 0) >= (goal.autoTarget || 0);
+  }
+  return false;
+}
+// 자동 습관 수치 추출 (달력/카드 표시용)
+function getAutoValue(value, goal) {
+  if (!value || value === true) return null;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'object') {
+    const unit = goal?.autoUnit || (goal?.auto === 'sleep' ? 'h' : 'kcal');
+    return value[unit] ?? null;
+  }
+  return null;
+}
+// 자동 습관 표시 단위
+function getAutoUnitLabel(goal) {
+  if (!goal?.auto) return '';
+  const u = goal.autoUnit || (goal.auto === 'sleep' ? 'h' : 'kcal');
+  return { h: 'h', kcal: 'kcal', min: 'min', km: 'km' }[u] || u;
+}
+
 // ===== 유틸리티 =====
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
 function isPublic(item) { return item.public !== false; }
@@ -248,9 +278,9 @@ function goalModulus(g, gi, y, m) {
 }
 function goalDone(g, gi, y, m) {
   if (!g || !g.unit) return 0;
-  if (g.unit === 'once') return localDash.completions[`g${gi}_once`] === true ? 1 : 0;
+  if (g.unit === 'once') return isCompDone(localDash.completions[`g${gi}_once`], g) ? 1 : 0;
   const pfx = `g${gi}_${y}_${m}_`;
-  return Object.entries(localDash.completions).filter(([k, v]) => k.startsWith(pfx) && v === true).length;
+  return Object.entries(localDash.completions).filter(([k, v]) => k.startsWith(pfx) && isCompDone(v, g)).length;
 }
 function goalPct(g, gi, y, m) {
   const mod = goalModulus(g, gi, y, m), done = goalDone(g, gi, y, m);
@@ -285,7 +315,7 @@ function calcStreak(g, gi) {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     for (let i = 0; i < 365; i++) {
       const d = new Date(today); d.setDate(today.getDate() - i);
-      if (localDash.completions[`g${gi}_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`] === true) streak++;
+      if (isCompDone(localDash.completions[`g${gi}_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`], g)) streak++;
       else break;
     }
     return streak;
@@ -298,11 +328,11 @@ function calcStreak(g, gi) {
     for (let w = 1; w <= 52; w++) {
       const ws = new Date(sun); ws.setDate(sun.getDate() - w * 7);
       let wd = 0;
-      for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
+      for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (isCompDone(localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`], g)) wd++; }
       if (wd >= freq) streak++; else break;
     }
     let tw = 0;
-    for (let d = 0; d < 7; d++) { const dd = new Date(sun); dd.setDate(sun.getDate() + d); if (dd > now) break; if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) tw++; }
+    for (let d = 0; d < 7; d++) { const dd = new Date(sun); dd.setDate(sun.getDate() + d); if (dd > now) break; if (isCompDone(localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`], g)) tw++; }
     if (tw >= freq) streak++;
     return streak;
   }
@@ -313,7 +343,7 @@ function calcStreak(g, gi) {
     for (let c = 1; c <= 26; c++) {
       const cs = new Date(sun); cs.setDate(sun.getDate() - c * 14);
       let cd = 0;
-      for (let d = 0; d < 14; d++) { const dd = new Date(cs); dd.setDate(cs.getDate() + d); if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) cd++; }
+      for (let d = 0; d < 14; d++) { const dd = new Date(cs); dd.setDate(cs.getDate() + d); if (isCompDone(localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`], g)) cd++; }
       if (cd >= freq) streak++; else break;
     }
     return streak;
@@ -335,12 +365,12 @@ function isGoalActiveThisWeek(g, gi) {
   const ws = new Date(now); ws.setDate(now.getDate() - dow);
   if (g.unit === 'weekly') {
     let wd = 0;
-    for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
+    for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (isCompDone(localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`], g)) wd++; }
     return wd < freq;
   }
   if (g.unit === 'biweekly') {
     let cd = 0; const cs = new Date(ws); cs.setDate(ws.getDate() - 7);
-    for (let d = 0; d < 14; d++) { const dd = new Date(cs); dd.setDate(cs.getDate() + d); if (dd > now) break; if (localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) cd++; }
+    for (let d = 0; d < 14; d++) { const dd = new Date(cs); dd.setDate(cs.getDate() + d); if (dd > now) break; if (isCompDone(localDash.completions[`g${gi}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`], g)) cd++; }
     return cd < freq;
   }
   return true;
@@ -940,7 +970,7 @@ window.generateHabitCard = function (idx) {
   calHtml += weekdays.map(d => `<div style="font-size:9px;color:#94a3b8;text-align:center;font-weight:700;">${d}</div>`).join('');
   for (let b = 0; b < fd; b++) calHtml += `<div></div>`;
   for (let d = 1; d <= days; d++) {
-    const done = localDash.completions[`g${idx}_${y}_${m}_${d}`] === true;
+    const done = isCompDone(localDash.completions[`g${idx}_${y}_${m}_${d}`], localDash.goals[idx]);
     const isToday = d === now.getDate();
     calHtml += `<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:10px;font-weight:700;
       ${done ? 'background:var(--accent);color:white;' : isToday ? 'border:1.5px solid var(--accent);color:var(--accent);' : 'color:#cbd5e1;'}">${d}</div>`;
@@ -1397,7 +1427,7 @@ function generateHabitCardHtml(g, idx, y, m) {
   const mg = migrateGoal(g), { pct } = goalPct(mg, idx, y, m);
   const streak = calcStreak(mg, idx), streakLbl = getStreakLabel(mg, streak);
   const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
-  const todayDone = localDash.completions[todayKey] === true;
+  const todayDone = isCompDone(localDash.completions[todayKey], mg);
   const isOnce = mg.unit === 'once';
   const isCompleted = pct >= 100;
   const isOver = pct > 100;
@@ -1412,6 +1442,12 @@ function generateHabitCardHtml(g, idx, y, m) {
         <div class="habit-card-mid">
           <div class="habit-card-unit">${getUnitLabel(mg)}</div>
           ${g.public === false ? '<div class="private-badge">🔒</div>' : ''}
+          ${mg.auto ? (() => {
+            const av = getAutoValue(localDash.completions[todayKey], mg);
+            const ul = getAutoUnitLabel(mg);
+            const tgt = mg.autoTarget || 0;
+            return av !== null ? `<div class="habit-card-auto">${av < 10 ? av.toFixed(1) : Math.round(av)}${ul} / ${tgt}${ul}</div>` : '';
+          })() : ''}
           <div class="habit-card-streak ${streak > 0 ? '' : 'zero'}">
             <span class="streak-num">${streakLbl}</span>
           </div>
@@ -1432,10 +1468,10 @@ function sortHabitItems(items, y, m) {
     const mg = migrateGoal(g);
     const isOnce = mg.unit === 'once';
     const todayKey = `g${idx}_${y}_${m}_${now.getDate()}`;
-    const isDone = localDash.completions[todayKey] === true || (isOnce && localDash.completions[`g${idx}_once`]);
+    const isDone = isCompDone(localDash.completions[todayKey], mg) || (isOnce && isCompDone(localDash.completions[`g${idx}_once`], mg));
     let lastDoneTs = 0;
     Object.keys(localDash.completions).forEach(k => {
-      if (!k.startsWith(`g${idx}_`) || localDash.completions[k] !== true) return;
+      if (!k.startsWith(`g${idx}_`) || !isCompDone(localDash.completions[k], mg)) return;
       const parts = k.split('_');
       if (parts.length === 4) {
         const d = new Date(+parts[1], +parts[2] - 1, +parts[3]);
@@ -2880,7 +2916,7 @@ function checkWeekClear(idx) {
   const freq = getGoalFreq(g), now = new Date(), dow = now.getDay();
   const ws = new Date(now); ws.setDate(now.getDate() - dow);
   let wd = 0;
-  for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (localDash.completions[`g${idx}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
+  for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (isCompDone(localDash.completions[`g${idx}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`], localDash.goals[idx])) wd++; }
   if (wd === freq) setTimeout(() => { showConfetti(); const p = $id('weekClearPopup'); p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 2800); }, 300);
 }
 
@@ -2999,7 +3035,23 @@ function renderCalendar(idx, g, y, m, canEdit) {
     return sunCache[sk] >= freq;
   }
 
-  let h = `<div class="cal-day-row">`;
+  let h = '';
+  // 자동 습관 월간 요약
+  const goal0 = localDash.goals[idx];
+  if (goal0?.auto) {
+    const unitLbl = getAutoUnitLabel(goal0);
+    let vals = [], achieved = 0;
+    for (let d = 1; d <= days; d++) {
+      const av = getAutoValue(localDash.completions[`g${idx}_${y}_${m}_${d}`], goal0);
+      if (av !== null) {
+        vals.push(av);
+        if (isCompDone(localDash.completions[`g${idx}_${y}_${m}_${d}`], goal0)) achieved++;
+      }
+    }
+    const avg = vals.length > 0 ? (vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+    h += `<div class="auto-cal-summary"><span>평균 ${avg < 10 ? avg.toFixed(1) : Math.round(avg)}${unitLbl}</span><span class="auto-cal-sep">·</span><span>달성 ${achieved}/${vals.length}일</span></div>`;
+  }
+  h += `<div class="cal-day-row">`;
   ['일', '월', '화', '수', '목', '금', '토'].forEach(d => h += `<div class="cal-day-lbl">${d}</div>`);
   h += `</div><div class="cal-grid">`;
 
@@ -3011,16 +3063,32 @@ function renderCalendar(idx, g, y, m, canEdit) {
   }
 
   // 날짜 셀
+  const goal = localDash.goals[idx];
+  const isAuto = goal?.auto;
   for (let d = 1; d <= days; d++) {
-    const k = `g${idx}_${y}_${m}_${d}`, isDone = localDash.completions[k] === true;
+    const k = `g${idx}_${y}_${m}_${d}`, val = localDash.completions[k];
+    const isDone = isCompDone(val, goal);
+    const autoVal = isAuto ? getAutoValue(val, goal) : null;
     const cellDate = new Date(y, m - 1, d);
     const isToday = cellDate.getTime() === todayDate.getTime();
     const isFuture = cellDate > todayDate;
-    const locked = !canEdit || isFuture;
+    const locked = !canEdit || isFuture || isAuto;
     const wc = isWeekCleared(y, m, d);
     const onclick = locked ? '' : `onclick="bsToggleDay(${idx},${y},${m},${d})"`;
 
-    h += `<div class="cal-cell ${isDone ? 'done' : ''} ${isToday ? 'cal-today' : ''} ${wc ? 'week-cleared' : ''} ${locked ? 'locked' : ''}" ${onclick}><span class="cal-dn">${d}</span><span class="cal-chk">${isDone ? '✓' : ''}</span></div>`;
+    if (isAuto && autoVal !== null) {
+      // 자동 습관: 수치 표시 + 색상 등급
+      const unitLbl = getAutoUnitLabel(goal);
+      const target = goal.autoTarget || 1;
+      const ratio = autoVal / target;
+      let bg = '';
+      if (ratio >= 1) bg = 'background:#dbeafe;color:#1e40af;';
+      else if (ratio >= 0.7) bg = 'background:#fef3c7;color:#92400e;';
+      else bg = 'background:#fee2e2;color:#991b1b;';
+      h += `<div class="cal-cell auto-val ${isToday ? 'cal-today' : ''} ${wc ? 'week-cleared' : ''}" style="${bg}"><span class="cal-dn">${d}</span><span class="cal-auto-num">${autoVal < 10 ? autoVal.toFixed(1) : Math.round(autoVal)}${unitLbl}</span></div>`;
+    } else {
+      h += `<div class="cal-cell ${isDone ? 'done' : ''} ${isToday ? 'cal-today' : ''} ${wc ? 'week-cleared' : ''} ${locked ? 'locked' : ''}" ${onclick}><span class="cal-dn">${d}</span><span class="cal-chk">${isDone ? '✓' : ''}</span></div>`;
+    }
   }
   h += `</div>`;
   return h;
@@ -3038,7 +3106,7 @@ window.bsToggleDay = async function (idx, y, m, d) {
 };
 
 function renderBSOnce(idx, body) {
-  const done = localDash.completions[`g${idx}_once`] === true;
+  const done = isCompDone(localDash.completions[`g${idx}_once`], localDash.goals[idx]);
   body.innerHTML = `<div style="text-align:center;padding:40px 0;">
     <div style="font-size:14px;color:var(--text-dim);margin-bottom:24px;">한 번 달성 목표</div>
     <button style="background:#fff;border:3px solid ${done ? 'var(--accent)' : 'var(--border)'};border-radius:50%;width:80px;height:80px;font-size:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;" onclick="bsToggleOnce(${idx})">${done ? '✅' : '⭕'}</button>
@@ -3050,7 +3118,7 @@ function renderBSOnce(idx, body) {
 
 window.bsToggleOnce = async function (idx) {
   const k = `g${idx}_once`;
-  const wasDone = localDash.completions[k] === true;
+  const wasDone = isCompDone(localDash.completions[k], localDash.goals[idx]);
   localDash.completions[k] = !wasDone;
   await saveDash(); renderBSBody(idx); renderHabitCards(); renderAvatar();
   if (wasDone) { checkMilestoneUndo(); } else { checkMilestone(); }
@@ -3546,7 +3614,7 @@ async function checkFriendActivity() {
       const hasHabits = Array.isArray(goals) ? goals.some(g => g && g.unit) : Object.values(goals).some(g => g && g.unit);
       if (hasHabits) _friendHasHabitsCount++;
       const totalHabits = Array.isArray(goals) ? goals.filter(g => g && g.unit).length : Object.values(goals).filter(g => g && g.unit).length;
-      const todayCount = Object.entries(comp).filter(([k, v]) => k.endsWith(todayPrefix) && v === true).length;
+      const todayCount = Object.entries(comp).filter(([k, v]) => k.endsWith(todayPrefix) && !!v).length;
       if (todayCount > 0) {
         _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount, totalHabits });
       } else if (hasHabits) {
@@ -3584,7 +3652,7 @@ function getMyTodayProgress() {
     } else if (mg.unit === 'weekly' || mg.unit === 'biweekly') {
       total++;
     } else return;
-    if (localDash.completions && localDash.completions[`g${i}_${y}_${m}_${d}`] === true) done++;
+    if (localDash.completions && isCompDone(localDash.completions[`g${i}_${y}_${m}_${d}`], localDash.goals[i])) done++;
   });
   return { total, done };
 }
@@ -3690,11 +3758,11 @@ window.openFriendDetail = async function (fid) {
     const mg = migrateGoal(g);
     const mod = goalModulus(mg, i, y, m);
     let done = 0;
-    if (mg.unit === 'once') done = comp[`g${i}_once`] === true ? 1 : 0;
-    else { const pfx = `g${i}_${y}_${m}_`; done = Object.entries(comp).filter(([k, v]) => k.startsWith(pfx) && v === true).length; }
+    if (mg.unit === 'once') done = isCompDone(comp[`g${i}_once`], mg) ? 1 : 0;
+    else { const pfx = `g${i}_${y}_${m}_`; done = Object.entries(comp).filter(([k, v]) => k.startsWith(pfx) && isCompDone(v, mg)).length; }
     const pct = mod > 0 ? Math.round(done / mod * 100) : 0;
     const todayK = `g${i}_${y}_${m}_${day}`;
-    const todayDone = comp[todayK] === true || (mg.unit === 'once' && comp[`g${i}_once`] === true);
+    const todayDone = isCompDone(comp[todayK], mg) || (mg.unit === 'once' && isCompDone(comp[`g${i}_once`], mg));
     h += `<button class="fgoal-btn ${todayDone ? 'fgoal-today-done' : ''}" id="fgoal_${i}" onclick="selectFriendGoal('${fid}',${i})"><div class="fgoal-name">${esc(g.title)}</div><div class="fgoal-pct">${pct}%</div><div class="fgoal-bar"><div class="fgoal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div></button>`;
   }
   h += `</div><div id="friendGoalCal"></div>`;
@@ -3757,7 +3825,7 @@ window.showFriendGoalCal = async function (fid, gi) {
   h += `</div><div class="rocal-grid">`;
   for (let i = 0; i < fd; i++) h += `<div class="rocal-cell empty"></div>`;
   for (let dd = 1; dd <= days; dd++) {
-    const k = `g${gi}_${y}_${m}_${dd}`, done = comp[k] === true;
+    const k = `g${gi}_${y}_${m}_${dd}`, done = !!comp[k];
     const isToday = dd === now.getDate();
     h += `<div class="rocal-cell ${done ? 'done' : ''} ${isToday ? 'today' : ''}">${dd}</div>`;
   }

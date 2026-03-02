@@ -386,6 +386,15 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .cal-today .cal-dn{color:var(--accent);}
 .cal-dn{font-size:12px;font-weight:600;color:#4b5563;}
 .cal-chk{font-size:10px;opacity:0;}
+
+/* 자동 습관 달력 셀 */
+.cal-cell.auto-val{cursor:default;padding:2px 0;}
+.cal-cell.auto-val:active{transform:none;}
+.cal-cell.auto-val .cal-dn{font-size:9px;color:inherit;opacity:.6;}
+.cal-auto-num{font-size:10px;font-weight:800;line-height:1;}
+/* 자동 습관 월간 요약 */
+.auto-cal-summary{display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;padding:6px 0;background:#f0f7ff;border-radius:8px;}
+.auto-cal-sep{color:#cbd5e1;}
 .bs-cal-meta{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
 .bs-cal-unit{background:var(--accent-light);border:2px solid rgba(25,82,245,.2);border-radius:100px;padding:5px 13px;font-size:12px;color:var(--accent);font-weight:700;}
 .bs-edit-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:7px 16px;font-size:12px;font-weight:700;font-family:var(--font-main);cursor:pointer;box-shadow:0 2px 8px rgba(25,82,245,.22);}
@@ -1151,3 +1160,6 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 .shelf-item.shelf-locked .shelf-name {
   color: #94a3b8;
 }
+
+/* Auto habit card value */
+.habit-card-auto{font-size:10px;font-weight:700;color:var(--accent);background:#eff6ff;padding:1px 6px;border-radius:4px;}

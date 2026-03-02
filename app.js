@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304n';
+const APP_VERSION = '20260304q';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -5063,34 +5063,33 @@ function closeCookingModal() {
 }
 window.closeCookingModal = closeCookingModal;
 
-function buildCookingModalHTML(activeTab) {
-  const tab = activeTab || 'kitchen';
+function buildCookingModalHTML() {
   const ck = localDash.cooking;
   const sid = ck.currentScenarioId;
   const allCleared = sid >= 12;
-  const clearedCount = (ck.clearedRecipes || []).length;
+  const clearedRecipes = (ck.clearedRecipes || []);
   let h = `<div class="cooking-modal">`;
   h += `<button class="cooking-close" onclick="closeCookingModal()">✕</button>`;
   h += `<div class="cooking-title">🍳 햄스터 주방</div>`;
-  // Tabs
-  h += `<div class="cooking-tabs">`;
-  h += `<button class="cooking-tab ${tab === 'kitchen' ? 'active' : ''}" onclick="switchCookingTab('kitchen')">🥘 주방</button>`;
-  h += `<button class="cooking-tab ${tab === 'collection' ? 'active' : ''}" onclick="switchCookingTab('collection')">📖 도감 <span class="cooking-tab-badge">${clearedCount}/${RECIPES.length}</span></button>`;
+  h += buildKitchenTab(ck, sid, allCleared);
+  // Cleared recipes shelf
+  h += `<div class="cooking-inv-divider">완성한 요리 ${clearedRecipes.length}/${RECIPES.length}</div>`;
+  h += `<div class="cooking-shelf">`;
+  RECIPES.forEach((r, i) => {
+    const cleared = clearedRecipes.includes(i);
+    h += `<div class="shelf-item ${cleared ? '' : 'shelf-locked'}">`;
+    h += `<span class="shelf-emoji" style="${cleared ? '' : 'filter:blur(5px);opacity:.4;'}">${r.emoji}</span>`;
+    h += `<span class="shelf-name">${cleared ? r.name : '❓❓'}</span>`;
+    h += `</div>`;
+  });
   h += `</div>`;
-
-  if (tab === 'kitchen') {
-    h += buildKitchenTab(ck, sid, allCleared);
-  } else {
-    h += buildCollectionTab(ck);
-  }
-
-  h += `</div>`; // modal
+  h += `</div>`;
   return h;
 }
 
 window.switchCookingTab = function(tab) {
   const overlay = document.getElementById('cookingOverlay');
-  if (overlay) overlay.innerHTML = buildCookingModalHTML(tab);
+  if (overlay) overlay.innerHTML = buildCookingModalHTML();
 };
 
 function buildKitchenTab(ck, sid, allCleared) {
@@ -5153,10 +5152,6 @@ function buildKitchenTab(ck, sid, allCleared) {
     h += `<div class="cooking-inv-empty">습관을 달성해서 재료를 모아보세요! 🐹</div>`;
   }
   h += `</div>`; // inv
-  // Collection (completed recipes)
-  const clearedCount = (ck.clearedRecipes || []).length;
-  h += `<div class="cooking-inv-divider">완성한 요리 (${clearedCount}/${RECIPES.length})</div>`;
-  h += buildCollectionTab(ck);
   return h;
 }
 

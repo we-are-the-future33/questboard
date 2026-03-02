@@ -1114,3 +1114,26 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 .collection-ings {
   font-size: 12px; margin-top: 4px; letter-spacing: 1px;
 }
+
+/* Cooking shelf - completed recipes */
+.cooking-shelf {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  padding: 8px 0 12px;
+}
+.shelf-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 10px; background: #fefce8; border: 1.5px solid #fde68a;
+  border-radius: 12px; min-width: 56px;
+}
+.shelf-emoji { font-size: 24px; line-height: 1; }
+.shelf-name { font-size: 10px; font-weight: 600; color: #92400e; white-space: nowrap; }
+.cooking-shelf-empty {
+  text-align: center; padding: 16px 0; font-size: 13px;
+  color: #94a3b8; font-weight: 600;
+}
+.shelf-item.shelf-locked {
+  background: #f1f5f9; border-color: #e2e8f0;
+}
+.shelf-item.shelf-locked .shelf-name {
+  color: #94a3b8;
+}

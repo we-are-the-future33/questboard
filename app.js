@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304h';
+const APP_VERSION = '20260304i';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4958,9 +4958,9 @@ function renderStageMessage() {
   // Build progress overlay (me + top friend)
   let meLabel = `오늘 (${done}/${total})`;
   if (pct === 0) meLabel += ' 🌙';
-  else if (pct < 50) meLabel += ` ${pct}% 달성 중`;
-  else if (pct < 100) meLabel += ` ${pct}% 달성 중 🔥`;
-  else meLabel += ' 올클리어! 🎉';
+  else if (pct < 50) meLabel += ` <span class="prog-pct">${pct}%</span> 달성 중 🔥`;
+  else if (pct < 100) meLabel += ` <span class="prog-pct">${pct}%</span> 달성 중 🔥`;
+  else meLabel += ' <span class="prog-pct">올클리어!</span> 🎉';
   
   let progHTML = `<div class="progress-overlay"><span class="prog-me">${meLabel}</span>`;
   if (_friendActivityCache.length > 0) {

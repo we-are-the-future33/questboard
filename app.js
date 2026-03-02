@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304t';
+const APP_VERSION = '20260304v';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -3401,12 +3401,15 @@ async function renderMainCheers() {
     return;
   }
   const data = snap.val(); let all = [];
-  Object.entries(data).forEach(([gi, msgs]) => {
-    Object.entries(msgs).forEach(([ts, msg]) => {
-      const gIdx = parseInt(gi);
-      const goalTitle = localDash.goals[gIdx]?.title || `목표 ${gIdx + 1}`;
-      all.push({ ...msg, ts: parseInt(ts), goalTitle });
-    });
+  // 호환: 새 flat 형식({ts: {from,text,ts}}) + 기존 goalIndex 형식({gi: {ts: {from,text,ts}}})
+  Object.entries(data).forEach(([k, v]) => {
+    if (v && typeof v === 'object' && v.from && v.text) {
+      all.push({ ...v, ts: parseInt(k) });
+    } else if (typeof v === 'object') {
+      Object.entries(v).forEach(([ts, msg]) => {
+        if (msg && msg.from) all.push({ ...msg, ts: parseInt(ts) });
+      });
+    }
   });
   all.sort((a, b) => b.ts - a.ts);
 
@@ -3425,7 +3428,7 @@ async function renderMainCheers() {
       const d = new Date(c.ts);
       const isNew = c.ts > lastCheck;
       const newLabel = isNew ? '<span class="cheer-new-badge">NEW</span>' : '';
-      h += `<div class="my-cheer-card${isNew ? ' cheer-new' : ''}"><div class="my-cheer-goal-tag">🎯 ${esc(c.goalTitle)}${newLabel}</div><div class="my-cheer-from">${esc(c.from)}</div><div class="my-cheer-text">${esc(c.text)}</div><div class="my-cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
+      h += `<div class="my-cheer-card${isNew ? ' cheer-new' : ''}"><div class="my-cheer-from">${esc(c.from)}${newLabel}</div><div class="my-cheer-text">${esc(c.text)}</div><div class="my-cheer-time">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div></div>`;
     });
   }
   el.innerHTML = h;
@@ -3542,11 +3545,12 @@ async function checkFriendActivity() {
       const goals = dash.goals || [];
       const hasHabits = Array.isArray(goals) ? goals.some(g => g && g.unit) : Object.values(goals).some(g => g && g.unit);
       if (hasHabits) _friendHasHabitsCount++;
+      const totalHabits = Array.isArray(goals) ? goals.filter(g => g && g.unit).length : Object.values(goals).filter(g => g && g.unit).length;
       const todayCount = Object.entries(comp).filter(([k, v]) => k.endsWith(todayPrefix) && v === true).length;
       if (todayCount > 0) {
-        _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount });
+        _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount, totalHabits });
       } else if (hasHabits) {
-        _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount: 0 });
+        _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount: 0, totalHabits });
       }
     }
 
@@ -3589,6 +3593,16 @@ function renderMainFriendActivity() {
   renderStageMessage();
 }
 
+// 도트 프로그레스 헬퍼 (done/total → ●○ 문자열)
+function buildDotProgress(done, total) {
+  if (total <= 10) {
+    return '<span class="dot filled">●</span>'.repeat(done) + '<span class="dot empty">○</span>'.repeat(total - done);
+  }
+  // 10개 넘으면 미니 바로 폴백
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  return `<span class="dot-bar"><span class="dot-bar-fill" style="width:${pct}%"></span></span>`;
+}
+
 async function renderFriends() {
   const sec = $id('friendsSection');
   sec.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">로딩 중...</div>';
@@ -3605,27 +3619,39 @@ async function renderFriends() {
   const badge = $id('friendTabBadge');
   if (badge) badge.style.display = 'none';
 
-  // Activity summary card
+  // Activity summary card — all friends with dot progress
   let h = '';
   if (_friendActivityCache.length > 0) {
-    // Active friends: show max 3 + "외 N명"
-    const show = _friendActivityCache.slice(0, 3);
-    const rest = _friendActivityCache.length - show.length;
-    let summary = show.map(f => `${f.emoji} ${esc(f.nick)} ${f.todayCount}개`).join(' · ');
-    if (rest > 0) summary += ` 외 ${rest}명`;
-    h += `<div class="friend-activity-card">
-      <div class="friend-activity-text">${summary}</div>
-      <div class="friend-activity-sub">오늘 친구들이 열심히 하고 있어요 💪</div>
-    </div>`;
+    const sorted = [..._friendActivityCache].sort((a, b) => b.todayCount - a.todayCount);
+    const show = sorted.slice(0, 3);
+    const rest = sorted.length - show.length;
+    const activeCount = sorted.filter(f => f.todayCount > 0).length;
+    const idleCount = sorted.length - activeCount;
+
+    h += `<div class="friend-activity-card" onclick="switchTab('friends')">`;
+    show.forEach(f => {
+      const dots = buildDotProgress(f.todayCount, f.totalHabits);
+      const statusIcon = f.todayCount >= f.totalHabits ? ' ⭐' : f.todayCount > 0 ? ' 🔥' : ' 😴';
+      h += `<div class="friend-progress-row">`;
+      h += `<span class="friend-progress-name">${f.emoji} ${esc(f.nick)}${statusIcon}</span>`;
+      h += `<span class="friend-progress-dots">${dots}</span>`;
+      h += `<span class="friend-progress-count">${f.todayCount}/${f.totalHabits}</span>`;
+      h += `</div>`;
+    });
+    if (rest > 0) h += `<div class="friend-progress-more">외 ${rest}명</div>`;
+    let summaryMsg = '';
+    if (activeCount > 0 && idleCount > 0) summaryMsg = `💪 ${activeCount}명 활동 중 · ${idleCount}명 대기 중`;
+    else if (activeCount > 0) summaryMsg = `💪 모두 열심히 하는 중!`;
+    else summaryMsg = `😴 아직 아무도 시작 안 했어요`;
+    h += `<div class="friend-activity-sub">${summaryMsg}</div>`;
+    h += `</div>`;
   } else if (_friendHasHabitsCount > 0) {
-    // Friends have habits but nobody did anything today
-    h += `<div class="friend-activity-card idle">
+    h += `<div class="friend-activity-card idle" onclick="switchTab('friends')">
       <div class="friend-activity-text">아직 아무도 시작 안 했어요 😴</div>
       <div class="friend-activity-sub">먼저 시작해서 친구들을 자극해볼까요?</div>
     </div>`;
   } else if (_friendTotalCount > 0) {
-    // Friends exist but none have habits
-    h += `<div class="friend-activity-card idle">
+    h += `<div class="friend-activity-card idle" onclick="switchTab('friends')">
       <div class="friend-activity-text">친구들이 아직 습관을 등록하지 않았어요</div>
       <div class="friend-activity-sub">습관을 등록하라고 알려주세요! 📢</div>
     </div>`;
@@ -3637,27 +3663,7 @@ async function renderFriends() {
     if (!uSnap.exists()) continue;
     const u = uSnap.val(), d = dSnap.exists() ? dSnap.val() : {};
     const nick = d.nickname || u.name;
-    // calc friend global pct
-    const fGoals = d.goals || [], fComp = d.completions || {};
-    const now = new Date(), fy = now.getFullYear(), fm = now.getMonth() + 1, fd = now.getDate();
-    let ftd = 0, ftm = 0, todayDone = 0, totalHabits = 0;
-    for (let i = 0; i < MAX_HABITS; i++) {
-      const fg = fGoals[i]; if (!fg || !fg.unit) continue;
-      totalHabits++;
-      const mg = migrateGoal(fg);
-      const mod = goalModulus(mg, i, fy, fm);
-      let done = 0;
-      if (mg.unit === 'once') done = fComp[`g${i}_once`] === true ? 1 : 0;
-      else { const pfx = `g${i}_${fy}_${fm}_`; done = Object.entries(fComp).filter(([k, v]) => k.startsWith(pfx) && v === true).length; }
-      ftd += done; ftm += mod;
-      // today check
-      const todayK = `g${i}_${fy}_${fm}_${fd}`;
-      if (fComp[todayK] === true || (mg.unit === 'once' && fComp[`g${i}_once`] === true)) todayDone++;
-    }
-    const fpct = ftm > 0 ? Math.round(ftd / ftm * 100) : 0;
-    const fstage = Math.min(9, Math.floor(fpct / 10));
-    const todayLabel = totalHabits > 0 ? ` · 오늘 ${todayDone}/${totalHabits} ${todayDone > 0 ? '🔥' : '😴'}` : '';
-    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${getFriendEmoji(fid)}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div><div class="friend-stage">${fstage + 1}단계${todayLabel}</div></div><div class="friend-pct">${fpct}%</div></div>`;
+    h += `<div class="friend-card" onclick="openFriendDetail('${fid}')"><div class="friend-avatar">${getFriendEmoji(fid)}</div><div class="friend-info"><div class="friend-name">${esc(nick)}</div></div></div>`;
   }
   h += '</div><div id="friendDetailArea"></div>';
   sec.innerHTML = h;
@@ -3691,8 +3697,44 @@ window.openFriendDetail = async function (fid) {
     const todayDone = comp[todayK] === true || (mg.unit === 'once' && comp[`g${i}_once`] === true);
     h += `<button class="fgoal-btn ${todayDone ? 'fgoal-today-done' : ''}" id="fgoal_${i}" onclick="selectFriendGoal('${fid}',${i})"><div class="fgoal-name">${esc(g.title)}</div><div class="fgoal-pct">${pct}%</div><div class="fgoal-bar"><div class="fgoal-bar-fill" style="width:${Math.min(pct,100)}%"></div></div></button>`;
   }
-  h += `</div><div id="friendGoalCal"></div></div>`;
+  h += `</div><div id="friendGoalCal"></div>`;
+  // 친구별 응원 (습관 무관)
+  h += `<div class="cheer-box"><div class="cheer-box-title">💬 응원하기</div>`;
+  const cheerSnap = await get(ref(db, `cheers/${fid}`));
+  if (cheerSnap.exists()) {
+    const raw = cheerSnap.val();
+    // 호환: 기존 goalIndex 하위 + 새 flat 형식 모두 파싱
+    let allCheers = [];
+    Object.entries(raw).forEach(([k, v]) => {
+      if (v && typeof v === 'object' && v.from && v.text) {
+        allCheers.push({ ...v, ts: parseInt(k) });
+      } else if (typeof v === 'object') {
+        Object.entries(v).forEach(([ts2, msg]) => {
+          if (msg && msg.from) allCheers.push({ ...msg, ts: parseInt(ts2) });
+        });
+      }
+    });
+    allCheers.sort((a, b) => b.ts - a.ts);
+    const recent = allCheers.slice(0, 5);
+    if (recent.length > 0) {
+      h += `<div class="cheer-list">`;
+      recent.forEach(c => {
+        const dt = new Date(c.ts);
+        h += `<div class="cheer-item"><div class="cheer-from">${esc(c.from)}</div><div class="cheer-text">${esc(c.text)}</div><div class="cheer-time">${dt.getMonth()+1}/${dt.getDate()} ${dt.getHours()}:${String(dt.getMinutes()).padStart(2,'0')}</div></div>`;
+      });
+      h += `</div>`;
+    }
+  }
+  h += `<div class="cheer-input-row"><input class="cheer-text-input" id="cheerInput" placeholder="응원 메시지 보내기" maxlength="50"><button class="cheer-send-btn" onclick="sendCheer('${fid}')">보내기</button></div></div>`;
+  h += `</div>`;
   area.innerHTML = h;
+  // Fix iOS keyboard scroll
+  const cheerInput = $id('cheerInput');
+  if (cheerInput) {
+    cheerInput.addEventListener('focus', () => {
+      setTimeout(() => { cheerInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 300);
+    });
+  }
 };
 
 window.selectFriendGoal = function (fid, gi) {
@@ -3720,38 +3762,16 @@ window.showFriendGoalCal = async function (fid, gi) {
     h += `<div class="rocal-cell ${done ? 'done' : ''} ${isToday ? 'today' : ''}">${dd}</div>`;
   }
   h += `</div></div>`;
-  // 응원 보내기
-  h += `<div class="cheer-box"><div class="cheer-box-title">💬 응원하기</div>`;
-  // 기존 응원 표시
-  const cheerSnap = await get(ref(db, `cheers/${fid}/${gi}`));
-  if (cheerSnap.exists()) {
-    const cheers = cheerSnap.val();
-    const sorted = Object.entries(cheers).sort((a, b) => parseInt(b[0]) - parseInt(a[0])).slice(0, 5);
-    h += `<div class="cheer-list">`;
-    sorted.forEach(([ts, c]) => {
-      const dt = new Date(parseInt(ts));
-      h += `<div class="cheer-item"><div class="cheer-from">${esc(c.from)}</div><div class="cheer-text">${esc(c.text)}</div><div class="cheer-time">${dt.getMonth()+1}/${dt.getDate()} ${dt.getHours()}:${String(dt.getMinutes()).padStart(2,'0')}</div></div>`;
-    });
-    h += `</div>`;
-  }
-  h += `<div class="cheer-input-row"><input class="cheer-text-input" id="cheerInput" placeholder="응원 메시지 보내기" maxlength="50"><button class="cheer-send-btn" onclick="sendCheer('${fid}',${gi})">보내기</button></div></div>`;
   area.innerHTML = h;
-  // Fix iOS keyboard scroll
-  const cheerInput = $id('cheerInput');
-  if (cheerInput) {
-    cheerInput.addEventListener('focus', () => {
-      setTimeout(() => { cheerInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 300);
-    });
-  }
 };
 
-window.sendCheer = async function (fid, gi) {
+window.sendCheer = async function (fid) {
   const input = $id('cheerInput');
   const text = input.value.trim(); if (!text) return;
   const ts = Date.now();
-  await set(ref(db, `cheers/${fid}/${gi}/${ts}`), { from: localDash.nickname || currentUser.name, text, ts });
+  await set(ref(db, `cheers/${fid}/${ts}`), { from: localDash.nickname || currentUser.name, text, ts });
   showToast('💬 응원 전송!', 'done');
-  showFriendGoalCal(fid, gi);
+  openFriendDetail(fid);
 };
 
 // ===== 관리자 =====
@@ -5028,7 +5048,7 @@ function renderStageMessage() {
     const fLabel = top.todayCount > 0 
       ? `${top.emoji} ${top.nick}도 ${top.todayCount}개 완료` 
       : `${top.emoji} ${top.nick} 아직 시작 전`;
-    progHTML += `<span class="prog-sep">·</span><span class="prog-friend">${fLabel}</span>`;
+    progHTML += `<span class="prog-sep">·</span><span class="prog-friend" onclick="switchTab('friends')" style="cursor:pointer;">${fLabel}</span>`;
   }
   progHTML += `</div>`;
   el.innerHTML = progHTML + `<div class="stage-msg-wrap"><div class="stage-msg">${sm.msg}</div></div>`;

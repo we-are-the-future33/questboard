@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304l';
+const APP_VERSION = '20260304m';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1198,10 +1198,10 @@ function renderAvatar() {
   const { total, done } = getMyTodayProgress();
   const todayPct = total > 0 ? Math.round((done / total) * 100) : 0;
   const showHouse = todayPct < 25;
-  // Track current mode
+  // Track current mode — always re-evaluate
   const currentMode = artEl._avatarMode;
   const needMode = showHouse ? 'house' : 'hamster';
-  if (currentMode !== needMode) {
+  if (currentMode !== needMode || !artEl._avatarMode) {
     artEl._avatarMode = needMode;
     artEl._hamsterInit = false;
     artEl.innerHTML = '';
@@ -5063,13 +5063,38 @@ function closeCookingModal() {
 }
 window.closeCookingModal = closeCookingModal;
 
-function buildCookingModalHTML() {
+function buildCookingModalHTML(activeTab) {
+  const tab = activeTab || 'kitchen';
   const ck = localDash.cooking;
   const sid = ck.currentScenarioId;
   const allCleared = sid >= 12;
+  const clearedCount = (ck.clearedRecipes || []).length;
   let h = `<div class="cooking-modal">`;
   h += `<button class="cooking-close" onclick="closeCookingModal()">✕</button>`;
   h += `<div class="cooking-title">🍳 햄스터 주방</div>`;
+  // Tabs
+  h += `<div class="cooking-tabs">`;
+  h += `<button class="cooking-tab ${tab === 'kitchen' ? 'active' : ''}" onclick="switchCookingTab('kitchen')">🥘 주방</button>`;
+  h += `<button class="cooking-tab ${tab === 'collection' ? 'active' : ''}" onclick="switchCookingTab('collection')">📖 도감 <span class="cooking-tab-badge">${clearedCount}/${RECIPES.length}</span></button>`;
+  h += `</div>`;
+
+  if (tab === 'kitchen') {
+    h += buildKitchenTab(ck, sid, allCleared);
+  } else {
+    h += buildCollectionTab(ck);
+  }
+
+  h += `</div>`; // modal
+  return h;
+}
+
+window.switchCookingTab = function(tab) {
+  const overlay = document.getElementById('cookingOverlay');
+  if (overlay) overlay.innerHTML = buildCookingModalHTML(tab);
+};
+
+function buildKitchenTab(ck, sid, allCleared) {
+  let h = '';
   // Equation
   h += `<div class="cooking-equation">`;
   if (allCleared) {
@@ -5128,7 +5153,25 @@ function buildCookingModalHTML() {
     h += `<div class="cooking-inv-empty">습관을 달성해서 재료를 모아보세요! 🐹</div>`;
   }
   h += `</div>`; // inv
-  h += `</div>`; // modal
+  return h;
+}
+
+function buildCollectionTab(ck) {
+  let h = `<div class="cooking-collection">`;
+  RECIPES.forEach((recipe, i) => {
+    const cleared = (ck.clearedRecipes || []).includes(i);
+    h += `<div class="collection-item ${cleared ? 'cleared' : 'locked'}">`;
+    h += `<div class="collection-emoji" style="${cleared ? '' : 'filter:blur(5px);opacity:.4;'}">${recipe.emoji}</div>`;
+    h += `<div class="collection-name">${cleared ? recipe.name : '❓'.repeat(recipe.name.length)}</div>`;
+    if (cleared) {
+      h += `<div class="collection-lv">${'⭐'.repeat(recipe.lv)}</div>`;
+      h += `<div class="collection-ings">${recipe.ingredients.map(k => INGREDIENTS[k].emoji).join(' ')}</div>`;
+    } else {
+      h += `<div class="collection-lv" style="opacity:.3;">${'⭐'.repeat(recipe.lv)}</div>`;
+    }
+    h += `</div>`;
+  });
+  h += `</div>`;
   return h;
 }
 

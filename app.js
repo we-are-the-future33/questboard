@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303y';
+const APP_VERSION = '20260304a';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -134,7 +134,7 @@ const RECIPES = [
 
 const MILESTONE_STAGES = [25, 50, 75, 100];
 const STAGE_MESSAGES = [
-  { min:0,   max:24,  msg:'Zzz... 25% 달성해서 나를 깨워줘! 💤' },
+  { min:0,   max:24,  msg:'💤... 25% 달성해서 나를 깨워줘!' },
   { min:25,  max:49,  msg:'앗, 햄스터 출몰! 🐹 이제 기본 재료를 모아줘' },
   { min:50,  max:74,  msg:'야호! 절반 넘었어! 이제 스페셜 재료를 모으자 ✨' },
   { min:75,  max:99,  msg:'좋아, 조금만 더 하면 100% 완벽한 하루야! 🔥' },

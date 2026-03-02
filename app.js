@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304m';
+const APP_VERSION = '20260304n';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -5153,6 +5153,10 @@ function buildKitchenTab(ck, sid, allCleared) {
     h += `<div class="cooking-inv-empty">습관을 달성해서 재료를 모아보세요! 🐹</div>`;
   }
   h += `</div>`; // inv
+  // Collection (completed recipes)
+  const clearedCount = (ck.clearedRecipes || []).length;
+  h += `<div class="cooking-inv-divider">완성한 요리 (${clearedCount}/${RECIPES.length})</div>`;
+  h += buildCollectionTab(ck);
   return h;
 }
 

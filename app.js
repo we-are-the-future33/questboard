@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304k';
+const APP_VERSION = '20260304l';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -5078,7 +5078,9 @@ function buildCookingModalHTML() {
   } else {
     const recipe = RECIPES[sid];
     const lvLabel = ['🟢 Lv.1','🟡 Lv.2','🟠 Lv.3','🔴 Lv.4'][recipe.lv - 1] || '';
-    h += `<div class="cooking-lv">${lvLabel} — ${recipe.emoji} ${recipe.name}</div>`;
+    const preCanCook = recipe.ingredients.every(k => (ck.inventory[k] || 0) >= 1);
+    const displayName = preCanCook ? `${recipe.emoji} ${recipe.name}` : '❓'.repeat(recipe.name.length);
+    h += `<div class="cooking-lv">${lvLabel} — ${displayName}</div>`;
     h += `<div class="cooking-recipe-row">`;
     recipe.ingredients.forEach((key, i) => {
       const ing = INGREDIENTS[key];
@@ -5093,7 +5095,7 @@ function buildCookingModalHTML() {
     h += `<span class="cooking-equals">=</span>`;
     const canCook = recipe.ingredients.every(k => (ck.inventory[k] || 0) >= 1);
     h += `<div class="cooking-result-slot ${canCook ? 'ready' : 'locked'}">`;
-    h += `<span class="cooking-result-emoji">${recipe.emoji}</span>`;
+    h += `<span class="cooking-result-emoji" style="${canCook ? '' : 'filter:blur(6px);opacity:.5;'}">${recipe.emoji}</span>`;
     h += `</div>`;
     h += `</div>`; // recipe-row
     // Cook button
@@ -5115,7 +5117,9 @@ function buildCookingModalHTML() {
     const qty = ck.inventory[k] || 0;
     if (qty > 0) hasAny = true;
     const ing = INGREDIENTS[k];
+    const isSpecial = ing.type === 'special';
     h += `<div class="cooking-inv-item ${qty > 0 ? '' : 'empty'}">`;
+    if (isSpecial && qty > 0) h += `<span class="cooking-inv-special">✨</span>`;
     h += `<span class="cooking-inv-emoji">${ing.emoji}</span>`;
     h += `<span class="cooking-inv-qty">${qty > 0 ? 'x' + qty : '-'}</span>`;
     h += `</div>`;

@@ -1052,3 +1052,15 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
     bottom: -16px;
   }
 }
+
+/* Cooking special ingredient badge */
+.cooking-inv-special {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 10px;
+  line-height: 1;
+}
+.cooking-inv-item {
+  position: relative;
+}

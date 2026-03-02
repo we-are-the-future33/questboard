@@ -689,10 +689,12 @@ window.bulkVisibility = async function(isPublicVal) {
 window.copyPublicLink = async function () {
   if (!currentUser) return;
   const hash = simpleHash(currentUser.id);
-  await set(ref(db, `publicLinks/${hash}`), currentUser.id);
   const url = `${location.origin}${location.pathname.replace(/index\.html$/, '')}public.html?id=${hash}`;
+  // iOS: 클립보드 복사를 await 전에 실행해야 사용자 제스처 컨텍스트 유지
   await copyToClipboard(url);
   showToast('📋 링크가 복사되었어요!', 'done');
+  // Firebase 저장은 백그라운드에서
+  set(ref(db, `publicLinks/${hash}`), currentUser.id).catch(() => {});
 };
 
 // ===== 서비스 정보 =====
@@ -5424,4 +5426,3 @@ function renderCookingFAB() {
     section.appendChild(fab);
   }
 }
-

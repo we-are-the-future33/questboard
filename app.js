@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303r';
+const APP_VERSION = '20260303t';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -3504,6 +3504,8 @@ async function checkFriendActivity() {
       const todayCount = Object.entries(comp).filter(([k, v]) => k.endsWith(todayPrefix) && v === true).length;
       if (todayCount > 0) {
         _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount });
+      } else if (hasHabits) {
+        _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount: 0 });
       }
     }
 
@@ -3511,7 +3513,7 @@ async function checkFriendActivity() {
     const badge = document.getElementById('friendTabBadge');
     const lastSeen = localStorage.getItem('kw_friendNotiDate');
     const today = `${y}-${m}-${d}`;
-    if (_friendActivityCache.length > 0 && lastSeen !== today) {
+    if (_friendActivityCache.some(f => f.todayCount > 0) && lastSeen !== today) {
       if (badge) badge.style.display = '';
     } else {
       if (badge) badge.style.display = 'none';
@@ -4951,7 +4953,8 @@ function renderStageMessage() {
   
   let progHTML = `<div class="progress-overlay"><span class="prog-me">${meLabel}</span>`;
   if (_friendActivityCache.length > 0) {
-    const top = _friendActivityCache[0];
+    const randIdx = Math.floor(Math.random() * _friendActivityCache.length);
+    const top = _friendActivityCache[randIdx];
     const fLabel = top.todayCount > 0 
       ? `${top.emoji} ${top.nick}도 ${top.todayCount}개 완료` 
       : `${top.emoji} ${top.nick} 아직 시작 전`;

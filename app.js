@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303q';
+const APP_VERSION = '20260303r';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4943,10 +4943,19 @@ function renderStageMessage() {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const sm = STAGE_MESSAGES.find(s => pct >= s.min && pct <= s.max) || STAGE_MESSAGES[0];
   // Build progress overlay (me + top friend)
-  let progHTML = `<div class="progress-overlay"><span class="prog-me">🐹 ${pct}%</span>`;
+  let meLabel = `오늘 (${done}/${total})`;
+  if (pct === 0) meLabel += ' 🌙';
+  else if (pct < 50) meLabel += ` ${pct}% 달성 중`;
+  else if (pct < 100) meLabel += ` ${pct}% 달성 중 🔥`;
+  else meLabel += ' 올클리어! 🎉';
+  
+  let progHTML = `<div class="progress-overlay"><span class="prog-me">${meLabel}</span>`;
   if (_friendActivityCache.length > 0) {
     const top = _friendActivityCache[0];
-    progHTML += `<span class="prog-sep">·</span><span class="prog-friend">${top.emoji} ${top.todayCount}개 완료</span>`;
+    const fLabel = top.todayCount > 0 
+      ? `${top.emoji} ${top.nick}도 ${top.todayCount}개 완료` 
+      : `${top.emoji} ${top.nick} 아직 시작 전`;
+    progHTML += `<span class="prog-sep">·</span><span class="prog-friend">${fLabel}</span>`;
   }
   progHTML += `</div>`;
   el.innerHTML = progHTML + `<div class="stage-msg-wrap"><div class="stage-msg">${sm.msg}</div></div>`;

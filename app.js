@@ -1,17 +1,17 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304q';
+const APP_VERSION = '20260304s';
 
 const _safetyTimer = setTimeout(() => {
-  const l = document.getElementById('loadingScreen');
+  const l = $id('loadingScreen');
   if (l && l.classList.contains('active')) { showScreen('loginScreen'); }
 }, 8000);
 
 // 3초 이상 걸리면 메시지 변경
 setTimeout(() => {
-  const msg = document.getElementById('loadingMsg');
-  const l = document.getElementById('loadingScreen');
+  const msg = $id('loadingMsg');
+  const l = $id('loadingScreen');
   if (msg && l && l.classList.contains('active')) { msg.textContent = '서버 연결 중...'; }
 }, 3000);
 
@@ -55,7 +55,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ===== CONSTANTS =====
+// ===== 상수 =====
 const MAX_HABITS = 25;
 const MAX_CHALLENGES = 25;
 const TUT_STEPS = 5;
@@ -81,7 +81,7 @@ function getFriendEmoji(fid) {
   return FRIEND_ANIMALS[Math.abs(hash) % FRIEND_ANIMALS.length];
 }
 
-// ===== STATE =====
+// ===== 상태 =====
 let currentUser = null;
 let localDash = null;
 let activeGoalIdx = null;
@@ -99,7 +99,7 @@ const TIME_LABELS = { any: '🔄 언제나', dawn: '🌅 새벽', morning: '🌤
 const CAT_LABELS = { health: '💪 건강 & 체력', diet: '🥗 식단 & 영양', study: '📚 학습 & 성장', work: '💼 업무 & 커리어', finance: '💰 재무 & 자산', life: '🌱 생활 & 루틴', home: '🧹 집안일 & 정리', hobby: '🎨 취미 & 창작', social: '🤝 관계 & 소셜', mental: '🧘 휴식 & 멘탈', etc: '📦 기타' };
 const TYPE_LABELS = { bucket: '🎯 버킷리스트', project: '📋 프로젝트' };
 
-// ===== COOKING SYSTEM CONSTANTS =====
+// ===== 요리 시스템 상수 =====
 const INGREDIENTS = {
   flour:      { emoji: '🌾', name: '밀가루', type: 'normal' },
   milk:       { emoji: '🥛', name: '우유', type: 'normal' },
@@ -147,7 +147,7 @@ function formatTargetMonth(tm) {
 }
 
 function setHabitMetaTags(g) {
-  const el = document.getElementById('bsMetaTags');
+  const el = $id('bsMetaTags');
   if (!el) return;
   const unitLbl = getUnitLabel(g);
   const timeLbl = TIME_LABELS[g.time || 'any'] || '🔄 언제나';
@@ -157,7 +157,7 @@ function setHabitMetaTags(g) {
   el.innerHTML = html;
 }
 function setChallengeMetaTags(c) {
-  const el = document.getElementById('bsMetaTags');
+  const el = $id('bsMetaTags');
   if (!el) return;
   const typeLbl = TYPE_LABELS[c.type || 'bucket'] || '🎯 버킷리스트';
   const catLbl = CAT_LABELS[c.category || 'etc'] || '📦 기타';
@@ -167,18 +167,53 @@ function setChallengeMetaTags(c) {
   el.innerHTML = html;
 }
 function clearMetaTags() {
-  const el = document.getElementById('bsMetaTags');
+  const el = $id('bsMetaTags');
   if (el) el.innerHTML = '';
 }
 function groupLabel(label) {
-  // Split emoji prefix from text: "💪 건강 & 체력" → <span emoji>💪</span> 건강 & 체력
   const m = label.match(/^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F?)\s*/u);
   if (m) return `<span class="group-header-emoji">${m[1]}</span>${label.slice(m[0].length)}`;
   return label;
 }
+// 그룹별 아코디언 렌더링 공통 헬퍼
+function renderGroupedGrid(groups, prefix, labels, renderItem) {
+  let html = '', gIdx = 0;
+  Object.keys(groups).forEach(key => {
+    if (groups[key].length === 0) return;
+    const label = labels[key] || key;
+    html += `<div class="group-header" onclick="toggleGroupAccordion('${prefix}_${gIdx}')">
+      <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
+      <div class="group-toggle-icon" id="${prefix}i_${gIdx}">▼</div>
+    </div><div class="card-grid" id="${prefix}_${gIdx}">`;
+    groups[key].forEach(item => { html += renderItem(item); });
+    html += `</div>`;
+    gIdx++;
+  });
+  return html;
+}
 let currentSubTab = 'habit';
 
-// ===== UTILITIES =====
+// ===== DOM 헬퍼 =====
+const $id = (id) => document.getElementById(id);
+const $html = (id, html) => { const el = $id(id); if (el) el.innerHTML = html; return el; };
+const $text = (id, txt) => { const el = $id(id); if (el) el.textContent = txt; return el; };
+const $show = (id) => { const el = $id(id); if (el) el.style.display = ''; return el; };
+const $hide = (id) => { const el = $id(id); if (el) el.style.display = 'none'; return el; };
+const $toggle = (id, cls, force) => { const el = $id(id); if (el) el.classList.toggle(cls, force); return el; };
+
+// 클립보드 복사 헬퍼
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    return true;
+  }
+}
+
+// ===== 유틸리티 =====
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
 function isPublic(item) { return item.public !== false; }
 function migrateGoal(g) { if (!g) return g; if (LEGACY_MAP[g.unit]) return Object.assign({}, g, LEGACY_MAP[g.unit]); return g; }
@@ -240,7 +275,7 @@ function getAllGoals() {
   return g;
 }
 
-// ===== STREAK =====
+// ===== 연속 달성 =====
 function calcStreak(g, gi) {
   if (!g || !g.unit || g.unit === 'once') return 0;
   g = migrateGoal(g);
@@ -311,14 +346,14 @@ function isGoalActiveThisWeek(g, gi) {
   return true;
 }
 
-// ===== SCREENS =====
+// ===== 화면 전환 =====
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  $id(id).classList.add('active');
   window.scrollTo(0, 0);
 }
 
-// ===== DB =====
+// ===== 데이터베이스 =====
 async function loadDash() {
   const snap = await get(ref(db, `dashboards/${currentUser.id}`));
   localDash = snap.exists() ? snap.val() : {};
@@ -341,7 +376,7 @@ async function loadDash() {
 }
 async function saveDash() { localDash.lastUpdate = new Date().toISOString(); await set(ref(db, `dashboards/${currentUser.id}`), localDash); }
 
-// ===== INIT =====
+// ===== 초기화 =====
 async function init() {
   const saved = JSON.parse(localStorage.getItem('qb_login') || 'null');
   if (saved && saved.id && saved.pw) {
@@ -350,7 +385,7 @@ async function init() {
       const snap = await Promise.race([get(ref(db, `users/${saved.id}`)), new Promise((_, r) => setTimeout(() => r('timeout'), 5000))]);
       if (snap.exists() && snap.val().password === saved.pw) {
         const u = snap.val(); currentUser = { id: saved.id, ...u };
-        document.getElementById('navUserName').textContent = u.name;
+        $id('navUserName').textContent = u.name;
         if (u.role === 'admin') { clearTimeout(_safetyTimer); showScreen('adminScreen'); renderAdminList(); return; }
         await loadDash();
         activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(saved.id); renderDashboard();
@@ -359,7 +394,7 @@ async function init() {
     } catch (e) {}
   }
   clearTimeout(_safetyTimer);
-  if (saved) { document.getElementById('loginId').value = saved.id || ''; document.getElementById('loginPw').value = saved.pw || ''; document.getElementById('saveLoginChk').checked = true; }
+  if (saved) { $id('loginId').value = saved.id || ''; $id('loginPw').value = saved.pw || ''; $id('saveLoginChk').checked = true; }
   showScreen('loginScreen');
 }
 init();
@@ -368,25 +403,25 @@ async function setupDashTabs(uid) {
   const snap = await get(ref(db, 'groups'));
   let has = false;
   if (snap.exists()) has = Object.values(snap.val()).some(g => g.members && Object.values(g.members).includes(uid));
-  document.getElementById('dashTabBar').style.display = has ? 'flex' : 'none';
+  $id('dashTabBar').style.display = has ? 'flex' : 'none';
 }
 
-// ===== LOGIN =====
+// ===== 로그인 =====
 window.doLogin = async function () {
-  const id = document.getElementById('loginId').value.trim(), pw = document.getElementById('loginPw').value;
-  const btn = document.getElementById('loginBtn'), saveChk = document.getElementById('saveLoginChk').checked;
+  const id = $id('loginId').value.trim(), pw = $id('loginPw').value;
+  const btn = $id('loginBtn'), saveChk = $id('saveLoginChk').checked;
   if (!id || !pw) return; btn.disabled = true; btn.textContent = '확인 중...';
   try {
     const snap = await get(ref(db, `users/${id}`));
-    if (!snap.exists() || snap.val().password !== pw) { document.getElementById('loginError').style.display = 'block'; }
+    if (!snap.exists() || snap.val().password !== pw) { $id('loginError').style.display = 'block'; }
     else {
-      document.getElementById('loginError').style.display = 'none';
+      $id('loginError').style.display = 'none';
       if (saveChk) localStorage.setItem('qb_login', JSON.stringify({ id, pw })); else localStorage.removeItem('qb_login');
       const u = snap.val(); currentUser = { id, ...u };
       await set(ref(db, `users/${id}/lastLogin`), new Date().toISOString());
       if (u.role === 'admin') { showScreen('adminScreen'); renderAdminList(); }
       else {
-        document.getElementById('navUserName').textContent = u.name;
+        $id('navUserName').textContent = u.name;
         await loadDash();
         activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(id); renderDashboard();
       }
@@ -394,24 +429,24 @@ window.doLogin = async function () {
   } catch (e) { showToast('❌ 연결 오류'); }
   btn.disabled = false; btn.textContent = '로그인';
 };
-['loginId', 'loginPw'].forEach(id => { document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') window.doLogin(); }); });
+['loginId', 'loginPw'].forEach(id => { $id(id).addEventListener('keydown', e => { if (e.key === 'Enter') window.doLogin(); }); });
 
 window.doLogout = function () {
   currentUser = null; localDash = null; activeGoalIdx = null;
-  document.getElementById('loginId').value = ''; document.getElementById('loginPw').value = '';
-  if (!document.getElementById('saveLoginChk').checked) localStorage.removeItem('qb_login');
+  $id('loginId').value = ''; $id('loginPw').value = '';
+  if (!$id('saveLoginChk').checked) localStorage.removeItem('qb_login');
   showScreen('loginScreen');
 };
 
-// ===== HAMBURGER MENU =====
+// ===== 햄버거 메뉴 =====
 window.toggleHamburger = function () {
-  const menu = document.getElementById('hamburgerMenu');
+  const menu = $id('hamburgerMenu');
   menu.classList.toggle('open');
 };
 document.addEventListener('click', function(e) {
   const wrap = document.querySelector('.hamburger-wrap');
   if (wrap && !wrap.contains(e.target)) {
-    document.getElementById('hamburgerMenu')?.classList.remove('open');
+    $id('hamburgerMenu')?.classList.remove('open');
   }
 });
 
@@ -491,7 +526,7 @@ ${summary}
 }
 
 window.openAboutMe = function () {
-  document.getElementById('bsTitle').textContent = '🔍 나 알아보기';
+  $text('bsTitle', '🔍 나 알아보기');
   clearMetaTags();
   const summary = summarizeMyData();
   // Count stats
@@ -522,26 +557,19 @@ window.openAboutMe = function () {
   </div>`;
   h += `<div style="font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:12px;line-height:1.5;">아래 버튼을 누르면 분석 프롬프트가 클립보드에 복사됩니다.<br>ChatGPT에 붙여넣기하세요!</div>`;
   h += `<button class="unit-confirm-btn" id="copyPromptBtn" onclick="copyAnalysisPrompt()">📋 프롬프트 복사하기</button>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   openBS();
 };
 
 window.copyAnalysisPrompt = async function () {
   const prompt = buildAnalysisPrompt();
-  try {
-    await navigator.clipboard.writeText(prompt);
-    showToast('📋 클립보드에 복사됨! ChatGPT에 붙여넣기하세요', 'done');
-    const btn = document.getElementById('copyPromptBtn');
-    if (btn) { btn.textContent = '✅ 복사 완료!'; btn.style.background = '#10b981'; setTimeout(() => { btn.textContent = '📋 프롬프트 복사하기'; btn.style.background = ''; }, 2000); }
-  } catch (e) {
-    // fallback
-    const ta = document.createElement('textarea');
-    ta.value = prompt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    showToast('📋 복사 완료!', 'done');
-  }
+  await copyToClipboard(prompt);
+  showToast('📋 클립보드에 복사됨! ChatGPT에 붙여넣기하세요', 'done');
+  const btn = $id('copyPromptBtn');
+  if (btn) { btn.textContent = '✅ 복사 완료!'; btn.style.background = '#10b981'; setTimeout(() => { btn.textContent = '📋 프롬프트 복사하기'; btn.style.background = ''; }, 2000); }
 };
 
-// ===== SETTINGS =====
+// ===== 설정 =====
 const FONT_SIZES = [
   { label: '아주 작게', scale: 0.85 },
   { label: '작게', scale: 0.92 },
@@ -567,7 +595,7 @@ function initFontSize() {
 initFontSize();
 
 window.openSettings = function () {
-  document.getElementById('bsTitle').textContent = '⚙️ 설정';
+  $text('bsTitle', '⚙️ 설정');
   clearMetaTags();
   const curLevel = parseInt(localStorage.getItem('qb_font_level') ?? '2');
   let h = `<div style="padding:8px 0;">`;
@@ -595,7 +623,7 @@ window.openSettings = function () {
   h += `<button onclick="bulkVisibility(true)" style="flex:1;padding:10px;background:#f0f9ff;color:#2563eb;border:1.5px solid #bfdbfe;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;">🔓 전체 공개</button>`;
   h += `<button onclick="bulkVisibility(false)" style="flex:1;padding:10px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;">🔒 전체 비공개</button>`;
   h += `</div></div>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   openBS();
 };
 
@@ -604,7 +632,7 @@ window.setFontLevel = function (level) {
   document.querySelectorAll('.font-size-btn').forEach((btn, i) => {
     btn.classList.toggle('selected', i === level);
   });
-  document.getElementById('fontLevelLabel').textContent = FONT_SIZES[level].label;
+  $id('fontLevelLabel').textContent = FONT_SIZES[level].label;
   showToast(`글씨 크기: ${FONT_SIZES[level].label}`, 'normal');
 };
 
@@ -630,20 +658,15 @@ window.bulkVisibility = async function(isPublicVal) {
 window.copyPublicLink = async function () {
   if (!currentUser) return;
   const hash = simpleHash(currentUser.id);
-  // Save hash→id mapping in Firebase so public.html can resolve it
   await set(ref(db, `publicLinks/${hash}`), currentUser.id);
   const url = `${location.origin}${location.pathname.replace(/index\.html$/, '')}public.html?id=${hash}`;
-  try {
-    await navigator.clipboard.writeText(url);
-    showToast('📋 링크가 복사되었어요!', 'done');
-  } catch (e) {
-    prompt('링크를 복사하세요:', url);
-  }
+  await copyToClipboard(url);
+  showToast('📋 링크가 복사되었어요!', 'done');
 };
 
-// ===== SERVICE INFO =====
+// ===== 서비스 정보 =====
 window.openServiceInfo = function () {
-  document.getElementById('bsTitle').textContent = '📦 서비스 정보';
+  $text('bsTitle', '📦 서비스 정보');
   clearMetaTags();
   let h = `<div style="text-align:center;padding:24px 0 16px;">
     <div style="font-size:48px;margin-bottom:8px;">🐹</div>
@@ -664,12 +687,12 @@ window.openServiceInfo = function () {
       <span style="font-size:13px;font-weight:700;color:var(--text);">Jin</span>
     </div>
   </div>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   openBS();
 };
 
 window.openWatchGuide = function () {
-  document.getElementById('bsTitle').textContent = '⌚ 워치 데이터 연동';
+  $text('bsTitle', '⌚ 워치 데이터 연동');
   clearMetaTags();
   const uid = currentUser?.id || '(로그인 필요)';
   const goals = getAllGoals();
@@ -700,15 +723,15 @@ window.openWatchGuide = function () {
   h += infoBox;
   h += `<div id="watchTabContent"></div>`;
 
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   openBS();
   switchWatchTab('android');
 };
 
 window.switchWatchTab = function (tab) {
-  document.getElementById('watchTabAnd').classList.toggle('active', tab === 'android');
-  document.getElementById('watchTabIos').classList.toggle('active', tab === 'ios');
-  const area = document.getElementById('watchTabContent');
+  $id('watchTabAnd').classList.toggle('active', tab === 'android');
+  $id('watchTabIos').classList.toggle('active', tab === 'ios');
+  const area = $id('watchTabContent');
   const uid = currentUser?.id || '(로그인 필요)';
   const baseUrl = `https://grow-goal-default-rtdb.firebaseio.com/dashboards/${uid}/completions/`;
 
@@ -851,24 +874,17 @@ window.switchWatchTab = function (tab) {
 };
 
 window.copyWatchText = async function (elId) {
-  const el = document.getElementById(elId);
+  const el = $id(elId);
   if (!el) return;
-  const text = el.textContent.trim();
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast('📋 복사됨!', 'done');
-  } catch (e) {
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    showToast('📋 복사됨!', 'done');
-  }
+  await copyToClipboard(el.textContent.trim());
+  showToast('📋 복사됨!', 'done');
 };
 
-// ===== SHARE CARD =====
+// ===== 공유 카드 =====
 const CAT_EMOJI = { health:'💪', diet:'🥗', study:'📚', work:'💼', finance:'💰', life:'🌱', home:'🧹', hobby:'🎨', social:'🤝', mental:'🧘', etc:'📦' };
 
 window.openShareCard = function () {
-  document.getElementById('bsTitle').textContent = '📤 공유하기';
+  $text('bsTitle', '📤 공유하기');
   clearMetaTags();
   let h = `<div style="display:flex;flex-direction:column;gap:10px;">
     <button class="share-menu-btn" onclick="openShareHabit()">
@@ -884,13 +900,13 @@ window.openShareCard = function () {
       <div><div style="font-size:13px;font-weight:800;">월간 리포트</div><div style="font-size:11px;color:var(--text-dim);">이번 달 요약</div></div>
     </button>
   </div>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   openBS();
 };
 
 // --- Share: Habit Card ---
 window.openShareHabit = function () {
-  document.getElementById('bsTitle').textContent = '🔥 습관 카드';
+  $text('bsTitle', '🔥 습관 카드');
   clearMetaTags();
   const goals = getAllGoals();
   let h = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">공유할 습관을 선택하세요</div>`;
@@ -905,7 +921,7 @@ window.openShareHabit = function () {
     </button>`;
   });
   h += `</div>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
 };
 
 window.generateHabitCard = function (idx) {
@@ -955,7 +971,7 @@ window.generateHabitCard = function (idx) {
 
 // --- Share: Stamp Card ---
 window.openShareStamp = function () {
-  document.getElementById('bsTitle').textContent = '🏆 도전 스탬프';
+  $text('bsTitle', '🏆 도전 스탬프');
   clearMetaTags();
   let h = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">카드 크기를 선택하세요</div>`;
   h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -964,7 +980,7 @@ window.openShareStamp = function () {
     <button class="share-menu-btn" style="justify-content:center;" onclick="generateStampCard(5)"><div style="font-size:13px;font-weight:700;">5×5</div><div style="font-size:11px;color:var(--text-dim);">최대 25개</div></button>
     <button class="share-menu-btn" style="justify-content:center;" onclick="generateStampCard(0)"><div style="font-size:13px;font-weight:700;">전체</div><div style="font-size:11px;color:var(--text-dim);">모두 표시</div></button>
   </div>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
 };
 
 window.generateStampCard = function (cols) {
@@ -1119,18 +1135,18 @@ window.openShareReport = function () {
 
 // --- Share Preview + Export ---
 function showSharePreview(cardHtml) {
-  document.getElementById('bsTitle').textContent = '📤 미리보기';
+  $text('bsTitle', '📤 미리보기');
   clearMetaTags();
   let h = `<div style="display:flex;justify-content:center;margin-bottom:16px;">${cardHtml}</div>`;
   h += `<div style="display:flex;gap:8px;">
     <button class="share-export-btn" onclick="exportShareCard('save')">💾 이미지 저장</button>
     <button class="share-export-btn primary" onclick="exportShareCard('share')">📤 공유하기</button>
   </div>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
 }
 
 window.exportShareCard = async function (mode) {
-  const el = document.getElementById('shareCardPreview');
+  const el = $id('shareCardPreview');
   if (!el) return;
   try {
     const canvas = await html2canvas(el, { scale: 2, backgroundColor: null, useCORS: true });
@@ -1161,40 +1177,40 @@ function downloadBlob(blob) {
   showToast('💾 이미지 저장됨', 'done');
 }
 
-// ===== TAB =====
+// ===== 탭 =====
 window.switchTab = function (tab) {
-  document.getElementById('tabBtnMy').classList.toggle('active', tab === 'my');
-  document.getElementById('tabBtnFriends').classList.toggle('active', tab === 'friends');
-  document.getElementById('tabMy').classList.toggle('active', tab === 'my');
-  document.getElementById('tabFriends').classList.toggle('active', tab === 'friends');
+  $id('tabBtnMy').classList.toggle('active', tab === 'my');
+  $id('tabBtnFriends').classList.toggle('active', tab === 'friends');
+  $id('tabMy').classList.toggle('active', tab === 'my');
+  $id('tabFriends').classList.toggle('active', tab === 'friends');
   if (tab === 'friends') renderFriends();
 };
 
 // ===== SCROLL SNAP (avatar ↔ sub-tab zone) =====
 // Scroll snap removed — free scroll with sticky tab bars
 
-// ===== DASHBOARD =====
+// ===== 대시보드 =====
 function renderDashboard() {
   const now = new Date();
   if (!viewMonth) viewMonth = { year: now.getFullYear(), month: now.getMonth() + 1 };
   // localStorage 저장값 UI 반영
-  const hSelect = document.getElementById('habitViewModeSelect');
+  const hSelect = $id('habitViewModeSelect');
   if (hSelect) hSelect.value = habitViewMode;
-  const cSelect = document.getElementById('challengeViewModeSelect');
+  const cSelect = $id('challengeViewModeSelect');
   if (cSelect) cSelect.value = challengeViewMode;
-  const hPill = document.getElementById('habitFilterPill');
+  const hPill = $id('habitFilterPill');
   if (hPill) { hPill.classList.toggle('active-filter', habitFilter === 'active'); hPill.innerHTML = (habitFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
-  const cPill = document.getElementById('challengeFilterPill');
+  const cPill = $id('challengeFilterPill');
   if (cPill) { cPill.classList.toggle('active-filter', challengeFilter === 'active'); cPill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
   renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers(); checkFriendActivity(); renderCookingFAB(); renderMilestoneBar();
   // jin 전용 어드민 메뉴
-  const adminEl = document.getElementById('adminMenuItem');
+  const adminEl = $id('adminMenuItem');
   if (adminEl) adminEl.style.display = (currentUser && currentUser.id === 'jin') ? '' : 'none';
 }
 
 function renderAvatar() {
   const p = globalPct(), stage = Math.min(9, Math.floor(p / 10));
-  const artEl = document.getElementById('avatarArt');
+  const artEl = $id('avatarArt');
   const { total, done } = getMyTodayProgress();
   const todayPct = total > 0 ? Math.round((done / total) * 100) : 0;
   const showHouse = todayPct < 25;
@@ -1213,9 +1229,9 @@ function renderAvatar() {
       initHamsterAvatar(artEl);
     }
   }
-  document.getElementById('avatarStage').textContent = `${stage + 1}단계`;
+  $id('avatarStage').textContent = `${stage + 1}단계`;
   const nick = localDash.nickname || currentUser.name || '나의 캐릭터';
-  document.getElementById('avatarNickname').textContent = nick;
+  $id('avatarNickname').textContent = nick;
   applyTimeBackground();
 }
 
@@ -1304,25 +1320,25 @@ function applyTimeBackground() {
   // 닉네임/단계 색상
   const nickEl = document.querySelector('.avatar-nickname');
   if (nickEl) nickEl.style.color = nickColor;
-  const stageEl = document.getElementById('avatarStage');
+  const stageEl = $id('avatarStage');
   if (stageEl) { stageEl.style.color = stageColor; stageEl.style.background = stageBg; }
   // 어두운 배경 여부 토글
   const isDark = (h >= 0 && h < 9) || h >= 17;
   section.classList.toggle('dark-bg', isDark);
 }
 
-// ===== SUB TAB =====
+// ===== 서브탭 =====
 window.switchSubTab = function (tab) {
   currentSubTab = tab;
-  document.getElementById('subTabHabit').classList.toggle('active', tab === 'habit');
-  document.getElementById('subTabChallenge').classList.toggle('active', tab === 'challenge');
-  document.getElementById('panelHabit').classList.toggle('active', tab === 'habit');
-  document.getElementById('panelChallenge').classList.toggle('active', tab === 'challenge');
+  $id('subTabHabit').classList.toggle('active', tab === 'habit');
+  $id('subTabChallenge').classList.toggle('active', tab === 'challenge');
+  $id('panelHabit').classList.toggle('active', tab === 'habit');
+  $id('panelChallenge').classList.toggle('active', tab === 'challenge');
   // Scroll so "나의 투두" header is visible right below sticky sub-tab-bar
   requestAnimationFrame(() => {
     const scroll = document.querySelector('.dash-scroll');
     const subBar = document.querySelector('.sub-tab-bar');
-    const panel = document.getElementById(tab === 'habit' ? 'panelHabit' : 'panelChallenge');
+    const panel = $id(tab === 'habit' ? 'panelHabit' : 'panelChallenge');
     if (!scroll || !subBar || !panel) return;
     const sectionHdr = panel.querySelector('.section-hdr');
     if (!sectionHdr) return;
@@ -1336,11 +1352,11 @@ window.switchSubTab = function (tab) {
   });
 };
 
-// ===== HABIT FILTER =====
+// ===== 습관 필터 =====
 window.toggleHabitFilter = function () {
   habitFilter = habitFilter === 'all' ? 'active' : 'all';
   localStorage.setItem('kw_habitFilter', habitFilter);
-  const pill = document.getElementById('habitFilterPill');
+  const pill = $id('habitFilterPill');
   pill.classList.toggle('active-filter', habitFilter === 'active');
   pill.innerHTML = (habitFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>';
   renderHabitCards();
@@ -1348,13 +1364,13 @@ window.toggleHabitFilter = function () {
 window.toggleChallengeFilter = function () {
   challengeFilter = challengeFilter === 'all' ? 'active' : 'all';
   localStorage.setItem('kw_challengeFilter', challengeFilter);
-  const pill = document.getElementById('challengeFilterPill');
+  const pill = $id('challengeFilterPill');
   pill.classList.toggle('active-filter', challengeFilter === 'active');
   pill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>';
   renderChallengeCards();
 };
 
-// ===== HABIT CARDS (2-col grid, grouped) =====
+// ===== 습관 카드 (2열 그리드) =====
 window.changeViewMode = function(mode) {
   habitViewMode = mode;
   localStorage.setItem('kw_habitViewMode', mode);
@@ -1362,9 +1378,9 @@ window.changeViewMode = function(mode) {
 };
 
 window.toggleGroupAccordion = function(id) {
-  const grid = document.getElementById(id);
+  const grid = $id(id);
   const iconId = id.replace(/^(hg_|cg_)/, (m) => m === 'hg_' ? 'hgi_' : 'cgi_');
-  const icon = document.getElementById(iconId);
+  const icon = $id(iconId);
   if (!grid || !icon) return;
   if (grid.classList.contains('hidden')) {
     grid.classList.remove('hidden');
@@ -1436,7 +1452,7 @@ function sortHabitItems(items, y, m) {
 function renderHabitCards() {
   const goalsObj = localDash.goals || {};
   const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
-  const wrapper = document.getElementById('habitListWrapper');
+  const wrapper = $id('habitListWrapper');
 
   let valid = [];
   // Object.keys로 안전 순회 (Firebase 객체/배열 모두 대응)
@@ -1447,44 +1463,23 @@ function renderHabitCards() {
   });
 
   let filtered = habitFilter === 'active' ? valid.filter(({ g, idx }) => isGoalActiveThisWeek(g, idx)) : valid;
-  document.getElementById('habitCount').textContent = valid.length;
+  $id('habitCount').textContent = valid.length;
 
   // 정렬
   filtered = sortHabitItems(filtered, y, m);
 
   let html = '';
 
+  const hCardRender = ({ g, idx }) => generateHabitCardHtml(g, idx, y, m);
   if (habitViewMode === 'time') {
     const groups = { dawn: [], morning: [], midday: [], afternoon: [], evening: [], night: [], any: [] };
-    filtered.forEach(v => { const t = v.g.time || 'any'; if (groups[t]) groups[t].push(v); else groups['any'].push(v); });
-    let gIdx = 0;
-    Object.keys(groups).forEach(key => {
-      if (groups[key].length === 0) return;
-      const label = TIME_LABELS[key] || key;
-      html += `<div class="group-header" onclick="toggleGroupAccordion('hg_${gIdx}')">
-        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
-        <div class="group-toggle-icon" id="hgi_${gIdx}">▼</div>
-      </div><div class="card-grid" id="hg_${gIdx}">`;
-      groups[key].forEach(({ g, idx }) => { html += generateHabitCardHtml(g, idx, y, m); });
-      html += `</div>`;
-      gIdx++;
-    });
+    filtered.forEach(v => { const t = v.g.time || 'any'; (groups[t] || groups['any']).push(v); });
+    html += renderGroupedGrid(groups, 'hg', TIME_LABELS, hCardRender);
   } else if (habitViewMode === 'category') {
     const groups = {};
     Object.keys(CAT_LABELS).forEach(k => { groups[k] = []; });
-    filtered.forEach(v => { const c = v.g.category || 'etc'; if (groups[c]) groups[c].push(v); else groups['etc'].push(v); });
-    let gIdx = 0;
-    Object.keys(groups).forEach(key => {
-      if (groups[key].length === 0) return;
-      const label = CAT_LABELS[key] || key;
-      html += `<div class="group-header" onclick="toggleGroupAccordion('hg_${gIdx}')">
-        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
-        <div class="group-toggle-icon" id="hgi_${gIdx}">▼</div>
-      </div><div class="card-grid" id="hg_${gIdx}">`;
-      groups[key].forEach(({ g, idx }) => { html += generateHabitCardHtml(g, idx, y, m); });
-      html += `</div>`;
-      gIdx++;
-    });
+    filtered.forEach(v => { (groups[v.g.category || 'etc'] || groups['etc']).push(v); });
+    html += renderGroupedGrid(groups, 'hg', CAT_LABELS, hCardRender);
   } else {
     // 기본 보기
     html += `<div class="card-grid">`;
@@ -1499,20 +1494,20 @@ function renderHabitCards() {
   }
 
   wrapper.innerHTML = html;
-  document.getElementById('habitSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
+  $id('habitSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
   // Staggered entrance
   filtered.forEach(({ idx }, i) => {
-    const outer = document.getElementById(`hcOuter_${idx}`);
+    const outer = $id(`hcOuter_${idx}`);
     if (outer) outer.style.animationDelay = `${i * 0.06}s`;
     initHabitSwipe(idx);
   });
 }
 
-// ===== HABIT SWIPE (touch only, bidirectional) =====
+// ===== 습관 스와이프 =====
 const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
 function initHabitSwipe(idx) {
-  const card = document.getElementById(`hc_${idx}`);
+  const card = $id(`hc_${idx}`);
   if (!card) return;
 
   // PC: 클릭만 (바텀시트 열기)
@@ -1525,7 +1520,7 @@ function initHabitSwipe(idx) {
   // Mobile touch swipe
   let sx = 0, sy = 0, dx = 0, swiping = false, locked = false, touchStartTime = 0, totalMove = 0;
   const TH = 60;
-  const outer = document.getElementById(`hcOuter_${idx}`);
+  const outer = $id(`hcOuter_${idx}`);
 
   function onS(e) {
     const t = e.touches[0];
@@ -1598,7 +1593,7 @@ async function habitMarkDone(idx) {
   showToast('🎉 완료!', 'done'); showConfettiSmall();
   if (!isOnce) checkWeekClear(idx);
   renderHabitCards(); renderAvatar();
-  saveDash();
+  await saveDash();
   checkMilestone();
   renderMilestoneBar();
 }
@@ -1613,12 +1608,12 @@ async function habitMarkUndo(idx) {
   showToast('↩️ 취소', 'undo');
   renderHabitCards(); renderAvatar();
   checkMilestoneUndo();
-  saveDash();
+  await saveDash();
   renderStageMessage();
   renderMilestoneBar();
 }
 
-// ===== CHALLENGE CARDS (2-col grid) =====
+// ===== 도전 카드 (2열 그리드) =====
 window.changeChallengeViewMode = function(mode) { challengeViewMode = mode; localStorage.setItem('kw_challengeViewMode', mode); renderChallengeCards(); };
 
 function generateChallengeCardHtml(c, idx) {
@@ -1663,7 +1658,7 @@ function generateChallengeCardHtml(c, idx) {
 
 function renderChallengeCards() {
   const challengesObj = localDash.challenges || {};
-  const wrapper = document.getElementById('challengeListWrapper');
+  const wrapper = $id('challengeListWrapper');
   let valid = [];
   Object.keys(challengesObj).forEach(key => {
     const idx = parseInt(key);
@@ -1672,58 +1667,34 @@ function renderChallengeCards() {
   });
   let filtered = valid;
   if (challengeFilter === 'active') filtered = valid.filter(({ c }) => !isChallengeComplete(c));
-  document.getElementById('challengeCount').textContent = valid.length;
+  $id('challengeCount').textContent = valid.length;
 
   let html = '';
 
+  const cCardRender = ({ c, idx }) => generateChallengeCardHtml(c, idx);
   if (challengeViewMode === 'type') {
     const groups = { bucket: [], project: [] };
-    filtered.forEach(v => { const t = v.c.type || 'bucket'; if (groups[t]) groups[t].push(v); else groups['bucket'].push(v); });
-    let gIdx = 0;
-    Object.keys(groups).forEach(key => {
-      if (groups[key].length === 0) return;
-      const label = TYPE_LABELS[key] || key;
-      html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
-        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
-        <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
-      </div><div class="card-grid" id="cg_${gIdx}">`;
-      groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
-      html += `</div>`;
-      gIdx++;
-    });
+    filtered.forEach(v => { (groups[v.c.type || 'bucket'] || groups['bucket']).push(v); });
+    html += renderGroupedGrid(groups, 'cg', TYPE_LABELS, cCardRender);
   } else if (challengeViewMode === 'category') {
     const groups = {};
     Object.keys(CAT_LABELS).forEach(k => { groups[k] = []; });
-    filtered.forEach(v => { const cat = v.c.category || 'etc'; if (groups[cat]) groups[cat].push(v); else groups['etc'].push(v); });
-    let gIdx = 0;
-    Object.keys(groups).forEach(key => {
-      if (groups[key].length === 0) return;
-      const label = CAT_LABELS[key] || key;
-      html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
-        <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
-        <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
-      </div><div class="card-grid" id="cg_${gIdx}">`;
-      groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
-      html += `</div>`;
-      gIdx++;
-    });
+    filtered.forEach(v => { (groups[v.c.category || 'etc'] || groups['etc']).push(v); });
+    html += renderGroupedGrid(groups, 'cg', CAT_LABELS, cCardRender);
   } else if (challengeViewMode === 'month') {
     const groups = {};
     filtered.forEach(v => { const tm = v.c.targetMonth || 'someday'; if (!groups[tm]) groups[tm] = []; groups[tm].push(v); });
-    const keys = Object.keys(groups).sort((a, b) => {
-      if (a === 'someday') return 1;
-      if (b === 'someday') return -1;
-      return a.localeCompare(b);
-    });
+    const sortedKeys = Object.keys(groups).sort((a, b) => a === 'someday' ? 1 : b === 'someday' ? -1 : a.localeCompare(b));
+    // 월별은 동적 라벨이므로 직접 렌더링
     let gIdx = 0;
-    keys.forEach(key => {
+    sortedKeys.forEach(key => {
       if (groups[key].length === 0) return;
       const label = formatTargetMonth(key);
       html += `<div class="group-header" onclick="toggleGroupAccordion('cg_${gIdx}')">
         <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
         <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
       </div><div class="card-grid" id="cg_${gIdx}">`;
-      groups[key].forEach(({ c, idx }) => { html += generateChallengeCardHtml(c, idx); });
+      groups[key].forEach(cCardRender);
       html += `</div>`;
       gIdx++;
     });
@@ -1739,7 +1710,7 @@ function renderChallengeCards() {
   }
 
   wrapper.innerHTML = html;
-  document.getElementById('challengeSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
+  $id('challengeSwipeHint').style.display = filtered.length > 0 ? 'block' : 'none';
   // Init swipe + staggered entrance for ALL bucket cards
   wrapper.querySelectorAll('.challenge-card.type-bucket').forEach((el, i) => {
     const idx = parseInt(el.dataset.idx);
@@ -1764,9 +1735,9 @@ function getProjectProgress(c) {
   return { done, total, pct: total > 0 ? Math.round(done / total * 100) : 0 };
 }
 
-// ===== BUCKET SWIPE =====
+// ===== 버킷 스와이프 =====
 function initBucketSwipe(idx) {
-  const card = document.getElementById(`cc_${idx}`);
+  const card = $id(`cc_${idx}`);
   if (!card) return;
 
   // PC: click opens bucket detail
@@ -1813,14 +1784,14 @@ async function swipeBucket(idx) {
   if (!wasDone) { triggerHaptic('heavy'); showToast('🎉 버킷리스트 달성!', 'done'); showConfetti(); }
   else { triggerHaptic('light'); showToast('↩️ 취소', 'undo'); }
   renderChallengeCards();
-  saveDash();
+  await saveDash();
 }
 
-// ===== BUCKET DETAIL (bottom sheet) =====
+// ===== 버킷 상세 =====
 window.openBucketDetail = function (idx) {
   const c = localDash.challenges[idx];
   if (!c) return;
-  document.getElementById('bsTitle').textContent = c.title;
+  $text('bsTitle', c.title);
   setChallengeMetaTags(c);
   const done = c.done === true;
   let h = `<div style="text-align:center;padding:30px 0;">
@@ -1830,14 +1801,14 @@ window.openBucketDetail = function (idx) {
   </div>`;
   h += `<button class="proj-edit-btn" onclick="openBucketEdit(${idx})">✏️ 수정</button>`;
   h += `<button class="proj-edit-btn" style="color:var(--danger);border-color:var(--danger);margin-top:8px;" onclick="deleteChallenge(${idx})">🗑 삭제</button>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   openBS();
 };
 
 window.openBucketEdit = function (idx) {
   const c = localDash.challenges[idx];
   if (!c) return;
-  document.getElementById('bsTitle').textContent = '버킷리스트 수정';
+  $text('bsTitle', '버킷리스트 수정');
   clearMetaTags();
   _bucketEditCat = c.category || 'etc';
   _bucketEditMonth = c.targetMonth || 'someday';
@@ -1858,8 +1829,8 @@ window.openBucketEdit = function (idx) {
     <label class="toggle-switch"><input type="checkbox" id="editBucketPrivate" ${bEditPriv ? 'checked' : ''}><span class="toggle-slider"></span></label>
   </div>`;
   h += `<div class="proj-save-row" style="margin-top:24px;"><button class="proj-save-btn cancel" onclick="openBucketDetail(${idx})">취소</button><button class="proj-save-btn save" onclick="saveBucketEdit(${idx})">저장</button></div>`;
-  document.getElementById('bsBody').innerHTML = h;
-  setTimeout(() => document.getElementById('editBucketName')?.focus(), 200);
+  $html('bsBody', h);
+  setTimeout(() => $id('editBucketName')?.focus(), 200);
 };
 
 let _bucketEditCat = 'etc';
@@ -1887,13 +1858,13 @@ function getEditMonthChipsHTML(selectedMonth, prefix) {
 
 window.selectEditMonth_bucket = function(m) {
   _bucketEditMonth = m;
-  const wrapper = document.getElementById('bucketMonthArea');
+  const wrapper = $id('bucketMonthArea');
   if (wrapper) wrapper.innerHTML = getEditMonthChipsHTML(m, 'bucket');
 };
 
 window.selectEditMonth_proj = function(m) {
   _projEditMonth = m;
-  const wrapper = document.getElementById('projMonthArea');
+  const wrapper = $id('projMonthArea');
   if (wrapper) wrapper.innerHTML = getEditMonthChipsHTML(m, 'proj');
 };
 
@@ -1910,7 +1881,7 @@ window.selectProjEditCat = function (cat) {
 };
 
 window.saveBucketEdit = async function (idx) {
-  const name = document.getElementById('editBucketName')?.value.trim();
+  const name = $id('editBucketName')?.value.trim();
   if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
   const selCat = document.querySelector('#bucketCatChips .chip-opt.selected');
   const cat = selCat ? [...document.querySelectorAll('#bucketCatChips .chip-opt')].indexOf(selCat) : -1;
@@ -1918,7 +1889,7 @@ window.saveBucketEdit = async function (idx) {
   localDash.challenges[idx].title = name;
   localDash.challenges[idx].targetMonth = _bucketEditMonth;
   localDash.challenges[idx].category = catKey;
-  localDash.challenges[idx].public = !document.getElementById('editBucketPrivate')?.checked;
+  localDash.challenges[idx].public = !$id('editBucketPrivate')?.checked;
   delete localDash.challenges[idx].deadline;
   await saveDash();
   renderChallengeCards();
@@ -1926,8 +1897,8 @@ window.saveBucketEdit = async function (idx) {
   showToast('✅ 수정 완료', 'done');
 };
 
-// ===== ADD CHALLENGE BOTTOM SHEET =====
-// ===== CHIP HELPERS =====
+// ===== 도전 추가 =====
+// ===== 칩 헬퍼 =====
 function getCatChipsHTML() {
   return `<div class="chip-group">` + Object.keys(CAT_LABELS).map(k => `<div class="chip-opt ${_createCat === k ? 'selected' : ''}" onclick="selectCreateCat('${k}')">${CAT_LABELS[k]}</div>`).join('') + `</div>`;
 }
@@ -1948,19 +1919,19 @@ function getMonthChipsHTML() {
   h += `</div>`;
   return h;
 }
-window.selectCreateCat = function(c) { _createCat = c; document.getElementById('createCatArea').innerHTML = getCatChipsHTML(); };
-window.selectCreateMonth = function(m) { _createMonth = m; document.getElementById('createMonthArea').innerHTML = getMonthChipsHTML(); };
+window.selectCreateCat = function(c) { _createCat = c; $id('createCatArea').innerHTML = getCatChipsHTML(); };
+window.selectCreateMonth = function(m) { _createMonth = m; $id('createMonthArea').innerHTML = getMonthChipsHTML(); };
 
-// ===== DYNAMIC STAGE BUILDER =====
+// ===== 단계 빌더 =====
 function syncCreateStagesFromDOM() {
   const stages = [];
   let si = 0;
-  while (document.getElementById(`pcStageName_${si}`)) {
-    const name = document.getElementById(`pcStageName_${si}`).value;
+  while ($id(`pcStageName_${si}`)) {
+    const name = $id(`pcStageName_${si}`).value;
     const tasks = [];
     let ti = 0;
-    while (document.getElementById(`pcTask_${si}_${ti}`)) {
-      tasks.push({ name: document.getElementById(`pcTask_${si}_${ti}`).value, done: false });
+    while ($id(`pcTask_${si}_${ti}`)) {
+      tasks.push({ name: $id(`pcTask_${si}_${ti}`).value, done: false });
       ti++;
     }
     stages.push({ name, tasks });
@@ -1985,17 +1956,17 @@ function getCreateStagesHTML() {
   h += `<button class="proj-add-stage-btn" onclick="addCreateStage()">+ 새 단계 추가</button>`;
   return h;
 }
-window.addCreateTask = function(si) { syncCreateStagesFromDOM(); _createStages[si].tasks.push({name:'', done:false}); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
-window.removeCreateTask = function(si, ti) { syncCreateStagesFromDOM(); _createStages[si].tasks.splice(ti, 1); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
-window.addCreateStage = function() { syncCreateStagesFromDOM(); _createStages.push({name:'', tasks:[]}); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
-window.removeCreateStage = function(si) { syncCreateStagesFromDOM(); _createStages.splice(si, 1); document.getElementById('createStagesArea').innerHTML = getCreateStagesHTML(); };
+window.addCreateTask = function(si) { syncCreateStagesFromDOM(); _createStages[si].tasks.push({name:'', done:false}); $id('createStagesArea').innerHTML = getCreateStagesHTML(); };
+window.removeCreateTask = function(si, ti) { syncCreateStagesFromDOM(); _createStages[si].tasks.splice(ti, 1); $id('createStagesArea').innerHTML = getCreateStagesHTML(); };
+window.addCreateStage = function() { syncCreateStagesFromDOM(); _createStages.push({name:'', tasks:[]}); $id('createStagesArea').innerHTML = getCreateStagesHTML(); };
+window.removeCreateStage = function(si) { syncCreateStagesFromDOM(); _createStages.splice(si, 1); $id('createStagesArea').innerHTML = getCreateStagesHTML(); };
 
-// ===== ADD CHALLENGE SHEET (Wizard Slide) =====
+// ===== 도전 추가 위자드 =====
 let _cwizStep = 0;
 let _cwizTotalSteps = 5; // bucket: 5, project: 6
 
 function cwizGoTo(step) {
-  const container = document.getElementById('bsBody');
+  const container = $id('bsBody');
   if (!container) return;
   const slides = container.querySelectorAll('.wiz-slide');
   slides.forEach((s, i) => {
@@ -2004,7 +1975,7 @@ function cwizGoTo(step) {
     else if (i === step) s.classList.add('active');
   });
   _cwizStep = step;
-  const summaryEl = document.getElementById('cAddSummary');
+  const summaryEl = $id('cAddSummary');
   const lastStep = _createType === 'project' ? 5 : 4;
   if (summaryEl) summaryEl.style.display = step === lastStep ? 'none' : 'flex';
   renderCAddSummary();
@@ -2014,12 +1985,12 @@ function cwizGoTo(step) {
 window.cwizGoTo = cwizGoTo;
 
 function renderCAddSummary() {
-  const el = document.getElementById('cAddSummary');
+  const el = $id('cAddSummary');
   if (!el) return;
   const chips = [];
   const typeLbl = _createType === 'bucket' ? '⭐ 버킷리스트' : _createType === 'project' ? '🗺️ 프로젝트' : null;
   if (_cwizStep > 0 && typeLbl) chips.push({ label: typeLbl, step: 0 });
-  const name = document.getElementById('cAddName')?.value.trim();
+  const name = $id('cAddName')?.value.trim();
   if (_cwizStep > 1 && name) chips.push({ label: name, step: 1 });
   if (_cwizStep > 2 && _createCat) {
     const cl = { health:'💪 건강', diet:'🥗 식단', study:'📚 학습', work:'💼 업무', finance:'💰 재무', life:'🌱 생활', home:'🧹 집안일', hobby:'🎨 취미', social:'🤝 관계', mental:'🧘 멘탈', etc:'📦 기타' };
@@ -2056,7 +2027,7 @@ window.openAddChallengeSheet = function () {
   _createType = null; _createCat = null; _createMonth = null;
   _createStages = [{ name: '', tasks: [] }];
   _cwizStep = 0;
-  document.getElementById('bsTitle').textContent = '새로운 도전 만들기';
+  $text('bsTitle', '새로운 도전 만들기');
   clearMetaTags();
 
   let h = `<div class="wiz-summary" id="cAddSummary"></div>`;
@@ -2129,7 +2100,7 @@ window.openAddChallengeSheet = function () {
 
   h += `</div>`;
 
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   openBS();
   renderCAddCat();
   renderCAddMonth();
@@ -2138,15 +2109,15 @@ window.openAddChallengeSheet = function () {
 
 window.cAddSelectType = function (type) {
   _createType = type;
-  document.getElementById('ctBucket2').classList.toggle('selected', type === 'bucket');
-  document.getElementById('ctProject2').classList.toggle('selected', type === 'project');
+  $id('ctBucket2').classList.toggle('selected', type === 'bucket');
+  $id('ctProject2').classList.toggle('selected', type === 'project');
   cwizGoTo(1);
-  setTimeout(() => document.getElementById('cAddName')?.focus(), 200);
+  setTimeout(() => $id('cAddName')?.focus(), 200);
 };
 
 window.cWizNameNext = function () {
-  const v = document.getElementById('cAddName')?.value.trim();
-  if (!v) { showToast('이름을 입력해주세요', 'normal'); document.getElementById('cAddName')?.focus(); return; }
+  const v = $id('cAddName')?.value.trim();
+  if (!v) { showToast('이름을 입력해주세요', 'normal'); $id('cAddName')?.focus(); return; }
   cwizGoTo(2);
 };
 
@@ -2158,7 +2129,7 @@ function renderCAddCat() {
     h += `<div class="unit-opt" style="font-size:11px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="cAddSelectCat('${val}')">${lbl}</div>`;
   });
   h += `</div>`;
-  const el = document.getElementById('cAddCatArea');
+  const el = $id('cAddCatArea');
   if (el) el.innerHTML = h;
 }
 
@@ -2182,7 +2153,7 @@ function renderCAddMonth() {
     h += `<div class="unit-opt" style="font-size:11px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="cAddSelectMonth('${val}')">${lbl}</div>`;
   });
   h += `</div>`;
-  const el = document.getElementById('cAddMonthArea');
+  const el = $id('cAddMonthArea');
   if (el) el.innerHTML = h;
 }
 
@@ -2201,7 +2172,7 @@ window.cAddSelectMonth = function (val) {
 };
 
 function renderCAddStages() {
-  const area = document.getElementById('cAddStagesArea');
+  const area = $id('cAddStagesArea');
   if (!area) return;
   let h = '';
   _createStages.forEach((s, i) => {
@@ -2232,7 +2203,7 @@ window.cAddTask = function (si) {
   _createStages[si].tasks.push({ name: '', done: false });
   renderCAddStages();
   const ti = _createStages[si].tasks.length - 1;
-  setTimeout(() => document.getElementById(`cTask_${si}_${ti}`)?.focus(), 100);
+  setTimeout(() => $id(`cTask_${si}_${ti}`)?.focus(), 100);
 };
 
 window.cRemoveTask = function (si, ti) {
@@ -2245,7 +2216,7 @@ window.cAddStage = function () {
   syncCStagesFromDOM();
   _createStages.push({ name: '', tasks: [] });
   renderCAddStages();
-  setTimeout(() => document.getElementById(`cStageName_${_createStages.length - 1}`)?.focus(), 100);
+  setTimeout(() => $id(`cStageName_${_createStages.length - 1}`)?.focus(), 100);
 };
 
 window.cRemoveStage = function (i) {
@@ -2256,10 +2227,10 @@ window.cRemoveStage = function (i) {
 
 function syncCStagesFromDOM() {
   _createStages.forEach((s, i) => {
-    const nameEl = document.getElementById(`cStageName_${i}`);
+    const nameEl = $id(`cStageName_${i}`);
     if (nameEl) s.name = nameEl.value;
     (s.tasks || []).forEach((t, ti) => {
-      const taskEl = document.getElementById(`cTask_${i}_${ti}`);
+      const taskEl = $id(`cTask_${i}_${ti}`);
       if (taskEl) t.name = taskEl.value;
     });
   });
@@ -2272,9 +2243,9 @@ window.cWizStagesNext = function () {
 };
 
 function renderCWizConfirm() {
-  const tagsEl = document.getElementById('cWizConfirmTags');
+  const tagsEl = $id('cWizConfirmTags');
   if (!tagsEl) return;
-  const name = document.getElementById('cAddName')?.value.trim() || '';
+  const name = $id('cAddName')?.value.trim() || '';
   const typeLbl = _createType === 'bucket' ? '⭐ 버킷리스트' : '🗺️ 프로젝트';
   const cl = { health:'💪 건강', diet:'🥗 식단', study:'📚 학습', work:'💼 업무', finance:'💰 재무', life:'🌱 생활', home:'🧹 집안일', hobby:'🎨 취미', social:'🤝 관계', mental:'🧘 멘탈', etc:'📦 기타' };
   const monthLbl = _createMonth === 'someday' ? '언젠가' : _createMonth;
@@ -2292,7 +2263,7 @@ function renderCWizConfirm() {
 }
 
 window.cAddSave = async function () {
-  const name = document.getElementById('cAddName')?.value.trim();
+  const name = $id('cAddName')?.value.trim();
   if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
   if (!_createType) { showToast('유형을 선택해주세요', 'normal'); return; }
   if (!localDash.challenges) localDash.challenges = {};
@@ -2300,7 +2271,7 @@ window.cAddSave = async function () {
   for (let i = 0; i < MAX_CHALLENGES; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
   if (slot === -1) { showToast('최대 25개까지 등록 가능합니다', 'normal'); return; }
 
-  const cIsPrivate = document.getElementById('cAddPrivate')?.checked;
+  const cIsPrivate = $id('cAddPrivate')?.checked;
 
   if (_createType === 'bucket') {
     localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat || 'etc', targetMonth: _createMonth || 'someday', createdAt: new Date().toISOString(), public: !cIsPrivate };
@@ -2314,22 +2285,22 @@ window.cAddSave = async function () {
   }
   closeBottomSheet(); renderChallengeCards();
   showToast(_createType === 'bucket' ? '⭐ 도전 등록!' : '🗺️ 프로젝트 시작!', 'done');
-  saveDash();
+  await saveDash();
 };
 
-// ===== PROJECT DETAIL BOTTOM SHEET =====
+// ===== 프로젝트 상세 =====
 window.openProjectDetail = function (idx) {
   const c = localDash.challenges[idx];
   if (!c || c.type !== 'project') return;
   activeGoalIdx = idx;
-  document.getElementById('bsTitle').textContent = c.title;
+  $text('bsTitle', c.title);
   setChallengeMetaTags(c);
   renderProjectDetail(idx);
   openBS();
 };
 
 function renderProjectDetail(idx) {
-  const c = localDash.challenges[idx], body = document.getElementById('bsBody');
+  const c = localDash.challenges[idx], body = $id('bsBody');
   const { done, total, pct } = getProjectProgress(c);
   let h = `<div style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">프로젝트 분석</div>`;
   // WHY box
@@ -2364,10 +2335,10 @@ window.toggleProjectTask = async function (cIdx, sIdx, tIdx) {
   if (task.done) showConfettiSmall();
 };
 
-// ===== PROJECT EDIT MODE =====
+// ===== 프로젝트 편집 =====
 window.openProjectEdit = function (idx) {
-  const c = localDash.challenges[idx], body = document.getElementById('bsBody');
-  document.getElementById('bsTitle').textContent = '프로젝트 수정';
+  const c = localDash.challenges[idx], body = $id('bsBody');
+  $text('bsTitle', '프로젝트 수정');
   clearMetaTags();
   _projEditCat = c.category || 'etc';
   _projEditMonth = c.targetMonth || 'someday';
@@ -2417,13 +2388,13 @@ let _editStages = [];
 function getEditStagesFromDOM() {
   const stages = [];
   let si = 0;
-  while (document.getElementById(`peStageName_${si}`)) {
-    const name = document.getElementById(`peStageName_${si}`).value;
+  while ($id(`peStageName_${si}`)) {
+    const name = $id(`peStageName_${si}`).value;
     const tasks = [];
     let ti = 0;
-    while (document.getElementById(`peTask_${si}_${ti}`)) {
-      const done = document.getElementById(`peTaskDone_${si}_${ti}`)?.checked || false;
-      tasks.push({ name: document.getElementById(`peTask_${si}_${ti}`).value, done });
+    while ($id(`peTask_${si}_${ti}`)) {
+      const done = $id(`peTaskDone_${si}_${ti}`)?.checked || false;
+      tasks.push({ name: $id(`peTask_${si}_${ti}`).value, done });
       ti++;
     }
     stages.push({ name, tasks });
@@ -2459,10 +2430,10 @@ window.removeEditStage = function (si) {
 
 function rebuildEditUI() {
   const c = localDash.challenges[activeGoalIdx];
-  const title = document.getElementById('peTitle')?.value || c.title;
-  const why = document.getElementById('peWhy')?.value || c.why || '';
+  const title = $id('peTitle')?.value || c.title;
+  const why = $id('peWhy')?.value || c.why || '';
   const stages = _editStages;
-  const body = document.getElementById('bsBody');
+  const body = $id('bsBody');
   let h = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">도전의 이름</div>`;
   h += `<input class="proj-edit-input" id="peTitle" value="${esc(title)}" maxlength="30">`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">🏷 카테고리</div>`;
@@ -2499,14 +2470,14 @@ function rebuildEditUI() {
 
 window.cancelProjectEdit = function (idx) {
   _editStages = [];
-  document.getElementById('bsTitle').textContent = localDash.challenges[idx].title;
+  $text('bsTitle', localDash.challenges[idx].title);
   renderProjectDetail(idx);
 };
 
 window.saveProjectEdit = async function (idx) {
-  const title = document.getElementById('peTitle').value.trim();
+  const title = $id('peTitle').value.trim();
   if (!title) { showToast('이름을 입력하세요', 'normal'); return; }
-  const why = document.getElementById('peWhy').value.trim();
+  const why = $id('peWhy').value.trim();
   const stages = getEditStagesFromDOM();
   stages.forEach((s, i) => {
     s.tasks.forEach((t, j) => {
@@ -2514,7 +2485,7 @@ window.saveProjectEdit = async function (idx) {
     });
     if (!s.name.trim()) s.name = `단계 ${i + 1}`;
   });
-  const updated = { ...localDash.challenges[idx], title, why, targetMonth: _projEditMonth, stages, category: _projEditCat, public: !document.getElementById('editProjPrivate')?.checked };
+  const updated = { ...localDash.challenges[idx], title, why, targetMonth: _projEditMonth, stages, category: _projEditCat, public: !$id('editProjPrivate')?.checked };
   delete updated.deadline;
   localDash.challenges[idx] = updated;
   await saveDash();
@@ -2532,11 +2503,11 @@ window.deleteChallenge = async function (idx) {
   showToast('🗑 삭제됨', 'normal');
 };
 
-// ===== ADD HABIT (Wizard Slide) =====
+// ===== 습관 추가 위자드 =====
 let _wizStep = 0;
 
 function pdiscReveal(stepId) {
-  const el = document.getElementById(stepId);
+  const el = $id(stepId);
   if (!el || !el.classList.contains('pdisc-hidden')) return;
   el.classList.remove('pdisc-hidden');
   el.classList.add('pdisc-reveal');
@@ -2546,7 +2517,7 @@ function pdiscReveal(stepId) {
 }
 
 window.wizGoTo = function (step) {
-  const container = document.getElementById('bsBody');
+  const container = $id('bsBody');
   if (!container) return;
   const slides = container.querySelectorAll('.wiz-slide');
   slides.forEach((s, i) => {
@@ -2555,17 +2526,17 @@ window.wizGoTo = function (step) {
     else if (i === step) s.classList.add('active');
   });
   _wizStep = step;
-  const summaryEl = document.getElementById('hAddSummary');
+  const summaryEl = $id('hAddSummary');
   if (summaryEl) summaryEl.style.display = step === 4 ? 'none' : 'flex';
   renderHAddSummary();
   renderHAddDots();
 };
 
 function renderHAddSummary() {
-  const el = document.getElementById('hAddSummary');
+  const el = $id('hAddSummary');
   if (!el) return;
   const chips = [];
-  const name = document.getElementById('hAddName')?.value.trim();
+  const name = $id('hAddName')?.value.trim();
   if (name) chips.push({ label: name, step: 0 });
   if (_habitCycle1) {
     const cycleLabels = { daily: '매일', w1: '1주에', w2: '2주에', w3: '3주에', w4: '4주에', auto: '자동' };
@@ -2611,7 +2582,7 @@ window.openAddHabitSheet = function () {
   _habitTime = null;
   _habitCat = null;
   _wizStep = 0;
-  document.getElementById('bsTitle').textContent = '습관 추가';
+  $text('bsTitle', '습관 추가');
   clearMetaTags();
 
   let h = `<div class="wiz-summary" id="hAddSummary"></div>`;
@@ -2667,9 +2638,9 @@ window.openAddHabitSheet = function () {
 
   h += `</div>`;
 
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   openBS();
-  setTimeout(() => document.getElementById('hAddName')?.focus(), 400);
+  setTimeout(() => $id('hAddName')?.focus(), 400);
   renderHAddCycle1();
   renderHAddTime();
   renderHAddCat();
@@ -2677,8 +2648,8 @@ window.openAddHabitSheet = function () {
 };
 
 window.hWizNameNext = function () {
-  const v = document.getElementById('hAddName')?.value.trim();
-  if (!v) { showToast('이름을 입력해주세요', 'normal'); document.getElementById('hAddName')?.focus(); return; }
+  const v = $id('hAddName')?.value.trim();
+  if (!v) { showToast('이름을 입력해주세요', 'normal'); $id('hAddName')?.focus(); return; }
   _habitAddName = v;
   wizGoTo(1);
 };
@@ -2697,7 +2668,7 @@ function renderHAddCycle1() {
     const sel = _habitCycle1 === o.val;
     h += `<div class="unit-opt ${sel ? 'selected' : ''}" onclick="hAddSelectCycle1('${o.val}')">${o.label}</div>`;
   });
-  const el = document.getElementById('hAddCycle1Area');
+  const el = $id('hAddCycle1Area');
   if (el) el.innerHTML = h;
 }
 
@@ -2713,7 +2684,7 @@ window.hAddSelectCycle1 = function (val) {
 };
 
 function renderHAddCycle2() {
-  const area = document.getElementById('hAddCycle2Area');
+  const area = $id('hAddCycle2Area');
   if (!area) return;
   if (!_habitCycle1 || _habitCycle1 === 'daily') { area.innerHTML = ''; return; }
 
@@ -2784,7 +2755,7 @@ function renderHAddTime() {
     h += `<div class="unit-opt" style="font-size:12px;padding:6px 12px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="hAddSelectTime('${val}')">${lbl}</div>`;
   });
   h += `</div>`;
-  const el = document.getElementById('hAddTimeArea');
+  const el = $id('hAddTimeArea');
   if (el) el.innerHTML = h;
 }
 
@@ -2802,7 +2773,7 @@ function renderHAddCat() {
     h += `<div class="unit-opt" style="font-size:11px;padding:6px 10px;${sel ? 'background:var(--accent-light);border-color:var(--accent);color:var(--accent);' : ''}" onclick="hAddSelectCat('${val}')">${lbl}</div>`;
   });
   h += `</div>`;
-  const el = document.getElementById('hAddCatArea');
+  const el = $id('hAddCatArea');
   if (el) el.innerHTML = h;
 }
 
@@ -2810,9 +2781,9 @@ window.hAddSelectCat = function (val) {
   _habitCat = val;
   renderHAddCat();
   // Render confirm slide
-  const tagsEl = document.getElementById('hWizConfirmTags');
+  const tagsEl = $id('hWizConfirmTags');
   if (tagsEl) {
-    const name = _habitAddName || document.getElementById('hAddName')?.value.trim() || '';
+    const name = _habitAddName || $id('hAddName')?.value.trim() || '';
     const cycleLabels = { daily:'매일', w1:'1주에', w2:'2주에', w3:'3주에', w4:'4주에', auto:'자동' };
     let cycleLbl = cycleLabels[_habitCycle1] || '';
     if (_habitCycle1 === 'auto' && _habitCycle2) cycleLbl = _habitCycle2 === 'health_sleep' ? '🌙 수면' : '💪 운동';
@@ -2832,7 +2803,7 @@ window.hAddSelectCat = function (val) {
 };
 
 window.habitAddSave = async function () {
-  const name = _habitAddName || document.getElementById('hAddName')?.value.trim();
+  const name = _habitAddName || $id('hAddName')?.value.trim();
   if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
 
   let unit, freq = 1;
@@ -2856,7 +2827,7 @@ window.habitAddSave = async function () {
   for (let i = 0; i < MAX_HABITS; i++) { if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; } }
   if (slot === -1) { showToast('최대 개수 도달', 'normal'); return; }
 
-  const isPrivate = document.getElementById('hAddPrivate')?.checked;
+  const isPrivate = $id('hAddPrivate')?.checked;
   const goal = { title: name, unit, freq, time, category: cat, public: !isPrivate };
   if (unit === 'health_workout' && _workoutType) goal.workoutType = _workoutType;
   localDash.goals[slot] = goal;
@@ -2864,38 +2835,38 @@ window.habitAddSave = async function () {
   closeBottomSheet();
   renderHabitCards(); renderAvatar();
   showToast('🎯 습관 등록!', 'done');
-  saveDash();
+  await saveDash();
 };
 
-// ===== NICKNAME / MSG EDIT =====
+// ===== 닉네임 / 메시지 편집 =====
 window.startEditNickname = function () {
-  const editArea = document.getElementById('avatarNicknameEdit');
-  const infoRow = document.getElementById('avatarInfoRow');
+  const editArea = $id('avatarNicknameEdit');
+  const infoRow = $id('avatarInfoRow');
   const cur = localDash.nickname || currentUser.name || '';
   infoRow.style.display = 'none';
   editArea.style.display = 'flex';
   editArea.innerHTML = `<input class="nickname-input" id="nickInput" value="${esc(cur)}" maxlength="10" placeholder="닉네임"><button class="nickname-save-btn" onclick="saveNickname()">저장</button><button class="nickname-cancel-btn" onclick="cancelNickname()">취소</button>`;
-  document.getElementById('nickInput').focus();
+  $id('nickInput').focus();
 };
 window.cancelNickname = function () {
-  document.getElementById('avatarNicknameEdit').style.display = 'none';
-  document.getElementById('avatarInfoRow').style.display = '';
+  $id('avatarNicknameEdit').style.display = 'none';
+  $id('avatarInfoRow').style.display = '';
 };
 window.saveNickname = async function () {
-  const v = document.getElementById('nickInput').value.trim();
+  const v = $id('nickInput').value.trim();
   if (v) { localDash.nickname = v; await saveDash(); }
-  document.getElementById('avatarNicknameEdit').style.display = 'none';
-  document.getElementById('avatarInfoRow').style.display = '';
+  $id('avatarNicknameEdit').style.display = 'none';
+  $id('avatarInfoRow').style.display = '';
   renderAvatar();
 };
 window.startEditMsg = function () {
-  const wrap = document.getElementById('avatarMsgWrap');
+  const wrap = $id('avatarMsgWrap');
   const cur = localDash.msg || '';
   wrap.innerHTML = `<div class="nickname-edit-row"><input class="nickname-input" id="msgInput" value="${esc(cur)}" maxlength="30" placeholder="상태 메시지"><button class="nickname-save-btn" onclick="saveMsg()">저장</button></div>`;
-  document.getElementById('msgInput').focus();
+  $id('msgInput').focus();
 };
 window.saveMsg = async function () {
-  const v = document.getElementById('msgInput').value.trim();
+  const v = $id('msgInput').value.trim();
   if (v) { localDash.msg = v; await saveDash(); }
   renderAvatar();
 };
@@ -2909,29 +2880,29 @@ function checkWeekClear(idx) {
   const ws = new Date(now); ws.setDate(now.getDate() - dow);
   let wd = 0;
   for (let d = 0; d < 7; d++) { const dd = new Date(ws); dd.setDate(ws.getDate() + d); if (dd > now) break; if (localDash.completions[`g${idx}_${dd.getFullYear()}_${dd.getMonth()+1}_${dd.getDate()}`] === true) wd++; }
-  if (wd === freq) setTimeout(() => { showConfetti(); const p = document.getElementById('weekClearPopup'); p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 2800); }, 300);
+  if (wd === freq) setTimeout(() => { showConfetti(); const p = $id('weekClearPopup'); p.classList.add('show'); setTimeout(() => p.classList.remove('show'), 2800); }, 300);
 }
 
-// ===== BOTTOM SHEET =====
+// ===== 바텀시트 =====
 window.openGoalBottomSheet = function (idx) {
   const g = getAllGoals()[idx];
   if (!g) { openAddHabitSheet(); return; }
   if (!g.unit) { openUnitSetupSheet(idx); return; }
   activeGoalIdx = idx;
   viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
-  document.getElementById('bsTitle').textContent = g.title;
+  $text('bsTitle', g.title);
   setHabitMetaTags(g);
   renderBSBody(idx);
   openBS();
 };
 
 function openBS() {
-  document.getElementById('bsOverlay').classList.add('open');
-  document.getElementById('bottomSheet').classList.add('open');
+  $id('bsOverlay').classList.add('open');
+  $id('bottomSheet').classList.add('open');
 }
 window.closeBottomSheet = function () {
-  document.getElementById('bsOverlay').classList.remove('open');
-  document.getElementById('bottomSheet').classList.remove('open');
+  $id('bsOverlay').classList.remove('open');
+  $id('bottomSheet').classList.remove('open');
 };
 
 // 헬퍼: 날짜가 속한 주의 일요일
@@ -2951,7 +2922,7 @@ function countWeekCompletions(idx, sunDt) {
 }
 
 function renderBSBody(idx) {
-  const g = migrateGoal(localDash.goals[idx]), body = document.getElementById('bsBody');
+  const g = migrateGoal(localDash.goals[idx]), body = $id('bsBody');
   if (g.unit === 'once') { renderBSOnce(idx, body); return; }
   const y = viewMonth.year, m = viewMonth.month, now = new Date();
   const isCurrentMonth = y === now.getFullYear() && m === now.getMonth() + 1;
@@ -3116,7 +3087,7 @@ function renderStats6Month(idx, g) {
   return h;
 }
 
-// ===== ADD HABIT FLOW =====
+// ===== 습관 추가 (기존 방식) =====
 let _habitAddName = '';
 let _habitCycle1 = null; // 'daily','w1','w2','w3','w4','auto'
 let _habitCycle2 = null; // number of times or 'health_sleep'/'health_workout'
@@ -3125,13 +3096,13 @@ let _habitCat = null;
 let _workoutType = null; // workout subtype
 
 window.habitAddStep2 = function () {
-  const v = document.getElementById('newGoalInput').value.trim();
+  const v = $id('newGoalInput').value.trim();
   if (!v) { showToast('이름을 입력해주세요', 'normal'); return; }
   _habitAddName = v;
   _habitCycle1 = null;
   _habitCycle2 = null;
   _workoutType = null;
-  document.getElementById('bsTitle').textContent = '주기 설정';
+  $text('bsTitle', '주기 설정');
   clearMetaTags();
   renderCycleStep();
 };
@@ -3208,7 +3179,7 @@ function renderCycleStep() {
   }
 
   h += `<button class="unit-confirm-btn" id="cycleConfirmBtn" onclick="confirmHabitAdd()" ${canConfirm?'':'disabled'}>확인</button>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
   if (_habitCycle1 && _habitCycle1 !== 'daily' && _habitCycle1 !== 'health_sleep' && _habitCycle1 !== 'health_workout') {
     renderCycle2();
   }
@@ -3221,7 +3192,7 @@ window.selectCycle1 = function (val) {
 };
 
 function renderCycle2() {
-  const area = document.getElementById('cycle2Area');
+  const area = $id('cycle2Area');
   if (!area) return;
   const weekNum = parseInt(_habitCycle1.slice(1));
   const maxDays = weekNum * 7;
@@ -3247,18 +3218,18 @@ window.selectCycle2 = function (n) {
 };
 
 window.showCycle2Custom = function () {
-  const ca = document.getElementById('cycle2CustomArea');
+  const ca = $id('cycle2CustomArea');
   if (!ca) return;
   ca.innerHTML = `<div style="display:flex;gap:8px;align-items:center;">
     <input type="number" id="cycle2CustomInput" class="proj-edit-input" style="width:80px;" min="1" max="28" placeholder="횟수">
     <span style="font-size:13px;color:var(--text-dim);">회</span>
     <button class="btn-sm" style="background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;" onclick="applyCycle2Custom()">적용</button>
   </div>`;
-  setTimeout(() => document.getElementById('cycle2CustomInput')?.focus(), 100);
+  setTimeout(() => $id('cycle2CustomInput')?.focus(), 100);
 };
 
 window.applyCycle2Custom = function () {
-  const v = parseInt(document.getElementById('cycle2CustomInput')?.value);
+  const v = parseInt($id('cycle2CustomInput')?.value);
   if (!v || v < 1) { showToast('1 이상 입력', 'normal'); return; }
   _habitCycle2 = v;
   renderCycleStep();
@@ -3311,7 +3282,7 @@ function openUnitSetupSheet(idx) {
   _habitAddName = localDash.goals[idx].title;
   _habitCycle1 = null;
   _habitCycle2 = null;
-  document.getElementById('bsTitle').textContent = '주기 설정';
+  $text('bsTitle', '주기 설정');
   clearMetaTags();
   // override confirmHabitAdd to update existing slot
   const origConfirm = window.confirmHabitAdd;
@@ -3343,7 +3314,7 @@ function openUnitSetupSheet(idx) {
   };
   renderCycleStep();
   // add delete button
-  const body = document.getElementById('bsBody');
+  const body = $id('bsBody');
   body.innerHTML += `<div style="margin-top:12px;"><button style="width:100%;background:transparent;border:2px solid var(--danger);border-radius:10px;padding:11px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer;font-family:var(--font-main);" onclick="deleteGoal(${idx})">🗑 습관 삭제</button></div>`;
 }
 
@@ -3366,11 +3337,11 @@ window.deleteGoalFromBS = async function (idx) {
   showToast('🗑 삭제됨', 'normal');
 };
 
-// ===== HABIT EDIT =====
+// ===== 습관 편집 =====
 window.openHabitEdit = function (idx) {
   const g = localDash.goals[idx];
   if (!g) return;
-  document.getElementById('bsTitle').textContent = '습관 수정';
+  $text('bsTitle', '습관 수정');
   clearMetaTags();
   const timeOpts = [['any','🔄 언제나'],['dawn','🌅 새벽'],['morning','🌤 아침'],['midday','🏞 낮'],['afternoon','🌇 오후'],['evening','🌟 저녁'],['night','🦉 밤']];
   const catOpts = [['health','💪 건강'],['diet','🥗 식단'],['study','📚 학습'],['work','💼 업무'],['finance','💰 재무'],['life','🌱 생활'],['home','🧹 집안일'],['hobby','🎨 취미'],['social','🤝 관계'],['mental','🧘 멘탈'],['etc','📦 기타']];
@@ -3399,29 +3370,29 @@ window.openHabitEdit = function (idx) {
     <label class="toggle-switch"><input type="checkbox" id="editPrivate" ${editPriv ? 'checked' : ''}><span class="toggle-slider"></span></label>
   </div>`;
   h += `<div class="proj-save-row"><button class="proj-save-btn cancel" onclick="renderBSBody(${idx});document.getElementById('bsTitle').textContent='${esc(g.title)}';">취소</button><button class="proj-save-btn save" onclick="saveHabitEdit(${idx})">저장</button></div>`;
-  document.getElementById('bsBody').innerHTML = h;
+  $html('bsBody', h);
 };
 
 window.saveHabitEdit = async function (idx) {
-  const name = document.getElementById('editGoalName')?.value.trim();
+  const name = $id('editGoalName')?.value.trim();
   if (!name) { showToast('이름을 입력해주세요', 'normal'); return; }
   const time = document.querySelector('input[name="editTime"]:checked')?.value || 'any';
   const cat = document.querySelector('input[name="editCat"]:checked')?.value || 'etc';
   localDash.goals[idx].title = name;
   localDash.goals[idx].time = time;
   localDash.goals[idx].category = cat;
-  localDash.goals[idx].public = !document.getElementById('editPrivate')?.checked;
+  localDash.goals[idx].public = !$id('editPrivate')?.checked;
   await saveDash();
   renderHabitCards();
   closeBottomSheet();
   showToast('✅ 수정 완료', 'done');
 };
 
-// ===== CHEERS (메인 하단) =====
+// ===== 응원 =====
 let _newCheerCount = 0;
 
 async function renderMainCheers() {
-  const el = document.getElementById('myCheersMain');
+  const el = $id('myCheersMain');
   const snap = await get(ref(db, `cheers/${currentUser.id}`));
   if (!snap.exists()) {
     el.innerHTML = `<div class="my-cheers-main-title">💬 받은 응원</div><div class="my-cheers-empty">아직 받은 응원이 없어요</div>`;
@@ -3460,7 +3431,7 @@ async function renderMainCheers() {
 
   // Intersection observer: mark as read when cheers section is visible
   if (_newCheerCount > 0) {
-    const anchor = document.getElementById('cheersAnchor');
+    const anchor = $id('cheersAnchor');
     if (anchor) {
       const obs = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
@@ -3474,7 +3445,7 @@ async function renderMainCheers() {
 }
 
 function updateCheerBubble(count) {
-  const bubble = document.getElementById('cheerBubble');
+  const bubble = $id('cheerBubble');
   if (!bubble) return;
   if (count > 0) {
     bubble.style.display = 'flex';
@@ -3500,15 +3471,15 @@ function markCheersRead() {
 }
 
 window.scrollToCheers = function () {
-  const anchor = document.getElementById('cheersAnchor');
+  const anchor = $id('cheersAnchor');
   if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-// ===== NOTICE =====
+// ===== 공지 =====
 async function loadNoticeBanner() {
   try {
     const snap = await get(ref(db, 'notices'));
-    if (!snap.exists()) { document.getElementById('noticeBanner').classList.remove('visible'); return; }
+    if (!snap.exists()) { $id('noticeBanner').classList.remove('visible'); return; }
     const notices = snap.val();
     let latest = null;
     Object.entries(notices).forEach(([id, n]) => {
@@ -3519,28 +3490,28 @@ async function loadNoticeBanner() {
     if (latest) {
       const readKey = `qb_notice_read_${latest.id}`;
       if (!localStorage.getItem(readKey)) {
-        document.getElementById('noticeBannerTitle').textContent = latest.title;
-        document.getElementById('noticeBanner').classList.add('visible');
-        document.getElementById('noticeBanner')._noticeData = latest;
-      } else { document.getElementById('noticeBanner').classList.remove('visible'); }
-    } else { document.getElementById('noticeBanner').classList.remove('visible'); }
+        $id('noticeBannerTitle').textContent = latest.title;
+        $id('noticeBanner').classList.add('visible');
+        $id('noticeBanner')._noticeData = latest;
+      } else { $id('noticeBanner').classList.remove('visible'); }
+    } else { $id('noticeBanner').classList.remove('visible'); }
   } catch (e) {}
 }
 window.openNoticeModal = function () {
-  const n = document.getElementById('noticeBanner')._noticeData;
+  const n = $id('noticeBanner')._noticeData;
   if (!n) return;
-  const body = document.getElementById('noticeModalBody');
+  const body = $id('noticeModalBody');
   let h = `<div class="notice-modal-title">${esc(n.title)}</div><div class="notice-modal-date">${new Date(n.createdAt).toLocaleDateString('ko')}</div>`;
   if (n.img) h += `<img class="notice-modal-img" src="${n.img}" onerror="this.style.display='none'">`;
   if (n.desc) h += `<div class="notice-modal-desc">${esc(n.desc)}</div>`;
   body.innerHTML = h;
-  document.getElementById('noticeModalOverlay').classList.add('open');
+  $id('noticeModalOverlay').classList.add('open');
   localStorage.setItem(`qb_notice_read_${n.id}`, '1');
-  document.getElementById('noticeBanner').classList.remove('visible');
+  $id('noticeBanner').classList.remove('visible');
 };
-window.closeNoticeModal = function () { document.getElementById('noticeModalOverlay').classList.remove('open'); };
+window.closeNoticeModal = function () { $id('noticeModalOverlay').classList.remove('open'); };
 
-// ===== FRIENDS =====
+// ===== 친구 =====
 let _friendActivityCache = []; // [{fid, nick, emoji, todayCount}]
 let _friendHasHabitsCount = 0; // friends with at least 1 habit
 let _friendTotalCount = 0; // total friends
@@ -3579,7 +3550,7 @@ async function checkFriendActivity() {
     }
 
     // Show/hide badge
-    const badge = document.getElementById('friendTabBadge');
+    const badge = $id('friendTabBadge');
     const lastSeen = localStorage.getItem('kw_friendNotiDate');
     const today = `${y}-${m}-${d}`;
     if (_friendActivityCache.some(f => f.todayCount > 0) && lastSeen !== today) {
@@ -3618,7 +3589,7 @@ function renderMainFriendActivity() {
 }
 
 async function renderFriends() {
-  const sec = document.getElementById('friendsSection');
+  const sec = $id('friendsSection');
   sec.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">로딩 중...</div>';
   const grpSnap = await get(ref(db, 'groups'));
   if (!grpSnap.exists()) { sec.innerHTML = '<div class="friends-empty">그룹이 없어요</div>'; return; }
@@ -3630,7 +3601,7 @@ async function renderFriends() {
   // Clear badge on friends tab entry
   const now0 = new Date();
   localStorage.setItem('kw_friendNotiDate', `${now0.getFullYear()}-${now0.getMonth()+1}-${now0.getDate()}`);
-  const badge = document.getElementById('friendTabBadge');
+  const badge = $id('friendTabBadge');
   if (badge) badge.style.display = 'none';
 
   // Activity summary card
@@ -3697,7 +3668,7 @@ async function renderFriends() {
 }
 
 window.openFriendDetail = async function (fid) {
-  const area = document.getElementById('friendDetailArea');
+  const area = $id('friendDetailArea');
   area.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);">로딩 중...</div>';
   const dSnap = await get(ref(db, `dashboards/${fid}`));
   const uSnap = await get(ref(db, `users/${fid}`));
@@ -3726,13 +3697,13 @@ window.openFriendDetail = async function (fid) {
 window.selectFriendGoal = function (fid, gi) {
   // Remove active from all, add to selected
   document.querySelectorAll('.fgoal-btn').forEach(b => b.classList.remove('fg-active'));
-  const btn = document.getElementById(`fgoal_${gi}`);
+  const btn = $id(`fgoal_${gi}`);
   if (btn) btn.classList.add('fg-active');
   showFriendGoalCal(fid, gi);
 };
 
 window.showFriendGoalCal = async function (fid, gi) {
-  const area = document.getElementById('friendGoalCal');
+  const area = $id('friendGoalCal');
   const dSnap = await get(ref(db, `dashboards/${fid}`));
   const d = dSnap.exists() ? dSnap.val() : {};
   const comp = d.completions || {};
@@ -3765,7 +3736,7 @@ window.showFriendGoalCal = async function (fid, gi) {
   h += `<div class="cheer-input-row"><input class="cheer-text-input" id="cheerInput" placeholder="응원 메시지 보내기" maxlength="50"><button class="cheer-send-btn" onclick="sendCheer('${fid}',${gi})">보내기</button></div></div>`;
   area.innerHTML = h;
   // Fix iOS keyboard scroll
-  const cheerInput = document.getElementById('cheerInput');
+  const cheerInput = $id('cheerInput');
   if (cheerInput) {
     cheerInput.addEventListener('focus', () => {
       setTimeout(() => { cheerInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 300);
@@ -3774,7 +3745,7 @@ window.showFriendGoalCal = async function (fid, gi) {
 };
 
 window.sendCheer = async function (fid, gi) {
-  const input = document.getElementById('cheerInput');
+  const input = $id('cheerInput');
   const text = input.value.trim(); if (!text) return;
   const ts = Date.now();
   await set(ref(db, `cheers/${fid}/${gi}/${ts}`), { from: localDash.nickname || currentUser.name, text, ts });
@@ -3782,7 +3753,7 @@ window.sendCheer = async function (fid, gi) {
   showFriendGoalCal(fid, gi);
 };
 
-// ===== ADMIN =====
+// ===== 관리자 =====
 const ADMIN_UNIT_LABELS = { once:'한 번', daily:'매일', w1:'주 1회', w2:'주 2~3회', w4:'주 4~5회', w6:'주 6회' };
 const ADMIN_UNIT_FREQ = { once:0, daily:7, w1:1, w2:2, w4:4, w6:6 };
 let _adminUsers = {}, _adminDash = {}, _adminGroups = {};
@@ -3825,8 +3796,8 @@ function adminCountData(dash) {
 // 어드민 섹션 탭 전환
 window.switchAdminSection = function(sec) {
   ['user','group','notice'].forEach(s => {
-    document.getElementById('aTab_'+s)?.classList.toggle('active', s===sec);
-    const panel = document.getElementById('aSection_'+s);
+    $id('aTab_'+s)?.classList.toggle('active', s===sec);
+    const panel = $id('aSection_'+s);
     if(panel) {
       panel.classList.toggle('active', s===sec);
       panel.style.display = ''; // 인라인 style 제거, CSS 클래스로 제어
@@ -3835,8 +3806,8 @@ window.switchAdminSection = function(sec) {
 };
 
 window.toggleAdminCreate = function() {
-  const form = document.getElementById('adminUserCreateForm');
-  const btn = document.getElementById('adminUserCreateToggle');
+  const form = $id('adminUserCreateForm');
+  const btn = $id('adminUserCreateToggle');
   if (form.style.display === 'none') {
     form.style.display = 'block';
     btn.style.display = 'none';
@@ -3847,7 +3818,7 @@ window.toggleAdminCreate = function() {
 };
 
 function renderAdminUserTable() {
-  const tbl = document.getElementById('adminUserTable');
+  const tbl = $id('adminUserTable');
   const users = Object.entries(_adminUsers).filter(([,u]) => u.role !== 'admin');
   if (users.length === 0) { tbl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:12px;text-align:center;">등록된 유저 없음</div>'; return; }
   let h = '';
@@ -3889,8 +3860,8 @@ function renderAdminUserTable() {
 }
 
 window.adminTogglePw = function(id) {
-  const mask = document.getElementById('pwMask_'+id);
-  const btn = document.getElementById('pwToggleBtn_'+id);
+  const mask = $id('pwMask_'+id);
+  const btn = $id('pwToggleBtn_'+id);
   const u = _adminUsers[id];
   if (btn.textContent === '보기') {
     mask.textContent = u?.password || '없음';
@@ -3901,25 +3872,25 @@ window.adminTogglePw = function(id) {
   }
 };
 
-window.adminStartEditPw = function(id) { document.getElementById('pwArea_'+id).style.display='none'; document.getElementById('pwEdit_'+id).style.display='flex'; };
-window.adminCancelPw = function(id) { document.getElementById('pwArea_'+id).style.display=''; document.getElementById('pwEdit_'+id).style.display='none'; };
+window.adminStartEditPw = function(id) { $id('pwArea_'+id).style.display='none'; $id('pwEdit_'+id).style.display='flex'; };
+window.adminCancelPw = function(id) { $id('pwArea_'+id).style.display=''; $id('pwEdit_'+id).style.display='none'; };
 window.adminSavePw = async function(id) {
-  const pw = document.getElementById('pwInput_'+id).value.trim();
+  const pw = $id('pwInput_'+id).value.trim();
   if (!pw) return;
   await set(ref(db, 'users/'+id+'/password'), pw);
   showToast('✅ 비밀번호 변경', 'done'); renderAdminList();
 };
 window.adminCreateUser = async function() {
-  const name = document.getElementById('adminNewName').value.trim();
-  const id = document.getElementById('adminNewId').value.trim();
-  const pw = document.getElementById('adminNewPw').value.trim();
+  const name = $id('adminNewName').value.trim();
+  const id = $id('adminNewId').value.trim();
+  const pw = $id('adminNewPw').value.trim();
   if (!name||!id||!pw) { showToast('모든 항목 입력 필요', 'normal'); return; }
   if (!/^[a-zA-Z0-9_]+$/.test(id)) { showToast('아이디: 영문/숫자/_만', 'normal'); return; }
   if (_adminUsers[id]) { showToast('이미 존재하는 아이디', 'normal'); return; }
   await set(ref(db, 'users/'+id), { name: name, password: pw, role: 'user' });
-  document.getElementById('adminNewName').value=''; document.getElementById('adminNewId').value=''; document.getElementById('adminNewPw').value='';
-  document.getElementById('adminUserCreateForm').style.display='none';
-  document.getElementById('adminUserCreateToggle').style.display='block';
+  $id('adminNewName').value=''; $id('adminNewId').value=''; $id('adminNewPw').value='';
+  $id('adminUserCreateForm').style.display='none';
+  $id('adminUserCreateToggle').style.display='block';
   showToast('✅ '+name+' 생성!', 'done'); renderAdminList();
 };
 window.adminDeleteUser = async function(id) {
@@ -3928,11 +3899,11 @@ window.adminDeleteUser = async function(id) {
   showToast('🗑 삭제됨', 'normal'); renderAdminList();
 };
 
-// ===== ADMIN USER DETAIL (overlay) =====
+// ===== 관리자 유저 상세 =====
 window.showAdminUserDetail = function(uid) {
   _adminDetailTab = 'habit';
   renderAdminDetail(uid);
-  document.getElementById('adminDetailOverlay').style.display = 'block';
+  $id('adminDetailOverlay').style.display = 'block';
 };
 window.switchAdminDetailTab = function(uid, tab) {
   _adminDetailTab = tab;
@@ -3956,7 +3927,7 @@ function renderAdminDetail(uid) {
   challengeArr.filter(function(c){return c.type==='project';}).forEach(function(c){ (c.stages||[]).forEach(function(s){ (s.tasks||[]).forEach(function(t){ pjT++; if(t.done)pjD++; }); }); });
   var projPct = pjT>0?Math.round(pjD/pjT*100):0;
 
-  var panel = document.getElementById('adminDetailPanel');
+  var panel = $id('adminDetailPanel');
   var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
     '<div><div style="font-family:var(--font-heading);font-size:20px;">'+esc(u.name||uid)+'</div><div style="font-size:12px;color:var(--text-dim);">@'+esc(uid)+' · '+lastLogin+'</div></div>' +
     '<button class="btn-sm" onclick="document.getElementById(\'adminDetailOverlay\').style.display=\'none\'">✕</button></div>';
@@ -4013,9 +3984,9 @@ function renderAdminDetail(uid) {
   panel.innerHTML = h;
 }
 
-// ===== ADMIN GROUP =====
+// ===== 관리자 그룹 =====
 function renderAdminGroupList() {
-  var gl = document.getElementById('adminGroupList');
+  var gl = $id('adminGroupList');
   var groups = Object.entries(_adminGroups);
   var nonAdmin = Object.entries(_adminUsers).filter(function(e){return e[1].role!=='admin';});
   if (groups.length === 0) { gl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;">그룹 없음</div>'; return; }
@@ -4037,10 +4008,10 @@ function renderAdminGroupList() {
 }
 
 window.adminCreateGroup = async function() {
-  var name = document.getElementById('adminNewGroupName').value.trim();
+  var name = $id('adminNewGroupName').value.trim();
   if (!name) return;
   await push(ref(db,'groups'), { name: name, members:{} });
-  document.getElementById('adminNewGroupName').value = '';
+  $id('adminNewGroupName').value = '';
   showToast('✅ "'+name+'" 그룹 생성!', 'done'); renderAdminList();
 };
 window.adminDeleteGroup = async function(gid) {
@@ -4049,7 +4020,7 @@ window.adminDeleteGroup = async function(gid) {
   showToast('🗑 삭제됨', 'normal'); renderAdminList();
 };
 window.adminAddMember = async function(gid) {
-  var sel = document.getElementById('gsel_'+gid);
+  var sel = $id('gsel_'+gid);
   var uid = sel?.value; if (!uid) return;
   await set(ref(db,'groups/'+gid+'/members/'+uid+'_'+Date.now()), uid);
   showToast('✅ 멤버 추가!', 'done'); renderAdminList();
@@ -4059,9 +4030,9 @@ window.adminRemoveMember = async function(gid, mk) {
   showToast('✅ 제거됨', 'done'); renderAdminList();
 };
 
-// ===== ADMIN NOTICE LIST =====
+// ===== 관리자 공지 =====
 async function renderAdminNoticeList() {
-  var nl = document.getElementById('adminNoticeList');
+  var nl = $id('adminNoticeList');
   var nSnap = await get(ref(db, 'notices'));
   if (!nSnap.exists()) { nl.innerHTML = ''; return; }
   var nh = '';
@@ -4072,28 +4043,28 @@ async function renderAdminNoticeList() {
   nl.innerHTML = nh;
 }
 
-// ===== NOTICE ADMIN =====
+// ===== 공지 관리 =====
 let _noticeTarget = 'all';
 window.setNoticeTarget = function (t) {
   _noticeTarget = t;
-  ['All', 'Group', 'User'].forEach(s => document.getElementById(`noticeTarget${s}`).classList.toggle('active', t === s.toLowerCase()));
-  document.getElementById('noticeTargetDetail').style.display = t === 'all' ? 'none' : 'block';
-  if (t === 'user') document.getElementById('noticeTargetDetail').innerHTML = `<input class="admin-notice-input" id="noticeTargetId" placeholder="유저 아이디 입력">`;
-  else if (t === 'group') document.getElementById('noticeTargetDetail').innerHTML = `<input class="admin-notice-input" id="noticeTargetGroupId" placeholder="그룹 ID 입력">`;
+  ['All', 'Group', 'User'].forEach(s => $id(`noticeTarget${s}`).classList.toggle('active', t === s.toLowerCase()));
+  $id('noticeTargetDetail').style.display = t === 'all' ? 'none' : 'block';
+  if (t === 'user') $id('noticeTargetDetail').innerHTML = `<input class="admin-notice-input" id="noticeTargetId" placeholder="유저 아이디 입력">`;
+  else if (t === 'group') $id('noticeTargetDetail').innerHTML = `<input class="admin-notice-input" id="noticeTargetGroupId" placeholder="그룹 ID 입력">`;
 };
 window.submitNotice = async function () {
-  const title = document.getElementById('noticeTitle').value.trim();
+  const title = $id('noticeTitle').value.trim();
   if (!title) { showToast('제목을 입력하세요', 'normal'); return; }
-  const desc = document.getElementById('noticeDesc').value.trim();
-  const img = document.getElementById('noticeImg').value.trim();
+  const desc = $id('noticeDesc').value.trim();
+  const img = $id('noticeImg').value.trim();
   const notice = { title, desc, img, target: _noticeTarget, createdAt: new Date().toISOString() };
-  if (_noticeTarget === 'user') notice.targetId = document.getElementById('noticeTargetId')?.value.trim();
-  if (_noticeTarget === 'group') notice.targetGroupId = document.getElementById('noticeTargetGroupId')?.value.trim();
+  if (_noticeTarget === 'user') notice.targetId = $id('noticeTargetId')?.value.trim();
+  if (_noticeTarget === 'group') notice.targetGroupId = $id('noticeTargetGroupId')?.value.trim();
   await push(ref(db, 'notices'), notice);
   showToast('📢 공지 추가!', 'done');
-  document.getElementById('noticeTitle').value = '';
-  document.getElementById('noticeDesc').value = '';
-  document.getElementById('noticeImg').value = '';
+  $id('noticeTitle').value = '';
+  $id('noticeDesc').value = '';
+  $id('noticeImg').value = '';
   renderAdminList();
 };
 window.deleteNotice = async function (nid) {
@@ -4102,58 +4073,58 @@ window.deleteNotice = async function (nid) {
   showToast('삭제됨', 'normal'); renderAdminList();
 };
 
-// ===== TUTORIAL =====
+// ===== 튜토리얼 =====
 let tutStep = 1, tutChecked = 0, tutGoalName = '12시 전에 자기';
 function initTutorial() {
   tutStep = 1; tutChecked = 0;
-  const dots = document.getElementById('tutDots');
+  const dots = $id('tutDots');
   let dh = ''; for (let i = 1; i <= TUT_STEPS; i++) dh += `<div class="tut-dot ${i === 1 ? 'active' : ''}" id="tutDot${i}"></div>`;
   dots.innerHTML = dh;
-  document.getElementById('tutFill').style.width = '0%';
+  $id('tutFill').style.width = '0%';
 }
 function tutUpdateUI() {
   for (let i = 1; i <= TUT_STEPS; i++) {
-    const d = document.getElementById(`tutDot${i}`);
+    const d = $id(`tutDot${i}`);
     d.className = 'tut-dot' + (i === tutStep ? ' active' : i < tutStep ? ' done' : '');
   }
-  document.getElementById('tutFill').style.width = ((tutStep - 1) / (TUT_STEPS - 1) * 100) + '%';
-  for (let i = 1; i <= TUT_STEPS; i++) document.getElementById(`tutStep${i}`).classList.toggle('active', i === tutStep);
+  $id('tutFill').style.width = ((tutStep - 1) / (TUT_STEPS - 1) * 100) + '%';
+  for (let i = 1; i <= TUT_STEPS; i++) $id(`tutStep${i}`).classList.toggle('active', i === tutStep);
 }
-window.tutStep1Confirm = function () { document.getElementById('tutGoalBtn').style.background = 'var(--accent-light)'; document.getElementById('tutGoalBtn').style.borderColor = 'var(--accent)'; setTimeout(() => tutNextStep(2), 400); };
+window.tutStep1Confirm = function () { $id('tutGoalBtn').style.background = 'var(--accent-light)'; $id('tutGoalBtn').style.borderColor = 'var(--accent)'; setTimeout(() => tutNextStep(2), 400); };
 window.tutNextStep = function (s) {
   tutStep = s; tutUpdateUI();
-  if (s === 2) { document.getElementById('tutGoalName2').textContent = tutGoalName; renderTutUnitOpts(); }
-  if (s === 3) { document.getElementById('tutGoalName3').textContent = tutGoalName; renderTutCal(); }
-  if (s === 4) { const pct = Math.round(tutChecked / 28 * 100); document.getElementById('tutGoalName4').textContent = tutGoalName; document.getElementById('tutGoalPct4').textContent = pct + '%'; document.getElementById('tutGoalBar4').style.width = pct + '%'; document.getElementById('tutGoalStat4').textContent = `${tutChecked}/28`; document.getElementById('tutGbFill').style.width = pct + '%'; document.getElementById('tutGbPct').textContent = pct + '%'; }
-  if (s === 5) { document.getElementById('tutAvatarArt').innerHTML = AVATARS[0]; }
+  if (s === 2) { $id('tutGoalName2').textContent = tutGoalName; renderTutUnitOpts(); }
+  if (s === 3) { $id('tutGoalName3').textContent = tutGoalName; renderTutCal(); }
+  if (s === 4) { const pct = Math.round(tutChecked / 28 * 100); $id('tutGoalName4').textContent = tutGoalName; $id('tutGoalPct4').textContent = pct + '%'; $id('tutGoalBar4').style.width = pct + '%'; $id('tutGoalStat4').textContent = `${tutChecked}/28`; $id('tutGbFill').style.width = pct + '%'; $id('tutGbPct').textContent = pct + '%'; }
+  if (s === 5) { $id('tutAvatarArt').innerHTML = AVATARS[0]; }
 };
 function renderTutUnitOpts() {
   const opts = [{ l: '매일', v: 'daily' }, { l: '주 2~3회', v: 'w23' }, { l: '주 4~5회', v: 'w45', target: true }, { l: '한 번', v: 'once' }];
   let h = '';
   opts.forEach(o => h += `<div class="unit-opt ${o.target ? 'tut-cal-cell target' : ''}" onclick="tutSelectUnit('${o.v}')" id="tutUopt_${o.v}">${o.l}</div>`);
-  document.getElementById('tutUnitOpts').innerHTML = h;
+  $id('tutUnitOpts').innerHTML = h;
 }
 window.tutSelectUnit = function (v) {
   document.querySelectorAll('#tutUnitOpts .unit-opt').forEach(e => e.classList.remove('selected'));
-  document.getElementById(`tutUopt_${v}`)?.classList.add('selected');
+  $id(`tutUopt_${v}`)?.classList.add('selected');
   setTimeout(() => tutNextStep(3), 500);
 };
 function renderTutCal() {
   const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
   const days = getMonthDays(y, m), fd = new Date(y, m - 1, 1).getDay();
   let dh = ''; ['일', '월', '화', '수', '목', '금', '토'].forEach(d => dh += `<div class="tut-cal-day">${d}</div>`);
-  document.getElementById('tutCalDayRow').innerHTML = dh;
+  $id('tutCalDayRow').innerHTML = dh;
   let gh = '';
   for (let i = 0; i < fd; i++) gh += `<div class="tut-cal-cell empty"></div>`;
   for (let d = 1; d <= days; d++) gh += `<div class="tut-cal-cell" id="tutCal_${d}" onclick="tutToggleCal(${d})">${d}</div>`;
-  document.getElementById('tutCalGrid').innerHTML = gh;
-  tutChecked = 0; document.getElementById('tutStep3Status').textContent = '0 / 4 체크';
+  $id('tutCalGrid').innerHTML = gh;
+  tutChecked = 0; $id('tutStep3Status').textContent = '0 / 4 체크';
 }
 window.tutToggleCal = function (d) {
-  const el = document.getElementById(`tutCal_${d}`);
+  const el = $id(`tutCal_${d}`);
   if (el.classList.contains('done')) { el.classList.remove('done'); tutChecked--; }
   else { el.classList.add('done'); tutChecked++; showConfettiSmall(); }
-  document.getElementById('tutStep3Status').textContent = `${tutChecked} / 4 체크`;
+  $id('tutStep3Status').textContent = `${tutChecked} / 4 체크`;
   if (tutChecked >= 4) setTimeout(() => tutNextStep(4), 600);
 };
 window.tutFinish = async function () {
@@ -4162,8 +4133,8 @@ window.tutFinish = async function () {
   showConfetti(); showToast('🎉 시작합니다!', 'done');
 };
 
-// ===== 3D HAMSTER (Three.js) =====
-// ===== HAMSTER HOUSE (sleeping mode, <25%) =====
+// ===== 3D 햄스터 =====
+// ===== 햄스터 집 (수면 모드) =====
 function initHamsterHouse(container) {
   if (typeof THREE !== 'undefined') { buildHamsterHouse(container); return; }
   const script = document.createElement('script');
@@ -4699,13 +4670,13 @@ function buildHamster(container) {
   animate();
 }
 
-// ===== EFFECTS =====
+// ===== 이펙트 =====
 function showToast(msg, type = 'normal') {
-  const t = document.getElementById('toast');
+  const t = $id('toast');
   t.textContent = msg; t.className = `toast toast-${type} show`;
   setTimeout(() => t.classList.remove('show'), 2200);
 }
-// ===== CELEBRATION EFFECTS =====
+// ===== 축하 이펙트 =====
 function triggerHaptic(style) {
   // Native vibration (Android)
   if (navigator.vibrate) {
@@ -4723,7 +4694,7 @@ function triggerHaptic(style) {
 }
 
 function showConfetti() {
-  const c = document.getElementById('confettiContainer');
+  const c = $id('confettiContainer');
   const colors = ['#1952f5', '#ff5e7d', '#f5c518', '#00b96b', '#a78bfa', '#ff9f43', '#38bdf8', '#e879f9'];
   const shapes = ['square', 'circle', 'strip'];
   for (let i = 0; i < 280; i++) {
@@ -4747,7 +4718,7 @@ function showConfetti() {
 }
 
 function showConfettiSmall() {
-  const c = document.getElementById('confettiContainer');
+  const c = $id('confettiContainer');
   const colors = ['#1952f5', '#a78bfa', '#ff5e7d', '#f5c518', '#00b96b', '#38bdf8'];
   for (let i = 0; i < 100; i++) {
     const p = document.createElement('div'); p.className = 'confetti-piece';
@@ -4770,7 +4741,7 @@ function shakeScreen() {
 }
 
 
-// ===== COOKING SYSTEM =====
+// ===== 요리 시스템 =====
 
 // --- Milestone Check ---
 let _milestoneToastQueue = [];
@@ -4973,7 +4944,7 @@ function showMilestoneToast(item) {
 
 // --- Milestone Progress Bar ---
 function renderMilestoneBar() {
-  const el = document.getElementById('milestoneBar');
+  const el = $id('milestoneBar');
   if (!el) return;
   const { total, done } = getMyTodayProgress();
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -5011,7 +4982,7 @@ function renderMilestoneBar() {
 // --- Stage Message ---
 function renderStageMessage() {
   renderMilestoneBar();
-  const el = document.getElementById('mainFriendActivity');
+  const el = $id('mainFriendActivity');
   if (!el) return;
   const goals = getAllGoals();
   const hasHabits = goals.some(g => g && g.title && migrateGoal(g).unit);
@@ -5044,7 +5015,7 @@ function renderStageMessage() {
 
 // --- Cooking Modal ---
 function openCookingModal() {
-  let overlay = document.getElementById('cookingOverlay');
+  let overlay = $id('cookingOverlay');
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.id = 'cookingOverlay';
@@ -5058,7 +5029,7 @@ function openCookingModal() {
 window.openCookingModal = openCookingModal;
 
 function closeCookingModal() {
-  const overlay = document.getElementById('cookingOverlay');
+  const overlay = $id('cookingOverlay');
   if (overlay) { overlay.classList.remove('open'); setTimeout(() => { overlay.innerHTML = ''; }, 300); }
 }
 window.closeCookingModal = closeCookingModal;
@@ -5088,7 +5059,7 @@ function buildCookingModalHTML() {
 }
 
 window.switchCookingTab = function(tab) {
-  const overlay = document.getElementById('cookingOverlay');
+  const overlay = $id('cookingOverlay');
   if (overlay) overlay.innerHTML = buildCookingModalHTML();
 };
 
@@ -5155,24 +5126,7 @@ function buildKitchenTab(ck, sid, allCleared) {
   return h;
 }
 
-function buildCollectionTab(ck) {
-  let h = `<div class="cooking-collection">`;
-  RECIPES.forEach((recipe, i) => {
-    const cleared = (ck.clearedRecipes || []).includes(i);
-    h += `<div class="collection-item ${cleared ? 'cleared' : 'locked'}">`;
-    h += `<div class="collection-emoji" style="${cleared ? '' : 'filter:blur(5px);opacity:.4;'}">${recipe.emoji}</div>`;
-    h += `<div class="collection-name">${cleared ? recipe.name : '❓'.repeat(recipe.name.length)}</div>`;
-    if (cleared) {
-      h += `<div class="collection-lv">${'⭐'.repeat(recipe.lv)}</div>`;
-      h += `<div class="collection-ings">${recipe.ingredients.map(k => INGREDIENTS[k].emoji).join(' ')}</div>`;
-    } else {
-      h += `<div class="collection-lv" style="opacity:.3;">${'⭐'.repeat(recipe.lv)}</div>`;
-    }
-    h += `</div>`;
-  });
-  h += `</div>`;
-  return h;
-}
+
 
 async function doCook() {
   const ck = localDash.cooking;
@@ -5190,7 +5144,7 @@ async function doCook() {
   // Play success animation
   showCookingSuccess(recipe, () => {
     // After animation, rebuild modal
-    const overlay = document.getElementById('cookingOverlay');
+    const overlay = $id('cookingOverlay');
     if (overlay && overlay.classList.contains('open')) {
       overlay.innerHTML = buildCookingModalHTML();
     }
@@ -5230,7 +5184,7 @@ function showCookingSuccess(recipe, callback) {
 function renderCookingFAB() {
   const section = document.querySelector('.avatar-section');
   if (!section) return;
-  let fab = document.getElementById('cookingFab');
+  let fab = $id('cookingFab');
   if (!fab) {
     fab = document.createElement('button');
     fab.id = 'cookingFab';

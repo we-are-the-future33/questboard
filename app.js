@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304b';
+const APP_VERSION = '20260304c';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -1576,6 +1576,7 @@ async function habitMarkDone(idx) {
   renderHabitCards(); renderAvatar();
   saveDash();
   checkMilestone();
+  renderMilestoneBar();
 }
 
 async function habitMarkUndo(idx) {
@@ -1590,6 +1591,7 @@ async function habitMarkUndo(idx) {
   checkMilestoneUndo();
   saveDash();
   renderStageMessage();
+  renderMilestoneBar();
 }
 
 // ===== CHALLENGE CARDS (2-col grid) =====
@@ -3020,6 +3022,7 @@ window.bsToggleOnce = async function (idx) {
   localDash.completions[k] = !wasDone;
   await saveDash(); renderBSBody(idx); renderHabitCards(); renderAvatar();
   if (wasDone) { checkMilestoneUndo(); } else { checkMilestone(); }
+  renderMilestoneBar();
 };
 
 // ===== 6개월 통계 =====

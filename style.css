@@ -903,7 +903,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 
 /* Milestone Progress Bar - Dark Blue Milestone Style */
 .ms-bar-wrap {
-  position: absolute; bottom: 10px; left: 16px; right: 16px;
+  position: absolute; bottom: 20px; left: 16px; right: 16px;
   box-sizing: border-box;
 }
 .ms-bar-pill {
@@ -953,6 +953,11 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
   border-color: #3b82f6;
   transform: scale(1.1);
   box-shadow: 0 0 16px rgba(59,130,246,.25);
+  animation: glowPulse 2s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(59,130,246,.2); }
+  50% { box-shadow: 0 0 24px rgba(59,130,246,.45); }
 }
 .ms-bar-icon.bounce { animation: msBounce .5s ease; }
 .ms-bar-emoji { font-size: 20px; line-height: 1; }
@@ -969,7 +974,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 }
 /* Dark mode milestone overrides */
 .avatar-section.dark-bg .ms-bar-icon { background: rgba(20,30,60,.9); border-color: rgba(255,255,255,.12); }
-.avatar-section.dark-bg .ms-bar-icon.active { background: rgba(30,50,100,.95); border-color: #3b82f6; }
+.avatar-section.dark-bg .ms-bar-icon.active { background: rgba(30,50,100,.95); border-color: #3b82f6; animation: glowPulse 2s ease-in-out infinite; }
 .avatar-section.dark-bg .ms-bar-icon.inactive { background: rgba(20,30,60,.95); }
 .avatar-section.dark-bg .ms-bar-label { color: rgba(255,255,255,.35); }
 .avatar-section.dark-bg .ms-bar-icon.active .ms-bar-label { color: #60a5fa; }

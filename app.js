@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304i';
+const APP_VERSION = '20260304j';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -152,7 +152,9 @@ function setHabitMetaTags(g) {
   const unitLbl = getUnitLabel(g);
   const timeLbl = TIME_LABELS[g.time || 'any'] || '🔄 언제나';
   const catLbl = CAT_LABELS[g.category || 'etc'] || '📦 기타';
-  el.innerHTML = `<span class="bs-meta-chip">${unitLbl}</span><span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
+  let html = `<span class="bs-meta-chip">${unitLbl}</span><span class="bs-meta-chip">${timeLbl}</span><span class="bs-meta-chip">${catLbl}</span>`;
+  if (g.public === false) html += '<span class="bs-meta-chip">🔒 비공개</span>';
+  el.innerHTML = html;
 }
 function setChallengeMetaTags(c) {
   const el = document.getElementById('bsMetaTags');
@@ -160,7 +162,9 @@ function setChallengeMetaTags(c) {
   const typeLbl = TYPE_LABELS[c.type || 'bucket'] || '🎯 버킷리스트';
   const catLbl = CAT_LABELS[c.category || 'etc'] || '📦 기타';
   const monthLbl = formatTargetMonth(c.targetMonth);
-  el.innerHTML = `<span class="bs-meta-chip">${typeLbl}</span><span class="bs-meta-chip">${catLbl}</span><span class="bs-meta-chip">${monthLbl}</span>`;
+  let html = `<span class="bs-meta-chip">${typeLbl}</span><span class="bs-meta-chip">${catLbl}</span><span class="bs-meta-chip">${monthLbl}</span>`;
+  if (c.public === false) html += '<span class="bs-meta-chip">🔒 비공개</span>';
+  el.innerHTML = html;
 }
 function clearMetaTags() {
   const el = document.getElementById('bsMetaTags');
@@ -176,6 +180,7 @@ let currentSubTab = 'habit';
 
 // ===== UTILITIES =====
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function isPublic(item) { return item.public !== false; }
 function migrateGoal(g) { if (!g) return g; if (LEGACY_MAP[g.unit]) return Object.assign({}, g, LEGACY_MAP[g.unit]); return g; }
 function getGoalFreq(g) {
   if (!g) return 1; g = migrateGoal(g);
@@ -582,6 +587,14 @@ window.openSettings = function () {
   h += `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">링크를 공유하면 누구나 나의 투두 현황을 볼 수 있어요</div>`;
   h += `<button onclick="copyPublicLink()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;">📋 공개 링크 복사</button>`;
   h += `</div>`;
+  // Bulk visibility
+  h += `<div style="border-top:1px solid var(--border);margin-top:20px;padding-top:20px;">`;
+  h += `<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">🔒 공개/비공개 일괄 변경</div>`;
+  h += `<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">모든 습관과 도전의 공개 설정을 한번에 변경합니다</div>`;
+  h += `<div style="display:flex;gap:8px;">`;
+  h += `<button onclick="bulkVisibility(true)" style="flex:1;padding:10px;background:#f0f9ff;color:#2563eb;border:1.5px solid #bfdbfe;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;">🔓 전체 공개</button>`;
+  h += `<button onclick="bulkVisibility(false)" style="flex:1;padding:10px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;">🔒 전체 비공개</button>`;
+  h += `</div></div>`;
   document.getElementById('bsBody').innerHTML = h;
   openBS();
 };
@@ -603,6 +616,16 @@ function simpleHash(str) {
   }
   return (h >>> 0).toString(36);
 }
+
+window.bulkVisibility = async function(isPublicVal) {
+  const label = isPublicVal ? '전체 공개' : '전체 비공개';
+  if (!confirm(`모든 습관과 도전을 ${label}로 변경할까요?\n\n이 작업은 되돌릴 수 있습니다.`)) return;
+  (localDash.goals || []).forEach(g => { if (g?.title) g.public = isPublicVal; });
+  Object.values(localDash.challenges || {}).forEach(c => { if (c?.title) c.public = isPublicVal; });
+  await saveDash();
+  renderHabitCards(); renderChallengeCards();
+  showToast(isPublicVal ? '🔓 전체 공개로 변경됨' : '🔒 전체 비공개로 변경됨', 'done');
+};
 
 window.copyPublicLink = async function () {
   if (!currentUser) return;
@@ -1371,6 +1394,7 @@ function generateHabitCardHtml(g, idx, y, m) {
         <div class="habit-card-title">${esc(g.title)}</div>
         <div class="habit-card-mid">
           <div class="habit-card-unit">${getUnitLabel(mg)}</div>
+          ${g.public === false ? '<div class="private-badge">🔒</div>' : ''}
           <div class="habit-card-streak ${streak > 0 ? '' : 'zero'}">
             <span class="streak-num">${streakLbl}</span>
           </div>
@@ -1609,6 +1633,7 @@ function generateChallengeCardHtml(c, idx) {
         <div>
           <div class="challenge-card-title">${esc(c.title)}</div>
           <span class="challenge-card-type bucket">버킷리스트</span>
+          ${c.public === false ? '<span class="private-badge">🔒</span>' : ''}
         </div>
         ${done ? '<div><div class="challenge-card-achieve">달성 완료</div></div>' : '<div></div>'}
       </div>
@@ -1622,6 +1647,7 @@ function generateChallengeCardHtml(c, idx) {
         <div class="challenge-card-title">${esc(c.title)}</div>
         <div class="challenge-card-meta-row">
           <span class="challenge-card-type project">프로젝트</span>
+          ${c.public === false ? '<span class="private-badge">🔒</span>' : ''}
           <span class="challenge-card-stage">${done}/${total} 단계</span>
         </div>
       </div>
@@ -1826,6 +1852,11 @@ window.openBucketEdit = function (idx) {
   h += `</div>`;
   h += `<div style="font-size:12px;color:var(--accent);font-weight:700;margin:16px 0 8px;">📅 목표 시기</div>`;
   h += `<div id="bucketMonthArea">${getEditMonthChipsHTML(_bucketEditMonth, 'bucket')}</div>`;
+  const bEditPriv = c.public === false;
+  h += `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin:16px 0 0;background:var(--card-bg);border-radius:12px;border:1px solid var(--border);">
+    <div><div style="font-size:13px;font-weight:700;color:var(--text);">🔒 비공개</div><div style="font-size:11px;color:var(--text-dim);">친구에게 이 도전을 숨겨요</div></div>
+    <label class="toggle-switch"><input type="checkbox" id="editBucketPrivate" ${bEditPriv ? 'checked' : ''}><span class="toggle-slider"></span></label>
+  </div>`;
   h += `<div class="proj-save-row" style="margin-top:24px;"><button class="proj-save-btn cancel" onclick="openBucketDetail(${idx})">취소</button><button class="proj-save-btn save" onclick="saveBucketEdit(${idx})">저장</button></div>`;
   document.getElementById('bsBody').innerHTML = h;
   setTimeout(() => document.getElementById('editBucketName')?.focus(), 200);
@@ -1887,6 +1918,7 @@ window.saveBucketEdit = async function (idx) {
   localDash.challenges[idx].title = name;
   localDash.challenges[idx].targetMonth = _bucketEditMonth;
   localDash.challenges[idx].category = catKey;
+  localDash.challenges[idx].public = !document.getElementById('editBucketPrivate')?.checked;
   delete localDash.challenges[idx].deadline;
   await saveDash();
   renderChallengeCards();
@@ -2081,6 +2113,16 @@ window.openAddChallengeSheet = function () {
     <div style="text-align:center;padding:16px 0;">
       <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;" id="cWizConfirmTags"></div>
     </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin:0 0 12px;background:var(--card-bg);border-radius:12px;border:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">🔒 비공개</div>
+        <div style="font-size:11px;color:var(--text-dim);">친구에게 이 도전을 숨겨요</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="cAddPrivate">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
     <button class="unit-confirm-btn" onclick="cAddSave()">도전 시작하기</button>
     <div class="wiz-nav" style="border:none;margin-top:8px;"><div class="wiz-dots cAddDotsBar"></div></div>
   </div>`;
@@ -2258,15 +2300,17 @@ window.cAddSave = async function () {
   for (let i = 0; i < MAX_CHALLENGES; i++) { if (!localDash.challenges[i] || !localDash.challenges[i].title) { slot = i; break; } }
   if (slot === -1) { showToast('최대 25개까지 등록 가능합니다', 'normal'); return; }
 
+  const cIsPrivate = document.getElementById('cAddPrivate')?.checked;
+
   if (_createType === 'bucket') {
-    localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat || 'etc', targetMonth: _createMonth || 'someday', createdAt: new Date().toISOString() };
+    localDash.challenges[slot] = { type: 'bucket', title: name, done: false, category: _createCat || 'etc', targetMonth: _createMonth || 'someday', createdAt: new Date().toISOString(), public: !cIsPrivate };
   } else {
     syncCStagesFromDOM();
     _createStages.forEach((s, i) => {
       if (!s.name.trim()) s.name = `${i+1}단계`;
       (s.tasks || []).forEach(t => { if (!t.name.trim()) t.name = '항목'; });
     });
-    localDash.challenges[slot] = { type: 'project', title: name, category: _createCat || 'etc', targetMonth: _createMonth || 'someday', stages: _createStages, createdAt: new Date().toISOString() };
+    localDash.challenges[slot] = { type: 'project', title: name, category: _createCat || 'etc', targetMonth: _createMonth || 'someday', stages: _createStages, createdAt: new Date().toISOString(), public: !cIsPrivate };
   }
   closeBottomSheet(); renderChallengeCards();
   showToast(_createType === 'bucket' ? '⭐ 도전 등록!' : '🗺️ 프로젝트 시작!', 'done');
@@ -2359,6 +2403,11 @@ window.openProjectEdit = function (idx) {
     h += `<button class="proj-add-task-btn" onclick="addEditTask(${si})">+ 세부 항목 추가</button></div>`;
   });
   h += `<button class="proj-add-stage-btn" onclick="addEditStage()">+ 새 단계 추가</button>`;
+  const pEditPriv = c.public === false;
+  h += `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin:16px 0 0;background:var(--card-bg);border-radius:12px;border:1px solid var(--border);">
+    <div><div style="font-size:13px;font-weight:700;color:var(--text);">🔒 비공개</div><div style="font-size:11px;color:var(--text-dim);">친구에게 이 도전을 숨겨요</div></div>
+    <label class="toggle-switch"><input type="checkbox" id="editProjPrivate" ${pEditPriv ? 'checked' : ''}><span class="toggle-slider"></span></label>
+  </div>`;
   h += `<div class="proj-save-row"><button class="proj-save-btn cancel" onclick="cancelProjectEdit(${idx})">취소</button><button class="proj-save-btn save" onclick="saveProjectEdit(${idx})">저장</button></div>`;
   body.innerHTML = h;
 };
@@ -2465,7 +2514,7 @@ window.saveProjectEdit = async function (idx) {
     });
     if (!s.name.trim()) s.name = `단계 ${i + 1}`;
   });
-  const updated = { ...localDash.challenges[idx], title, why, targetMonth: _projEditMonth, stages, category: _projEditCat };
+  const updated = { ...localDash.challenges[idx], title, why, targetMonth: _projEditMonth, stages, category: _projEditCat, public: !document.getElementById('editProjPrivate')?.checked };
   delete updated.deadline;
   localDash.challenges[idx] = updated;
   await saveDash();
@@ -2601,6 +2650,16 @@ window.openAddHabitSheet = function () {
   h += `<div class="wiz-slide" id="hWiz4">
     <div style="text-align:center;padding:16px 0;">
       <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px;" id="hWizConfirmTags"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin:0 0 12px;background:var(--card-bg);border-radius:12px;border:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">🔒 비공개</div>
+        <div style="font-size:11px;color:var(--text-dim);">친구에게 이 습관을 숨겨요</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="hAddPrivate">
+        <span class="toggle-slider"></span>
+      </label>
     </div>
     <button class="unit-confirm-btn" onclick="habitAddSave()">습관 등록하기</button>
     <div class="wiz-nav" style="border:none;margin-top:8px;"><div class="wiz-dots hAddDotsBar"></div></div>
@@ -2797,7 +2856,8 @@ window.habitAddSave = async function () {
   for (let i = 0; i < MAX_HABITS; i++) { if (!localDash.goals[i] || !localDash.goals[i].title) { slot = i; break; } }
   if (slot === -1) { showToast('최대 개수 도달', 'normal'); return; }
 
-  const goal = { title: name, unit, freq, time, category: cat };
+  const isPrivate = document.getElementById('hAddPrivate')?.checked;
+  const goal = { title: name, unit, freq, time, category: cat, public: !isPrivate };
   if (unit === 'health_workout' && _workoutType) goal.workoutType = _workoutType;
   localDash.goals[slot] = goal;
 
@@ -3333,6 +3393,11 @@ window.openHabitEdit = function (idx) {
       <input type="radio" name="editCat" value="${val}" ${sel?'checked':''} style="margin:0;"> ${lbl}</label>`;
   });
   h += `</div>`;
+  const editPriv = g.public === false;
+  h += `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin:0 0 16px;background:var(--card-bg);border-radius:12px;border:1px solid var(--border);">
+    <div><div style="font-size:13px;font-weight:700;color:var(--text);">🔒 비공개</div><div style="font-size:11px;color:var(--text-dim);">친구에게 이 습관을 숨겨요</div></div>
+    <label class="toggle-switch"><input type="checkbox" id="editPrivate" ${editPriv ? 'checked' : ''}><span class="toggle-slider"></span></label>
+  </div>`;
   h += `<div class="proj-save-row"><button class="proj-save-btn cancel" onclick="renderBSBody(${idx});document.getElementById('bsTitle').textContent='${esc(g.title)}';">취소</button><button class="proj-save-btn save" onclick="saveHabitEdit(${idx})">저장</button></div>`;
   document.getElementById('bsBody').innerHTML = h;
 };
@@ -3345,6 +3410,7 @@ window.saveHabitEdit = async function (idx) {
   localDash.goals[idx].title = name;
   localDash.goals[idx].time = time;
   localDash.goals[idx].category = cat;
+  localDash.goals[idx].public = !document.getElementById('editPrivate')?.checked;
   await saveDash();
   renderHabitCards();
   closeBottomSheet();
@@ -3642,6 +3708,7 @@ window.openFriendDetail = async function (fid) {
   let h = `<div class="friend-detail"><div class="fgoal-grid">`;
   for (let i = 0; i < MAX_HABITS; i++) {
     const g = goals[i]; if (!g || !g.unit) continue;
+    if (g.public === false) continue;
     const mg = migrateGoal(g);
     const mod = goalModulus(mg, i, y, m);
     let done = 0;

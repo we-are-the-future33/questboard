@@ -6,7 +6,7 @@
 <title>키웁 — 공개 프로필</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260302t">
+<link rel="stylesheet" href="style.css?v=20260302u">
 <style>
 body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
 .pub-mobile-wrap{max-width:440px;width:100%;background:var(--bg,#fff);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -242,7 +242,7 @@ function isChallengeCompletePub(c){
 function renderHabits(){
   const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
   let activeGoals=[];
-  _goals.forEach((g,i)=>{if(g&&g.unit)activeGoals.push({g,idx:i});});
+  _goals.forEach((g,i)=>{if(g&&g.unit&&g.public!==false)activeGoals.push({g,idx:i});});
   document.getElementById('hCount').textContent=activeGoals.length;
 
   // Filter
@@ -309,7 +309,7 @@ function habitCard(g,idx){
 }
 
 function renderChallenges(){
-  let activeC=[];_challenges.forEach((c,i)=>{if(c)activeC.push({c,idx:i});});
+  let activeC=[];_challenges.forEach((c,i)=>{if(c&&c.public!==false)activeC.push({c,idx:i});});
   document.getElementById('cCount').textContent=activeC.length;
   // Filter
   if(pubCFilter==='active') activeC=activeC.filter(v=>!isChallengeCompletePub(v.c));

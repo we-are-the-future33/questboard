@@ -120,10 +120,10 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .gb-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.25) 0%,transparent 60%);border-radius:100px;}
 
 /* 아바타 */
-.avatar-section{padding:40px 16px 90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
+.avatar-section{padding:30px 16px 100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
 .avatar-section::before{content:'';position:absolute;top:0;left:0;right:0;height:24px;background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,transparent 100%);z-index:2;pointer-events:none;}
-.avatar-art{width:240px;height:240px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-top:-10px;margin-bottom:5px;}
-.avatar-art canvas{width:240px!important;height:240px!important;}
+.avatar-art{width:220px;height:220px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-top:-10px;margin-bottom:0px;}
+.avatar-art canvas{width:220px!important;height:220px!important;}
 .avatar-stage{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:8px;position:relative;z-index:3;}
 .avatar-info-row{display:flex;align-items:center;justify-content:center;gap:8px;position:relative;z-index:3;padding-bottom:8px;}
 .avatar-nickname{font-family:var(--font-heading);font-size:22px;color:#111827;letter-spacing:-0.02em;}

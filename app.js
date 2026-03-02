@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303p';
+const APP_VERSION = '20260303q';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4108,7 +4108,7 @@ function buildHamsterHouse(container) {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 2.5, 10);
+  camera.position.set(0, 2.5, 13);
   camera.lookAt(0, 2.2, 0);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });

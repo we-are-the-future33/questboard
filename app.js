@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304v';
+const APP_VERSION = '20260304w';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -351,7 +351,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $id(id).classList.add('active');
   window.scrollTo(0, 0);
-  if (id !== 'dashboardScreen') stopShimmerLoop();
+  if (id !== 'dashboardScreen') stopTypingLoop();
 }
 
 // ===== 데이터베이스 =====
@@ -5001,24 +5001,33 @@ function renderMilestoneBar() {
 }
 
 // --- Stage Message ---
-// --- 스테이지 메시지 shimmer 효과 ---
-let _shimmerTimer = null;
-function startShimmerLoop() {
-  if (_shimmerTimer) return;
-  function triggerShimmer() {
+// --- 스테이지 메시지 타이핑 효과 ---
+let _typingTimer = null;
+let _typingInterval = null;
+function startTypingLoop() {
+  if (_typingTimer) return;
+  function triggerTyping() {
     const msgEl = document.querySelector('.stage-msg');
-    if (msgEl) {
-      msgEl.classList.remove('shimmer');
-      void msgEl.offsetWidth; // reflow로 애니메이션 재시작
-      msgEl.classList.add('shimmer');
-      msgEl.addEventListener('animationend', () => msgEl.classList.remove('shimmer'), { once: true });
-    }
-    _shimmerTimer = setTimeout(triggerShimmer, 5000 + Math.random() * 3000);
+    if (!msgEl || _typingInterval) return;
+    const fullText = msgEl.textContent;
+    msgEl.textContent = '';
+    let i = 0;
+    _typingInterval = setInterval(() => {
+      if (i < fullText.length) {
+        msgEl.textContent += fullText[i];
+        i++;
+      } else {
+        clearInterval(_typingInterval);
+        _typingInterval = null;
+      }
+    }, 50);
+    _typingTimer = setTimeout(triggerTyping, 6000 + Math.random() * 4000);
   }
-  _shimmerTimer = setTimeout(triggerShimmer, 3000 + Math.random() * 2000);
+  _typingTimer = setTimeout(triggerTyping, 3000 + Math.random() * 2000);
 }
-function stopShimmerLoop() {
-  if (_shimmerTimer) { clearTimeout(_shimmerTimer); _shimmerTimer = null; }
+function stopTypingLoop() {
+  if (_typingTimer) { clearTimeout(_typingTimer); _typingTimer = null; }
+  if (_typingInterval) { clearInterval(_typingInterval); _typingInterval = null; }
 }
 
 function renderStageMessage() {
@@ -5052,7 +5061,7 @@ function renderStageMessage() {
   }
   progHTML += `</div>`;
   el.innerHTML = progHTML + `<div class="stage-msg-wrap"><div class="stage-msg">${sm.msg}</div></div>`;
-  startShimmerLoop();
+  startTypingLoop();
 }
 
 // --- Cooking Modal ---

@@ -770,7 +770,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 .avatar-section.dark-bg .prog-friend { color: rgba(255,255,255,.5); }
 
 /* Stage Message */
-.stage-msg-wrap { text-align: center; padding: 0; margin-bottom: 0; position: relative; z-index: 5; }
+.stage-msg-wrap { text-align: center; padding: 0; margin-top: 6px; margin-bottom: 0; position: relative; z-index: 5; }
 .stage-msg {
   display: inline-block;
   font-size: 11px; font-weight: 400; padding: 2px 0; border-radius: 0;
@@ -778,41 +778,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
   line-height: 1.4; letter-spacing: -0.02em; white-space: nowrap;
   border: none; backdrop-filter: none;
 }
-.stage-msg.shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(0,0,0,.35) 0%,
-    rgba(0,0,0,.35) 35%,
-    rgba(245,197,24,.85) 50%,
-    rgba(0,0,0,.35) 65%,
-    rgba(0,0,0,.35) 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmerSlide 1.5s ease-in-out;
-}
 .avatar-section.dark-bg .stage-msg { color: rgba(255,255,255,.4); }
-.avatar-section.dark-bg .stage-msg.shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(255,255,255,.4) 0%,
-    rgba(255,255,255,.4) 35%,
-    rgba(245,197,24,.95) 50%,
-    rgba(255,255,255,.4) 65%,
-    rgba(255,255,255,.4) 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmerSlide 1.5s ease-in-out;
-}
-@keyframes shimmerSlide {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
-}
 
 /* Cooking FAB */
 .cooking-fab {

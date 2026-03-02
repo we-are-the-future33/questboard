@@ -942,7 +942,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 }
 .ms-bar-icon {
   width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: rgba(220,225,240,.6);
+  border-radius: 50%; background: rgba(235,238,248,.95);
   border: 2px solid rgba(180,190,210,.3);
   transition: all .4s cubic-bezier(.175,.885,.32,1.275); flex-shrink: 0;
   position: relative;
@@ -957,7 +957,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 .ms-bar-icon.bounce { animation: msBounce .5s ease; }
 .ms-bar-emoji { font-size: 20px; line-height: 1; }
 .ms-bar-icon.crown .ms-bar-emoji { font-size: 22px; }
-.ms-bar-icon.inactive { background: rgba(220,225,240,.5); }
+.ms-bar-icon.inactive { background: rgba(235,238,248,.95); }
 .ms-bar-icon.inactive .ms-bar-emoji { filter: grayscale(80%); opacity: .45; }
 .ms-bar-label {
   position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
@@ -970,7 +970,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 /* Dark mode milestone overrides */
 .avatar-section.dark-bg .ms-bar-icon { background: rgba(20,30,60,.9); border-color: rgba(255,255,255,.12); }
 .avatar-section.dark-bg .ms-bar-icon.active { background: rgba(30,50,100,.95); border-color: #3b82f6; }
-.avatar-section.dark-bg .ms-bar-icon.inactive { background: rgba(20,30,60,.9); }
+.avatar-section.dark-bg .ms-bar-icon.inactive { background: rgba(20,30,60,.95); }
 .avatar-section.dark-bg .ms-bar-label { color: rgba(255,255,255,.35); }
 .avatar-section.dark-bg .ms-bar-icon.active .ms-bar-label { color: #60a5fa; }
 @keyframes msBounce {
@@ -978,10 +978,10 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
   50% { transform: scale(1.35); }
 }
 
-/* Text zone - independent absolute, center-bottom area */
+/* Text zone - independent absolute, middle area */
 .avatar-text-zone {
   position: absolute; left: 0; right: 0;
-  bottom: 100px; /* above progress bar */
+  top: 60%; transform: translateY(-50%);
   text-align: center; z-index: 5;
   padding: 0 20px;
 }

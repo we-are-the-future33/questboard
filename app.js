@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304y';
+const APP_VERSION = '20260304z';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -1731,7 +1731,7 @@ function renderChallengeCards() {
         <div class="group-header-left">${groupLabel(label)} <span style="font-size:12px;color:var(--accent);">${groups[key].length}</span></div>
         <div class="group-toggle-icon" id="cgi_${gIdx}">▼</div>
       </div><div class="card-grid" id="cg_${gIdx}">`;
-      groups[key].forEach(cCardRender);
+      groups[key].forEach(v => { html += cCardRender(v); });
       html += `</div>`;
       gIdx++;
     });
@@ -3537,6 +3537,13 @@ async function renderMainCheers() {
   _newCheerCount = newCheers.length;
   updateCheerBubble(_newCheerCount);
 
+  // 🎉 새 응원 도착 모달 (오래된 것부터 순차 표시)
+  if (newCheers.length > 0 && !window._cheerModalShown) {
+    window._cheerModalShown = true;
+    const sorted = [...newCheers].sort((a, b) => a.ts - b.ts); // 오래된 것부터
+    showCheerArrivalQueue(sorted);
+  }
+
   const recent = all.slice(0, 10);
   const badgeHtml = _newCheerCount > 0 ? `<span class="cheer-count-badge">${_newCheerCount}</span>` : '';
   let h = `<div class="my-cheers-main-title" id="cheersAnchor">💬 받은 응원 <span style="font-size:12px;color:var(--text-dim);">(${all.length})</span>${badgeHtml}</div>`;
@@ -3591,6 +3598,57 @@ function markCheersRead() {
     setTimeout(() => el.remove(), 500);
   });
 }
+
+// ===== 응원 도착 모달 (순차 표시) =====
+let _cheerQueue = [];
+function showCheerArrivalQueue(cheers) {
+  _cheerQueue = [...cheers];
+  showNextCheerModal();
+}
+
+function showNextCheerModal() {
+  if (_cheerQueue.length === 0) {
+    // 모든 응원 확인 완료 → 읽음 처리
+    markCheersRead();
+    renderMainCheers();
+    return;
+  }
+  const c = _cheerQueue.shift();
+  const d = new Date(c.ts);
+  const timeStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padLeft ? d.getMinutes().toString().padStart(2,'0') : String(d.getMinutes()).padStart(2,'0')}`;
+  const remaining = _cheerQueue.length;
+
+  // 화면 흔들기
+  document.body.classList.add('cheer-shake');
+
+  let overlay = $id('cheerArrivalOverlay');
+  if (overlay) overlay.remove();
+  overlay = document.createElement('div');
+  overlay.id = 'cheerArrivalOverlay';
+  overlay.className = 'cheer-arrival-overlay';
+  overlay.innerHTML = `
+    <div class="cheer-arrival-modal">
+      <div class="cheer-arrival-title">🎉 친구의 응원이 도착했어요!</div>
+      <div class="cheer-arrival-body">
+        <div class="cheer-arrival-from">${esc(c.from)}</div>
+        <div class="cheer-arrival-text">"${esc(c.text)}"</div>
+        <div class="cheer-arrival-time">${timeStr}</div>
+      </div>
+      ${remaining > 0 ? `<div class="cheer-arrival-remaining">📬 ${remaining}개 더 남았어요</div>` : ''}
+      <button class="cheer-arrival-btn" onclick="closeCheerArrival()">확인</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('show'));
+}
+
+window.closeCheerArrival = function () {
+  document.body.classList.remove('cheer-shake');
+  const overlay = $id('cheerArrivalOverlay');
+  if (overlay) {
+    overlay.classList.remove('show');
+    setTimeout(() => { overlay.remove(); showNextCheerModal(); }, 250);
+  }
+};
 
 window.scrollToCheers = function () {
   const anchor = $id('cheersAnchor');

@@ -1179,3 +1179,20 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 .nick-modal-btns{display:flex;gap:8px;}
 .nick-modal-cancel{flex:1;padding:10px;background:var(--surface);color:var(--text-dim);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;}
 .nick-modal-save{flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;}
+
+/* Cheer arrival modal */
+.cheer-arrival-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;transition:opacity .25s;}
+.cheer-arrival-overlay.show{opacity:1;}
+.cheer-arrival-modal{background:#fff;border-radius:20px;padding:28px 24px;max-width:320px;width:calc(100% - 48px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:cheerPop .35s cubic-bezier(.2,.8,.3,1.2);}
+@keyframes cheerPop{from{transform:scale(.7) rotate(-3deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.cheer-arrival-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:18px;font-family:var(--font-main);}
+.cheer-arrival-body{background:var(--surface);border-radius:14px;padding:18px 16px;margin-bottom:16px;border:1.5px solid var(--border);}
+.cheer-arrival-from{font-size:14px;font-weight:800;color:var(--accent);margin-bottom:6px;}
+.cheer-arrival-text{font-size:16px;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:8px;}
+.cheer-arrival-time{font-size:11px;color:var(--text-dim);}
+.cheer-arrival-remaining{font-size:12px;color:var(--text-dim);margin-bottom:12px;font-weight:600;}
+.cheer-arrival-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:var(--font-main);cursor:pointer;}
+
+/* Screen shake */
+@keyframes cheerShake{0%,100%{transform:translateX(0)}10%{transform:translateX(-4px) rotate(-0.5deg)}20%{transform:translateX(4px) rotate(0.5deg)}30%{transform:translateX(-3px)}40%{transform:translateX(3px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}70%{transform:translateX(-1px)}80%{transform:translateX(1px)}}
+.cheer-shake{animation:cheerShake .5s ease-in-out;}

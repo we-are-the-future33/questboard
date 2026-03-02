@@ -903,15 +903,15 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 }
 .ms-bar-pill {
   padding: 14px 24px 28px; margin: 0;
-  background: rgba(255,255,255,.07); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-radius: 24px; border: 1px solid rgba(255,255,255,.1);
-  box-shadow: 0 4px 20px rgba(0,0,0,.25);
+  background: rgba(200,210,240,.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px; border: 1px solid rgba(255,255,255,.25);
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
   position: relative; box-sizing: border-box;
 }
 .ms-bar-track {
-  position: absolute; left: 40px; right: 40px; top: 22px;
-  height: 8px; background: rgba(255,255,255,.1); border-radius: 100px;
-  z-index: 0; box-shadow: inset 0 1px 3px rgba(0,0,0,.3);
+  position: absolute; left: 40px; right: 40px; top: 34px;
+  height: 8px; background: rgba(100,120,180,.2); border-radius: 100px;
+  z-index: 0; box-shadow: inset 0 1px 3px rgba(0,0,0,.2); overflow: hidden;
 }
 .ms-bar-fill {
   position: absolute; left: 0; top: 0; height: 100%; border-radius: 100px;

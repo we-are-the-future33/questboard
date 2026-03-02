@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304s';
+const APP_VERSION = '20260304t';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -351,6 +351,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $id(id).classList.add('active');
   window.scrollTo(0, 0);
+  if (id !== 'dashboardScreen') stopShimmerLoop();
 }
 
 // ===== 데이터베이스 =====
@@ -4980,6 +4981,26 @@ function renderMilestoneBar() {
 }
 
 // --- Stage Message ---
+// --- 스테이지 메시지 shimmer 효과 ---
+let _shimmerTimer = null;
+function startShimmerLoop() {
+  if (_shimmerTimer) return;
+  function triggerShimmer() {
+    const msgEl = document.querySelector('.stage-msg');
+    if (msgEl) {
+      msgEl.classList.remove('shimmer');
+      void msgEl.offsetWidth; // reflow로 애니메이션 재시작
+      msgEl.classList.add('shimmer');
+      msgEl.addEventListener('animationend', () => msgEl.classList.remove('shimmer'), { once: true });
+    }
+    _shimmerTimer = setTimeout(triggerShimmer, 5000 + Math.random() * 3000);
+  }
+  _shimmerTimer = setTimeout(triggerShimmer, 3000 + Math.random() * 2000);
+}
+function stopShimmerLoop() {
+  if (_shimmerTimer) { clearTimeout(_shimmerTimer); _shimmerTimer = null; }
+}
+
 function renderStageMessage() {
   renderMilestoneBar();
   const el = $id('mainFriendActivity');
@@ -5011,6 +5032,7 @@ function renderStageMessage() {
   }
   progHTML += `</div>`;
   el.innerHTML = progHTML + `<div class="stage-msg-wrap"><div class="stage-msg">${sm.msg}</div></div>`;
+  startShimmerLoop();
 }
 
 // --- Cooking Modal ---

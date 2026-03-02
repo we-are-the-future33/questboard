@@ -120,7 +120,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .gb-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.25) 0%,transparent 60%);border-radius:100px;}
 
 /* 아바타 */
-.avatar-section{padding:30px 16px 100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
+.avatar-section{padding:20px 16px 120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-bottom:none;border-radius:0;transition:background 0.5s ease;position:relative;overflow:hidden;aspect-ratio:1/1;}
 .avatar-section::before{content:'';position:absolute;top:0;left:0;right:0;height:24px;background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,transparent 100%);z-index:2;pointer-events:none;}
 .avatar-art{width:220px;height:220px;flex-shrink:0;background:transparent;border:none;overflow:visible;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-top:-10px;margin-bottom:0px;}
 .avatar-art canvas{width:220px!important;height:220px!important;}
@@ -742,22 +742,27 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 /* Progress Overlay (between house and message) */
 .progress-overlay {
   text-align: center; padding: 2px 0; position: relative; z-index: 5;
-  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.65);
-  letter-spacing: -0.01em;
+  font-size: 14px; font-weight: 700; color: rgba(0,0,0,.7);
+  letter-spacing: -0.02em;
 }
-.prog-me { color: rgba(255,255,255,.85); }
-.prog-sep { margin: 0 6px; opacity: .4; }
-.prog-friend { color: rgba(255,255,255,.55); }
+.prog-me { }
+.prog-sep { margin: 0 5px; opacity: .35; font-weight: 400; }
+.prog-friend { font-weight: 500; font-size: 12px; opacity: .6; }
+/* Dark mode */
+.dark-bg ~ #mainFriendActivity .progress-overlay,
+.avatar-section.dark-bg .progress-overlay { color: rgba(255,255,255,.85); }
+.avatar-section.dark-bg .prog-friend { color: rgba(255,255,255,.5); }
 
 /* Stage Message */
 .stage-msg-wrap { text-align: center; padding: 0; margin-bottom: 0; position: relative; z-index: 5; }
 .stage-msg {
   display: inline-block;
-  font-size: 13px; font-weight: 500; padding: 4px 0; border-radius: 0;
-  background: transparent; color: rgba(255,255,255,.7); text-align: center;
+  font-size: 11px; font-weight: 400; padding: 2px 0; border-radius: 0;
+  background: transparent; color: rgba(0,0,0,.35); text-align: center;
   line-height: 1.4; letter-spacing: -0.02em; white-space: nowrap;
   border: none; backdrop-filter: none;
 }
+.avatar-section.dark-bg .stage-msg { color: rgba(255,255,255,.4); }
 
 /* Cooking FAB */
 .cooking-fab {
@@ -898,7 +903,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 
 /* Milestone Progress Bar - Dark Blue Milestone Style */
 .ms-bar-wrap {
-  position: absolute; bottom: 16px; left: 16px; right: 16px;
+  position: absolute; bottom: 10px; left: 16px; right: 16px;
   box-sizing: border-box;
 }
 .ms-bar-pill {

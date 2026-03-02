@@ -903,7 +903,7 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 
 /* Milestone Progress Bar - Dark Blue Milestone Style */
 .ms-bar-wrap {
-  position: absolute; bottom: 20px; left: 16px; right: 16px;
+  position: absolute; bottom: 40px; left: 16px; right: 16px;
   box-sizing: border-box;
 }
 .ms-bar-pill {

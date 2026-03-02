@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260304x';
+const APP_VERSION = '20260304y';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -2875,27 +2875,77 @@ window.habitAddSave = async function () {
   await saveDash();
 };
 
-// ===== 닉네임 / 메시지 편집 =====
-window.startEditNickname = function () {
-  const editArea = $id('avatarNicknameEdit');
-  const infoRow = $id('avatarInfoRow');
-  const cur = localDash.nickname || currentUser.name || '';
-  infoRow.style.display = 'none';
-  editArea.style.display = 'flex';
-  editArea.innerHTML = `<input class="nickname-input" id="nickInput" value="${esc(cur)}" maxlength="10" placeholder="닉네임"><button class="nickname-save-btn" onclick="saveNickname()">저장</button><button class="nickname-cancel-btn" onclick="cancelNickname()">취소</button>`;
-  $id('nickInput').focus();
+// ===== 닉네임 편집 모달 (햄스터 3초 롱프레스) =====
+let _nickLongTimer = null;
+function setupAvatarLongPress(container) {
+  let startTime = 0;
+  const LONG_PRESS_MS = 3000;
+  const onDown = () => {
+    startTime = Date.now();
+    _nickLongTimer = setTimeout(() => {
+      openNicknameModal();
+    }, LONG_PRESS_MS);
+  };
+  const onUp = () => {
+    if (_nickLongTimer) { clearTimeout(_nickLongTimer); _nickLongTimer = null; }
+  };
+  container.addEventListener('touchstart', onDown, { passive: true });
+  container.addEventListener('touchend', onUp);
+  container.addEventListener('touchcancel', onUp);
+  container.addEventListener('mousedown', onDown);
+  container.addEventListener('mouseup', onUp);
+  container.addEventListener('mouseleave', onUp);
+}
+
+window.openNicknameModal = function () {
+  const cur = localDash.nickname || (currentUser ? currentUser.name : '') || '';
+  let overlay = $id('nickModalOverlay');
+  if (overlay) overlay.remove();
+  overlay = document.createElement('div');
+  overlay.id = 'nickModalOverlay';
+  overlay.className = 'nick-modal-overlay';
+  overlay.innerHTML = `
+    <div class="nick-modal" onclick="event.stopPropagation()">
+      <div class="nick-modal-view" id="nickViewMode">
+        <span class="nick-modal-name" id="nickDisplayName">${esc(cur)}</span>
+        <button class="nick-modal-edit-btn" onclick="switchNickEditMode()">✏️</button>
+      </div>
+      <div class="nick-modal-edit" id="nickEditMode" style="display:none;">
+        <input class="nick-modal-input" id="nickModalInput" value="${esc(cur)}" maxlength="10" placeholder="닉네임">
+        <div class="nick-modal-btns">
+          <button class="nick-modal-cancel" onclick="closeNicknameModal()">취소</button>
+          <button class="nick-modal-save" onclick="saveNicknameModal()">저장</button>
+        </div>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', closeNicknameModal);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('show'));
 };
-window.cancelNickname = function () {
-  $id('avatarNicknameEdit').style.display = 'none';
-  $id('avatarInfoRow').style.display = '';
+
+window.switchNickEditMode = function () {
+  $id('nickViewMode').style.display = 'none';
+  $id('nickEditMode').style.display = '';
+  const input = $id('nickModalInput');
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
 };
-window.saveNickname = async function () {
-  const v = $id('nickInput').value.trim();
-  if (v) { localDash.nickname = v; await saveDash(); }
-  $id('avatarNicknameEdit').style.display = 'none';
-  $id('avatarInfoRow').style.display = '';
+
+window.closeNicknameModal = function () {
+  const overlay = $id('nickModalOverlay');
+  if (overlay) { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 200); }
+};
+
+window.saveNicknameModal = async function () {
+  const v = $id('nickModalInput').value.trim();
+  if (!v) { showToast('닉네임을 입력해주세요', 'warn'); return; }
+  localDash.nickname = v;
+  await saveDash();
+  closeNicknameModal();
   renderAvatar();
+  showToast('✅ 닉네임이 변경되었어요!', 'done');
 };
+
 window.startEditMsg = function () {
   const wrap = $id('avatarMsgWrap');
   const cur = localDash.msg || '';
@@ -4409,6 +4459,7 @@ function buildHamsterHouse(container) {
     // Trigger house bounce
     bounceTime = 1.0;
   });
+  setupAvatarLongPress(container);
 
   // Animate
   const clock = new THREE.Clock();
@@ -4688,6 +4739,7 @@ function buildHamster(container) {
   }
   container.addEventListener('click', onTap);
   container.addEventListener('touchstart', (e) => { if (e.touches.length === 1) onTap(e); }, { passive: true });
+  setupAvatarLongPress(container);
 
   // --- Gyro (Device Orientation) ---
   let gyroTarget = { x: 0, y: 0 };

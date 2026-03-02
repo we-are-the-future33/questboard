@@ -1163,3 +1163,19 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 
 /* Auto habit card value */
 .habit-card-auto{font-size:10px;font-weight:700;color:var(--accent);background:#eff6ff;padding:1px 6px;border-radius:4px;}
+
+/* Nickname edit modal */
+.nick-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;transition:opacity .2s;}
+.nick-modal-overlay.show{opacity:1;}
+.nick-modal{background:#fff;border-radius:18px;padding:24px 28px;min-width:260px;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:nickPop .25s ease-out;}
+@keyframes nickPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.nick-modal-view{display:flex;align-items:center;justify-content:center;gap:10px;}
+.nick-modal-name{font-size:20px;font-weight:800;color:var(--text);font-family:var(--font-main);}
+.nick-modal-edit-btn{background:none;border:none;font-size:16px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background .15s;}
+.nick-modal-edit-btn:hover{background:var(--surface);}
+.nick-modal-edit{display:flex;flex-direction:column;gap:12px;}
+.nick-modal-input{font-size:18px;font-weight:700;font-family:var(--font-main);text-align:center;border:2px solid var(--border);border-radius:12px;padding:10px 14px;outline:none;transition:border-color .2s;color:var(--text);background:var(--surface);}
+.nick-modal-input:focus{border-color:var(--accent);}
+.nick-modal-btns{display:flex;gap:8px;}
+.nick-modal-cancel{flex:1;padding:10px;background:var(--surface);color:var(--text-dim);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;}
+.nick-modal-save{flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--font-main);cursor:pointer;}

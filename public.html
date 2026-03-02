@@ -6,7 +6,7 @@
 <title>키웁 — 공개 프로필</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260302u">
+<link rel="stylesheet" href="style.css?v=20260304x">
 <style>
 body{background:#f1f5f9;display:flex;justify-content:center;margin:0;padding:0;}
 .pub-mobile-wrap{max-width:440px;width:100%;background:var(--bg,#fff);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -86,13 +86,30 @@ const MAX_HABITS = 25;
 const LEGACY_MAP = { w1:{unit:'weekly',freq:1}, w2:{unit:'weekly',freq:2}, w4:{unit:'weekly',freq:4}, w6:{unit:'weekly',freq:6} };
 const TIME_LABELS = { any:'🔄 언제나', dawn:'🌅 새벽', morning:'🌤 아침', midday:'🏞 낮', afternoon:'🌇 오후', evening:'🌟 저녁', night:'🦉 밤' };
 const CAT_LABELS = { health:'💪 건강 & 체력', diet:'🥗 식단 & 영양', study:'📚 학습 & 성장', work:'💼 업무 & 커리어', finance:'💰 재무 & 자산', life:'🌱 생활 & 루틴', home:'🧹 집안일 & 정리', hobby:'🎨 취미 & 창작', social:'🤝 관계 & 소셜', mental:'🧘 휴식 & 멘탈', etc:'📦 기타' };
+const STAGE_MESSAGES = [
+  { min:0,   max:24,  msg:'💤... 25% 달성해서 나를 깨워줘!' },
+  { min:25,  max:49,  msg:'앗, 햄스터 출몰! 🐹 이제 기본 재료를 모아줘' },
+  { min:50,  max:74,  msg:'야호! 절반 넘었어! 이제 스페셜 재료를 모으자 ✨' },
+  { min:75,  max:99,  msg:'좋아, 조금만 더 하면 100% 완벽한 하루야! 🔥' },
+  { min:100, max:999, msg:'오늘 미션 컴플리트! 진짜 대박이야! 👑' }
+];
+function isCompDone(value, goal) {
+  if (value === true) return true;
+  if (!value || !goal?.auto) return false;
+  if (typeof value === 'number') return value >= (goal.autoTarget || 0);
+  if (typeof value === 'object') {
+    const unit = goal.autoUnit || (goal.auto === 'sleep' ? 'h' : 'kcal');
+    return (value[unit] || 0) >= (goal.autoTarget || 0);
+  }
+  return false;
+}
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 function migrateGoal(g){if(!g)return g;if(LEGACY_MAP[g.unit])return Object.assign({},g,LEGACY_MAP[g.unit]);return g;}
 function getUnitLabel(g){if(!g)return '';g=migrateGoal(g);if(g.unit==='once')return'한 번';if(g.unit==='daily')return'매일';if(g.unit==='health_sleep')return'🌙 수면';if(g.unit==='health_workout')return'💪 운동';if(g.unit==='weekly')return`주 ${g.freq}회`;return g.unit;}
 function getMonthDays(y,m){return new Date(y,m,0).getDate();}
 function getMonthWeeks(y,m){return Math.ceil(getMonthDays(y,m)/7);}
 function goalModulus(g,gi,y,m){if(!g||!g.unit||g.unit==='once')return 1;g=migrateGoal(g);if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout')return getMonthDays(y,m);if(g.unit==='weekly')return(g.freq||1)*getMonthWeeks(y,m);if(g.unit==='biweekly')return(g.freq||1)*Math.ceil(getMonthDays(y,m)/14);if(g.unit==='multiweek')return(g.freq||1)*Math.ceil(getMonthDays(y,m)/((g.weeks||3)*7));return 1;}
-function goalDone(g,gi,y,m,c){if(!g||!g.unit)return 0;if(g.unit==='once')return c[`g${gi}_once`]===true?1:0;return Object.entries(c).filter(([k,v])=>k.startsWith(`g${gi}_${y}_${m}_`)&&v===true).length;}
+function goalDone(g,gi,y,m,c){if(!g||!g.unit)return 0;if(g.unit==='once')return isCompDone(c[`g${gi}_once`],g)?1:0;return Object.entries(c).filter(([k,v])=>k.startsWith(`g${gi}_${y}_${m}_`)&&isCompDone(v,g)).length;}
 function goalPct(g,gi,y,m,c){const mod=goalModulus(g,gi,y,m),done=goalDone(g,gi,y,m,c);return{done,mod,pct:mod>0?Math.round(done/mod*100):0};}
 function calcStreak(g,gi,c){if(!g||!g.unit||g.unit==='once')return 0;g=migrateGoal(g);if(g.unit==='daily'||g.unit==='health_sleep'||g.unit==='health_workout'){const now=new Date();let s=0;if(c[`g${gi}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`])s++;for(let d=1;d<=365;d++){const dt=new Date(now);dt.setDate(dt.getDate()-d);if(c[`g${gi}_${dt.getFullYear()}_${dt.getMonth()+1}_${dt.getDate()}`])s++;else break;}return s;}return 0;}
 function getStreakLabel(g,streak){g=migrateGoal(g);if(g&&(g.unit==='weekly'||g.unit==='biweekly'||g.unit==='multiweek'))return`${streak}주째`;return`${streak}일째`;}
@@ -150,6 +167,8 @@ function render(user,dash,cheersData,uid){
   h+=`<span class="avatar-stage" id="avatarStage">1단계</span>`;
   h+=`<span class="avatar-nickname" id="avatarNickname">${esc(nick)}</span>`;
   h+=`</div>`;
+  h+=`<div class="avatar-text-zone" id="pubStageArea"></div>`;
+  h+=`<div id="pubMilestoneBar"></div>`;
   h+=`<div id="pubFriendBanner"></div>`;
   h+=`</div>`;
 
@@ -194,7 +213,7 @@ function render(user,dash,cheersData,uid){
 
   document.getElementById('content').innerHTML=h;
 
-  // Compute stage
+  // Compute stage & today progress
   const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
   let td=0,tm=0;
   _goals.forEach((g,i)=>{if(!g||!g.unit)return;const r=goalPct(g,i,y,m,_comp);td+=r.done;tm+=r.mod;});
@@ -202,10 +221,50 @@ function render(user,dash,cheersData,uid){
   const stage=Math.min(9,Math.floor(gPct/10));
   document.getElementById('avatarStage').textContent=`${stage+1}단계`;
 
+  // Today progress
+  let pubTotal=0,pubDone=0;
+  _goals.forEach((g,i)=>{
+    if(!g||!g.title)return;
+    const mg=migrateGoal(g);
+    if(!mg.unit||mg.unit==='once')return;
+    pubTotal++;
+    if(_comp[`g${i}_${y}_${m}_${now.getDate()}`])pubDone++;
+  });
+  const todayPct=pubTotal>0?Math.round(pubDone/pubTotal*100):0;
+
+  // Stage message + progress text
+  const stageArea=document.getElementById('pubStageArea');
+  if(stageArea){
+    const sm=STAGE_MESSAGES.find(s=>todayPct>=s.min&&todayPct<=s.max)||STAGE_MESSAGES[0];
+    let progLabel=`오늘 (${pubDone}/${pubTotal})`;
+    if(todayPct===0) progLabel+=' 🌙';
+    else if(todayPct<100) progLabel+=` <span class="prog-pct">${todayPct}%</span> 달성 중 🔥`;
+    else progLabel+=' <span class="prog-pct">올클리어!</span> 🎉';
+    stageArea.innerHTML=`<div class="progress-overlay"><span class="prog-me">${progLabel}</span></div><div class="stage-msg-wrap"><div class="stage-msg">${sm.msg}</div></div>`;
+  }
+
+  // Milestone bar
+  const msEl=document.getElementById('pubMilestoneBar');
+  if(msEl){
+    const icons=[{ms:0,emoji:'💤',label:'0%'},{ms:25,emoji:'🐹',label:'25%'},{ms:50,emoji:'📦',label:'50%'},{ms:75,emoji:'✨',label:'75%'},{ms:100,emoji:'👑',label:'100%'}];
+    let mh=`<div class="ms-bar-wrap"><div class="ms-bar-pill"><div class="ms-bar-track"><div class="ms-bar-fill" style="width:${Math.min(todayPct,100)}%"></div></div><div class="ms-bar-icons">`;
+    icons.forEach(ic=>{
+      const active=todayPct>=ic.ms;
+      mh+=`<div class="ms-bar-icon ${active?'active':'inactive'}"><span class="ms-bar-emoji">${ic.emoji}</span><span class="ms-bar-label">${ic.label}</span></div>`;
+    });
+    mh+=`</div></div></div>`;
+    msEl.innerHTML=mh;
+  }
+
   renderHabits();
   renderChallenges();
   applyTimeBackground();
   renderPubFriendBanner(uid);
+
+  // 3D hamster - house mode if <25%
+  const showHouse=todayPct<25;
+  const artEl=document.getElementById('avatarArt');
+  if(artEl){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js';s.onload=()=>{if(showHouse)buildHamsterHouse(artEl);else buildHamster(artEl);};document.head.appendChild(s);}
 
   // Floating bottom banner
   const existingBanner=document.getElementById('pubFloatBanner');
@@ -215,10 +274,6 @@ function render(user,dash,cheersData,uid){
   banner.id='pubFloatBanner';
   banner.innerHTML=`🐹 ${esc(nick)}의 공개 대시보드입니다<br><span style="opacity:.7">체험만 가능</span> <span class="pub-float-dot">·</span> <span style="opacity:.7">가입은 별도 문의</span>`;
   document.body.appendChild(banner);
-
-  // 3D hamster
-  const artEl=document.getElementById('avatarArt');
-  if(artEl){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js';s.onload=()=>buildHamster(artEl);document.head.appendChild(s);}
 }
 
 function isGoalActiveThisWeekPub(g,gi){
@@ -627,6 +682,41 @@ function initAllInteractions(){
   _goals.forEach((g,i)=>{if(g&&g.unit)initPubHabitSwipe(i);});
   _challenges.forEach((c,i)=>{if(!c)return;if(c.type==='bucket'||!c.type)initPubBucketSwipe(i);else if(c.type==='project')initPubProjectTap(i);});
 }
+function buildHamsterHouse(container){
+  if(typeof THREE==='undefined'){container.innerHTML='🏠';return;}
+  let scene,camera,renderer,leftEyeMesh,rightEyeMesh;
+  let blinkState={active:false,progress:0};
+  const creamColor=0xfffcf2;
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(45,1,0.1,100);camera.position.set(0,2.5,13);camera.lookAt(0,2.2,0);
+  renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setSize(220,220);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));container.innerHTML='';container.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff,0.7));const dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(3,10,8);scene.add(dl);
+  const houseGroup=new THREE.Group();
+  const base=new THREE.Mesh(new THREE.BoxGeometry(4.5,3.5,4),new THREE.MeshStandardMaterial({color:creamColor,roughness:0.8}));base.position.y=1.75;houseGroup.add(base);
+  const doorShape=new THREE.Shape();const dw=2.4,dh=3.6;doorShape.moveTo(-dw/2,0);doorShape.lineTo(dw/2,0);doorShape.lineTo(dw/2,dh*0.6);doorShape.absarc(0,dh*0.6,dw/2,0,Math.PI,false);doorShape.lineTo(-dw/2,0);
+  const door=new THREE.Mesh(new THREE.ShapeGeometry(doorShape),new THREE.MeshBasicMaterial({color:0x1e293b}));door.position.set(0,0,2.01);houseGroup.add(door);
+  const seedGroup=new THREE.Group();const seedShape=new THREE.Shape();seedShape.moveTo(0,0.5);seedShape.quadraticCurveTo(0.35,0.4,0.35,-0.1);seedShape.quadraticCurveTo(0.35,-0.5,0,-0.5);seedShape.quadraticCurveTo(-0.35,-0.5,-0.35,-0.1);seedShape.quadraticCurveTo(-0.35,0.4,0,0.5);
+  seedGroup.add(new THREE.Mesh(new THREE.ShapeGeometry(seedShape),new THREE.MeshBasicMaterial({color:0x2d2d2d})));
+  const mkStripe=(x,r)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.7,0.01),new THREE.MeshBasicMaterial({color:0xfafafa}));m.position.set(x,-0.05,0.01);m.rotation.z=r;return m;};
+  seedGroup.add(mkStripe(0,0),mkStripe(-0.15,0.25),mkStripe(0.15,-0.25));seedGroup.position.set(0,3.85,2.05);seedGroup.scale.set(0.65,0.65,1);houseGroup.add(seedGroup);
+  const faceZ=2.02,faceCY=1.65;
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.08,32,32),new THREE.MeshBasicMaterial({color:0xf5b0a0}));nose.scale.set(1.2,0.8,1);nose.position.set(0,faceCY,faceZ);houseGroup.add(nose);
+  const mouth=new THREE.Mesh(new THREE.SphereGeometry(0.035,16,16),new THREE.MeshBasicMaterial({color:0x7a5a5a}));mouth.scale.set(1,0.7,0.5);mouth.position.set(0,faceCY-0.1,faceZ);houseGroup.add(mouth);
+  const mkEye=(x)=>{const g=new THREE.Group();const eW=new THREE.Mesh(new THREE.SphereGeometry(0.13,32,32),new THREE.MeshBasicMaterial({color:0xffffff}));eW.scale.set(0.85,1.1,0.5);const p=new THREE.Mesh(new THREE.SphereGeometry(0.07,32,32),new THREE.MeshBasicMaterial({color:0x1a1a1a}));p.position.set(0,0,0.05);p.scale.set(0.9,1,0.5);const hl=new THREE.Mesh(new THREE.SphereGeometry(0.03,16,16),new THREE.MeshBasicMaterial({color:0xffffff}));hl.position.set(0.03,0.04,0.08);g.add(eW,p,hl);g.position.set(x,faceCY+0.33,faceZ);return{group:g,mesh:eW};};
+  const le=mkEye(-0.33),re=mkEye(0.33);leftEyeMesh=le.mesh;rightEyeMesh=re.mesh;houseGroup.add(le.group,re.group);
+  const gableShape=new THREE.Shape();const gW=4.5/2,gH=1.35;gableShape.moveTo(-gW,0);gableShape.lineTo(gW,0);gableShape.lineTo(0,gH);gableShape.lineTo(-gW,0);
+  const gableMat=new THREE.MeshStandardMaterial({color:creamColor,roughness:0.8});
+  const fg=new THREE.Mesh(new THREE.ShapeGeometry(gableShape),gableMat);fg.position.set(0,3.5,2);houseGroup.add(fg);
+  const bg2=new THREE.Mesh(new THREE.ShapeGeometry(gableShape),gableMat);bg2.position.set(0,3.5,-2);bg2.rotation.y=Math.PI;houseGroup.add(bg2);
+  const roofMat=new THREE.MeshStandardMaterial({color:0x2196f3,roughness:0.9,side:THREE.DoubleSide});const roofGeo=new THREE.BoxGeometry(2.9,0.3,5.5);
+  const lr=new THREE.Mesh(roofGeo,roofMat);lr.position.set(-1.23,4.25,0);lr.rotation.z=Math.PI/5.8;houseGroup.add(lr);
+  const rr=new THREE.Mesh(roofGeo,roofMat);rr.position.set(1.23,4.25,0);rr.rotation.z=-Math.PI/5.8;houseGroup.add(rr);
+  scene.add(houseGroup);
+  const emojis=['💤','😴','🌙','⭐','✨','🐹','💫','🏠'];let bounceTime=0;
+  container.addEventListener('click',e=>{const r=container.getBoundingClientRect();const cx=e.clientX-r.left,cy=e.clientY-r.top;for(let i=0;i<8;i++){const em=document.createElement('div');em.textContent=emojis[Math.floor(Math.random()*emojis.length)];em.style.cssText=`position:absolute;font-size:${18+Math.random()*14}px;pointer-events:none;z-index:10;left:${cx-10+(Math.random()-.5)*60}px;top:${cy-10}px;opacity:1;transition:none;`;container.style.position='relative';container.appendChild(em);const dx=(Math.random()-.5)*120,dy=-(40+Math.random()*80);requestAnimationFrame(()=>{em.style.transition='all 1.6s cubic-bezier(.15,.9,.3,1)';em.style.transform=`translate(${dx}px,${dy}px) rotate(${(Math.random()-.5)*60}deg)`;em.style.opacity='0';});setTimeout(()=>em.remove(),1800);}bounceTime=1.0;});
+  const clock=new THREE.Clock();
+  (function anim(){requestAnimationFrame(anim);const t=clock.getElapsedTime();if(!blinkState.active&&Math.random()<0.008){blinkState.active=true;blinkState.progress=0;}if(blinkState.active){blinkState.progress+=0.15;let sY=1;if(blinkState.progress<Math.PI)sY=Math.abs(Math.cos(blinkState.progress));else{blinkState.active=false;sY=1;}if(leftEyeMesh)leftEyeMesh.scale.y=sY*1.1;if(rightEyeMesh)rightEyeMesh.scale.y=sY*1.1;}const idleY=Math.sin(t*0.4)*0.2+Math.sin(t*0.7)*0.1;const idleX=Math.sin(t*0.3)*0.08;houseGroup.rotation.y=idleY;houseGroup.rotation.x=idleX;houseGroup.rotation.z=Math.sin(t*0.6)*0.03;let bs=1;if(bounceTime>0){bounceTime-=0.05;bs=1+Math.sin(bounceTime*Math.PI*6)*bounceTime*0.15;}const br=(1+Math.sin(t*1.5)*0.04)*bs;houseGroup.scale.set(br,br*(1+Math.sin(t*2)*0.015),br);renderer.render(scene,camera);})();
+}
+
 function buildHamster(container){
   if(typeof THREE==='undefined'){container.innerHTML='🐹';return;}
   let scene,camera,renderer,hamster,handsGroup,seed,clock=new THREE.Clock(),mouse=new THREE.Vector2(),targetRotation=new THREE.Vector2(),eyes=[],isBlinking=false;

@@ -1017,3 +1017,38 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
 .toggle-slider::before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; }
 .toggle-switch input:checked + .toggle-slider { background:var(--accent); }
 .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); }
+
+/* Milestone bar narrow screen */
+@media (max-width: 350px) {
+  .ms-bar-wrap {
+    left: 4px;
+    right: 4px;
+  }
+  .ms-bar-pill {
+    padding: 0 8px;
+  }
+  .ms-bar-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .ms-bar-icon.crown {
+    width: 40px;
+    height: 40px;
+  }
+  .ms-bar-emoji {
+    font-size: 16px;
+  }
+  .ms-bar-icon.crown .ms-bar-emoji {
+    font-size: 18px;
+  }
+  .ms-bar-track {
+    left: 28px;
+    right: 28px;
+    top: 16px;
+    height: 6px;
+  }
+  .ms-bar-label {
+    font-size: 9px;
+    bottom: -16px;
+  }
+}

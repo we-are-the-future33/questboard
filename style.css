@@ -907,19 +907,19 @@ body.vhap-heavy{animation:vhap-heavy-shake .25s ease-out;}
   box-sizing: border-box;
 }
 .ms-bar-pill {
-  padding: 14px 24px 28px; margin: 0;
-  background: rgba(240,243,250,.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-radius: 24px; border: 1px solid rgba(0,0,0,.06);
-  box-shadow: 0 2px 12px rgba(0,0,0,.04);
+  padding: 0 24px; margin: 0;
+  background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none;
+  border-radius: 0; border: none;
+  box-shadow: none;
   position: relative; box-sizing: border-box;
 }
 .ms-bar-track {
-  position: absolute; left: 40px; right: 40px; top: 34px;
+  position: absolute; left: 40px; right: 40px; top: 20px;
   height: 8px; background: rgba(0,0,0,.06); border-radius: 100px;
   z-index: 0; box-shadow: inset 0 1px 2px rgba(0,0,0,.08); overflow: hidden;
 }
 .avatar-section.dark-bg .ms-bar-track { background: rgba(255,255,255,.1); box-shadow: inset 0 1px 3px rgba(0,0,0,.3); }
-.avatar-section.dark-bg .ms-bar-pill { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.1); box-shadow: 0 4px 20px rgba(0,0,0,.25); }
+.avatar-section.dark-bg .ms-bar-pill { background: transparent; border: none; box-shadow: none; }
 .ms-bar-fill {
   position: absolute; left: 0; top: 0; height: 100%; border-radius: 100px;
   background: linear-gradient(90deg, #2563eb, #60a5fa);

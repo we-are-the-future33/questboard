@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const APP_VERSION = '20260303t';
+const APP_VERSION = '20260303u';
 
 const _safetyTimer = setTimeout(() => {
   const l = document.getElementById('loadingScreen');
@@ -4910,11 +4910,11 @@ function renderMilestoneBar() {
   const ck = localDash.cooking || {};
   const reached = ck.milestoneReached || [];
   const icons = [
-    { ms: 0,   emoji: '💤', label: '시작' },
-    { ms: 25,  emoji: '🐹', label: '외출' },
-    { ms: 50,  emoji: '📦', label: '재료' },
-    { ms: 75,  emoji: '✨', label: '스페셜' },
-    { ms: 100, emoji: '👑', label: '완료' }
+    { ms: 0,   emoji: '💤', label: '0%' },
+    { ms: 25,  emoji: '🐹', label: '25%' },
+    { ms: 50,  emoji: '📦', label: '50%' },
+    { ms: 75,  emoji: '✨', label: '75%' },
+    { ms: 100, emoji: '👑', label: '100%' }
   ];
   let h = `<div class="ms-bar-wrap"><div class="ms-bar-pill">`;
   h += `<div class="ms-bar-track"><div class="ms-bar-fill" style="width:${Math.min(pct, 100)}%"></div></div>`;
@@ -4922,8 +4922,16 @@ function renderMilestoneBar() {
   icons.forEach(ic => {
     const active = pct >= ic.ms;
     const justReached = ic.ms > 0 && reached.includes(ic.ms);
-    h += `<div class="ms-bar-icon ${active ? 'active' : ''} ${justReached ? 'bounce' : ''}">`;
+    const isCrown = ic.ms === 100;
+    const cls = [
+      'ms-bar-icon',
+      active ? 'active' : 'inactive',
+      justReached ? 'bounce' : '',
+      isCrown ? 'crown' : ''
+    ].filter(Boolean).join(' ');
+    h += `<div class="${cls}">`;
     h += `<span class="ms-bar-emoji">${ic.emoji}</span>`;
+    h += `<span class="ms-bar-label">${ic.label}</span>`;
     h += `</div>`;
   });
   h += `</div></div></div>`;

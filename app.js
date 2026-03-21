@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-const APP_VERSION = '20260321b';
+const APP_VERSION = '20260321c';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -494,6 +494,8 @@ async function init() {
   if (saved && saved.id && saved.pw) {
     showScreen('loadingScreen');
     try {
+      const _t0 = Date.now();
+      console.log('[INIT] 시작');
       const timeout = new Promise((_, r) => setTimeout(() => r('timeout'), 15000));
       // users, dashboards, groups 병렬 호출
       const [uSnap, dSnap, gSnap] = await Promise.race([
@@ -504,6 +506,7 @@ async function init() {
         ]),
         timeout.then(() => { throw new Error('timeout'); })
       ]);
+      console.log('[INIT] Firebase 완료:', Date.now() - _t0, 'ms');
       if (uSnap.exists() && uSnap.val().password === saved.pw) {
         const u = uSnap.val(); currentUser = { id: saved.id, ...u };
         $id('navUserName').textContent = u.name;
@@ -528,10 +531,12 @@ async function init() {
         let has = false;
         if (gSnap.exists()) has = Object.values(gSnap.val()).some(g => g.members && Object.values(g.members).includes(saved.id));
         $id('dashTabBar').style.display = has ? 'flex' : 'none';
+        console.log('[INIT] renderDashboard 시작:', Date.now() - _t0, 'ms');
         activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); renderDashboard();
+        console.log('[INIT] 완료:', Date.now() - _t0, 'ms');
         clearTimeout(_safetyTimer); return;
       }
-    } catch (e) {}
+    } catch (e) { console.log('[INIT] 오류:', e); }
   }
   clearTimeout(_safetyTimer);
   if (saved) { $id('loginId').value = saved.id || ''; $id('loginPw').value = saved.pw || ''; $id('saveLoginChk').checked = true; }

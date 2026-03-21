@@ -119,7 +119,7 @@ function closeNotiPermModal() {
 
 async function registerFCMToken() {
   try {
-    const reg = await navigator.serviceWorker.register((location.pathname.includes('/questboard') ? '/questboard/' : '/') + 'firebase-messaging-sw.js');
+    const swPath = (location.pathname.includes('/questboard') ? '/questboard/' : '/') + 'firebase-messaging-sw.js');
     const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
     if (token) {
       await set(ref(db, `fcmTokens/${currentUser.id}`), { token, updatedAt: Date.now() });

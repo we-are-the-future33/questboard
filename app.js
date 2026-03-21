@@ -494,13 +494,41 @@ async function init() {
   if (saved && saved.id && saved.pw) {
     showScreen('loadingScreen');
     try {
-      const snap = await Promise.race([get(ref(db, `users/${saved.id}`)), new Promise((_, r) => setTimeout(() => r('timeout'), 15000))]);
-      if (snap.exists() && snap.val().password === saved.pw) {
-        const u = snap.val(); currentUser = { id: saved.id, ...u };
+      const timeout = new Promise((_, r) => setTimeout(() => r('timeout'), 15000));
+      // users, dashboards, groups 병렬 호출
+      const [uSnap, dSnap, gSnap] = await Promise.race([
+        Promise.all([
+          get(ref(db, `users/${saved.id}`)),
+          get(ref(db, `dashboards/${saved.id}`)),
+          get(ref(db, 'groups'))
+        ]),
+        timeout.then(() => { throw new Error('timeout'); })
+      ]);
+      if (uSnap.exists() && uSnap.val().password === saved.pw) {
+        const u = uSnap.val(); currentUser = { id: saved.id, ...u };
         $id('navUserName').textContent = u.name;
         if (u.role === 'admin') { clearTimeout(_safetyTimer); showScreen('adminScreen'); renderAdminList(); return; }
-        await loadDash();
-        activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(saved.id); renderDashboard();
+        // localDash 직접 세팅 (loadDash 재호출 불필요)
+        localDash = dSnap.exists() ? dSnap.val() : {};
+        if (!localDash.goals) localDash.goals = [];
+        if (!localDash.completions) localDash.completions = {};
+        if (!localDash.challenges) localDash.challenges = [];
+        if (!localDash.cooking) localDash.cooking = {};
+        const ck = localDash.cooking;
+        if (ck.currentScenarioId === undefined) ck.currentScenarioId = 0;
+        if (!Array.isArray(ck.clearedRecipes)) ck.clearedRecipes = [];
+        if (!ck.inventory) ck.inventory = {};
+        INGREDIENT_ORDER.forEach(k => { if (ck.inventory[k] === undefined) ck.inventory[k] = 0; });
+        if (!ck.milestoneToday) ck.milestoneToday = '';
+        if (!Array.isArray(ck.milestoneReached)) ck.milestoneReached = [];
+        if (!ck.milestoneDrops) ck.milestoneDrops = {};
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (ck.milestoneToday !== todayStr) { ck.milestoneToday = todayStr; ck.milestoneReached = []; ck.milestoneDrops = {}; }
+        // setupDashTabs 인라인 처리
+        let has = false;
+        if (gSnap.exists()) has = Object.values(gSnap.val()).some(g => g.members && Object.values(g.members).includes(saved.id));
+        $id('dashTabBar').style.display = has ? 'flex' : 'none';
+        activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); renderDashboard();
         clearTimeout(_safetyTimer); return;
       }
     } catch (e) {}

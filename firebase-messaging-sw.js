@@ -1,6 +1,3 @@
-// firebase-messaging-sw.js
-// 이 파일은 프로젝트 루트(index.html과 같은 위치)에 배치
-
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 

@@ -14,11 +14,21 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const { title, body, icon } = payload.notification || {};
-  self.registration.showNotification(title || '🐹 키웁', {
-    body: body || '알림이 도착했어요!',
-    icon: icon || '/icon-192.png',
-    badge: '/icon-192.png',
-    data: payload.data
-  });
+  try {
+    const { title, body } = payload.notification || {};
+    self.registration.showNotification(title || '🐹 키웁', {
+      body: body || '알림이 도착했어요!',
+      icon: '/questboard/logo.png',
+      badge: '/questboard/logo.png',
+      data: payload.data || {}
+    });
+  } catch(e) {
+    console.error('[SW] showNotification error:', e);
+  }
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

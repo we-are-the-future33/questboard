@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-const APP_VERSION = '20260321a';
+const APP_VERSION = '20260321b';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -494,7 +494,7 @@ async function init() {
   if (saved && saved.id && saved.pw) {
     showScreen('loadingScreen');
     try {
-      const snap = await Promise.race([get(ref(db, `users/${saved.id}`)), new Promise((_, r) => setTimeout(() => r('timeout'), 5000))]);
+      const snap = await Promise.race([get(ref(db, `users/${saved.id}`)), new Promise((_, r) => setTimeout(() => r('timeout'), 15000))]);
       if (snap.exists() && snap.val().password === saved.pw) {
         const u = snap.val(); currentUser = { id: saved.id, ...u };
         $id('navUserName').textContent = u.name;
@@ -5637,4 +5637,3 @@ function renderCookingFAB() {
     section.appendChild(fab);
   }
 }
-

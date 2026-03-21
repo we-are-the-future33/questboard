@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-const APP_VERSION = '20260305f';
+const APP_VERSION = '20260321a';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -58,7 +58,7 @@ const db = getDatabase(app);
 let messaging = null;
 try { messaging = getMessaging(app); } catch(e) { console.log('FCM not supported:', e); }
 
-const VAPID_KEY = 'BEA4OQQCKYaTZDGxbij7La0fMmyxDSyN1qWYxronV3ki1GwYB3mz8LXTRlo01lGjFLiM7LHY8JQr5EFyyfmlbHs';
+const VAPID_KEY = 'BCD5lOc8jd5MF-ij78y8BfmLQWowEqd9sMnwlqcQ0pru26h9pPsKjZ90wRknOM14GcevqDMPTgvkhlhDKKcB4Ec';
 
 async function setupFCM() {
   if (!messaging || !currentUser) return;

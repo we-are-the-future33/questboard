@@ -1,7 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-const APP_VERSION = '20260304z';
+const APP_VERSION = '20260305f';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -54,6 +55,84 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+let messaging = null;
+try { messaging = getMessaging(app); } catch(e) { console.log('FCM not supported:', e); }
+
+const VAPID_KEY = 'BEA4OQQCKYaTZDGxbij7La0fMmyxDSyN1qWYxronV3ki1GwYB3mz8LXTRlo01lGjFLiM7LHY8JQr5EFyyfmlbHs';
+
+async function setupFCM() {
+  if (!messaging || !currentUser) return;
+  // 이미 권한 허용됨 → 바로 토큰 등록
+  if (Notification.permission === 'granted') {
+    await registerFCMToken();
+    return;
+  }
+  // 이미 거부됨 → 스킵
+  if (Notification.permission === 'denied') return;
+  // 이미 한 번 물어봤으면 스킵
+  if (localStorage.getItem('kw_notiAsked')) return;
+  // 안내 모달 표시
+  showNotiPermissionModal();
+}
+
+function showNotiPermissionModal() {
+  let overlay = $id('notiPermOverlay');
+  if (overlay) overlay.remove();
+  overlay = document.createElement('div');
+  overlay.id = 'notiPermOverlay';
+  overlay.className = 'noti-perm-overlay';
+  overlay.innerHTML = `
+    <div class="noti-perm-modal">
+      <div class="noti-perm-icon">🔔</div>
+      <div class="noti-perm-title">알림을 받아보시겠어요?</div>
+      <div class="noti-perm-desc">습관 리마인더와 친구 응원 알림을<br>받을 수 있어요!</div>
+      <div class="noti-perm-btns">
+        <button class="noti-perm-later" onclick="dismissNotiPerm()">나중에</button>
+        <button class="noti-perm-ok" onclick="acceptNotiPerm()">좋아요!</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('show'));
+}
+
+window.acceptNotiPerm = async function () {
+  closeNotiPermModal();
+  localStorage.setItem('kw_notiAsked', '1');
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      await registerFCMToken();
+      showToast('🔔 알림 설정 완료!', 'done');
+    }
+  } catch (e) {}
+};
+
+window.dismissNotiPerm = function () {
+  closeNotiPermModal();
+  localStorage.setItem('kw_notiAsked', '1');
+};
+
+function closeNotiPermModal() {
+  const overlay = $id('notiPermOverlay');
+  if (overlay) { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 200); }
+}
+
+async function registerFCMToken() {
+  try {
+    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    if (token) {
+      await set(ref(db, `fcmTokens/${currentUser.id}`), { token, updatedAt: Date.now() });
+      console.log('FCM 토큰 저장 완료');
+    }
+    onMessage(messaging, (payload) => {
+      const { title, body } = payload.notification || {};
+      showToast(body || '🐹 알림이 도착했어요!', 'done');
+    });
+  } catch (e) {
+    console.log('FCM 토큰 등록 실패:', e);
+  }
+}
 
 // ===== 상수 =====
 const MAX_HABITS = 25;
@@ -88,8 +167,8 @@ let activeGoalIdx = null;
 let viewMonth = null;
 let habitFilter = localStorage.getItem('kw_habitFilter') || 'active';
 let challengeFilter = localStorage.getItem('kw_challengeFilter') || 'active';
-let habitViewMode = localStorage.getItem('kw_habitViewMode') || 'all';
-let challengeViewMode = localStorage.getItem('kw_challengeViewMode') || 'all';
+let habitViewMode = localStorage.getItem('kw_habitViewMode') || 'time';
+let challengeViewMode = localStorage.getItem('kw_challengeViewMode') || 'month';
 let _createType = 'bucket';
 let _createCat = null;
 let _createMonth = null;
@@ -1236,6 +1315,8 @@ function renderDashboard() {
   const cPill = $id('challengeFilterPill');
   if (cPill) { cPill.classList.toggle('active-filter', challengeFilter === 'active'); cPill.innerHTML = (challengeFilter === 'active' ? '진행 중' : '전체') + ' <span class="filter-dot"></span>'; }
   renderAvatar(); renderHabitCards(); renderChallengeCards(); loadNoticeBanner(); renderMainCheers(); checkFriendActivity(); renderCookingFAB(); renderMilestoneBar();
+  setupFCM();
+  loadNotifications();
   // jin 전용 어드민 메뉴
   const adminEl = $id('adminMenuItem');
   if (adminEl) adminEl.style.display = (currentUser && currentUser.id === 'jin') ? '' : 'none';
@@ -1627,6 +1708,12 @@ async function habitMarkDone(idx) {
   const g = migrateGoal(localDash.goals[idx]);
   const isOnce = g && g.unit === 'once';
   const k = isOnce ? `g${idx}_once` : `g${idx}_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}`;
+
+  // 오늘 첫 완료인지 체크 (알림 전에)
+  const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
+  const todaySuffix = `_${y}_${m}_${d}`;
+  const wasTodayZero = !Object.entries(localDash.completions || {}).some(([ck, cv]) => ck.endsWith(todaySuffix) && isCompDone(cv, null) && ck !== k);
+
   localDash.completions[k] = true;
   triggerHaptic('heavy');
   showToast('🎉 완료!', 'done'); showConfettiSmall();
@@ -1635,6 +1722,25 @@ async function habitMarkDone(idx) {
   await saveDash();
   checkMilestone();
   renderMilestoneBar();
+
+  // 오늘 첫 습관 완료 시 친구들에게 알림
+  if (wasTodayZero && !isOnce) {
+    notifyFriendsFirstActivity();
+  }
+}
+
+async function notifyFriendsFirstActivity() {
+  try {
+    const grpSnap = await get(ref(db, 'groups'));
+    if (!grpSnap.exists()) return;
+    const groups = grpSnap.val();
+    let friendIds = new Set();
+    Object.values(groups).forEach(g => { if (g.members && Object.values(g.members).includes(currentUser.id)) Object.values(g.members).forEach(mid => { if (mid !== currentUser.id) friendIds.add(mid); }); });
+    const myNick = localDash.nickname || currentUser.name;
+    for (const fid of friendIds) {
+      await createNotification(fid, 'activity', `${myNick}님이 오늘 첫 습관을 완료했어요! 🔥`);
+    }
+  } catch (e) {}
 }
 
 async function habitMarkUndo(idx) {
@@ -2879,24 +2985,31 @@ window.habitAddSave = async function () {
 
 // ===== 닉네임 편집 모달 (햄스터 3초 롱프레스) =====
 let _nickLongTimer = null;
+let _nickLongPressSetup = false;
 function setupAvatarLongPress(container) {
-  let startTime = 0;
+  // avatar-section에 한 번만 등록
+  const section = document.querySelector('.avatar-section');
+  if (!section || _nickLongPressSetup) return;
+  _nickLongPressSetup = true;
   const LONG_PRESS_MS = 3000;
-  const onDown = () => {
-    startTime = Date.now();
+  let moved = false;
+  section.addEventListener('touchstart', () => {
+    moved = false;
+    if (_nickLongTimer) clearTimeout(_nickLongTimer);
     _nickLongTimer = setTimeout(() => {
-      openNicknameModal();
+      if (!moved) openNicknameModal();
     }, LONG_PRESS_MS);
-  };
-  const onUp = () => {
+  }, { passive: true });
+  section.addEventListener('touchmove', () => {
+    moved = true;
     if (_nickLongTimer) { clearTimeout(_nickLongTimer); _nickLongTimer = null; }
-  };
-  container.addEventListener('touchstart', onDown, { passive: true });
-  container.addEventListener('touchend', onUp);
-  container.addEventListener('touchcancel', onUp);
-  container.addEventListener('mousedown', onDown);
-  container.addEventListener('mouseup', onUp);
-  container.addEventListener('mouseleave', onUp);
+  }, { passive: true });
+  section.addEventListener('touchend', () => {
+    if (_nickLongTimer) { clearTimeout(_nickLongTimer); _nickLongTimer = null; }
+  });
+  section.addEventListener('touchcancel', () => {
+    if (_nickLongTimer) { clearTimeout(_nickLongTimer); _nickLongTimer = null; }
+  });
 }
 
 window.openNicknameModal = function () {
@@ -3657,6 +3770,90 @@ window.scrollToCheers = function () {
   if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
+// ===== 인앱 알림 센터 =====
+let _notiPanelOpen = false;
+
+window.toggleNotiPanel = function () {
+  _notiPanelOpen = !_notiPanelOpen;
+  const panel = $id('notiPanel');
+  const overlay = $id('notiPanelOverlay');
+  if (_notiPanelOpen) {
+    panel.style.display = '';
+    overlay.style.display = '';
+    requestAnimationFrame(() => { panel.classList.add('show'); overlay.classList.add('show'); });
+    renderNotiPanel();
+    markNotisRead();
+  } else {
+    panel.classList.remove('show');
+    overlay.classList.remove('show');
+    setTimeout(() => { panel.style.display = 'none'; overlay.style.display = 'none'; }, 200);
+  }
+};
+
+async function loadNotifications() {
+  if (!currentUser) return;
+  try {
+    const snap = await get(ref(db, `notifications/${currentUser.id}`));
+    if (!snap.exists()) { updateNotiBadge(0); return; }
+    const data = snap.val();
+    const lastRead = parseInt(localStorage.getItem('kw_lastNotiRead') || '0');
+    let unread = 0;
+    Object.keys(data).forEach(k => { if (parseInt(k) > lastRead) unread++; });
+    updateNotiBadge(unread);
+  } catch (e) {}
+}
+
+function updateNotiBadge(count) {
+  const badge = $id('notiBellBadge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.style.display = '';
+    badge.textContent = count > 9 ? '9+' : count;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function renderNotiPanel() {
+  const list = $id('notiPanelList');
+  if (!currentUser) { list.innerHTML = '<div class="noti-empty">로그인 필요</div>'; return; }
+  try {
+    const snap = await get(ref(db, `notifications/${currentUser.id}`));
+    if (!snap.exists()) { list.innerHTML = '<div class="noti-empty">알림이 없어요</div>'; return; }
+    const data = snap.val();
+    const lastRead = parseInt(localStorage.getItem('kw_lastNotiRead') || '0');
+    const all = Object.entries(data).map(([k, v]) => ({ ...v, ts: parseInt(k) })).sort((a, b) => b.ts - a.ts).slice(0, 30);
+    if (all.length === 0) { list.innerHTML = '<div class="noti-empty">알림이 없어요</div>'; return; }
+    let h = '';
+    all.forEach(n => {
+      const isNew = n.ts > lastRead;
+      const d = new Date(n.ts);
+      const timeStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const iconMap = { cheer: '💬', activity: '🔥', group: '👥' };
+      const icon = iconMap[n.type] || '🔔';
+      h += `<div class="noti-item${isNew ? ' noti-new' : ''}">`;
+      h += `<div class="noti-item-icon">${icon}</div>`;
+      h += `<div class="noti-item-body"><div class="noti-item-text">${esc(n.text)}</div><div class="noti-item-time">${timeStr}</div></div>`;
+      if (isNew) h += `<div class="noti-item-dot"></div>`;
+      h += `</div>`;
+    });
+    list.innerHTML = h;
+  } catch (e) {
+    list.innerHTML = '<div class="noti-empty">불러오기 실패</div>';
+  }
+}
+
+function markNotisRead() {
+  localStorage.setItem('kw_lastNotiRead', String(Date.now()));
+  updateNotiBadge(0);
+}
+
+// 알림 생성 헬퍼 (다른 곳에서 호출)
+async function createNotification(targetUid, type, text) {
+  const ts = Date.now();
+  await set(ref(db, `notifications/${targetUid}/${ts}`), { type, text, ts });
+}
+
 // ===== 공지 =====
 async function loadNoticeBanner() {
   try {
@@ -3729,6 +3926,8 @@ async function checkFriendActivity() {
         _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount, totalHabits });
       } else if (hasHabits) {
         _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount: 0, totalHabits });
+      } else {
+        _friendActivityCache.push({ fid, nick, emoji: getFriendEmoji(fid), todayCount: 0, totalHabits: 0, noHabits: true });
       }
     }
 
@@ -3808,13 +4007,21 @@ async function renderFriends() {
 
     h += `<div class="friend-activity-card" onclick="switchTab('friends')">`;
     show.forEach(f => {
-      const dots = buildDotProgress(f.todayCount, f.totalHabits);
-      const statusIcon = f.todayCount >= f.totalHabits ? ' ⭐' : f.todayCount > 0 ? ' 🔥' : ' 😴';
-      h += `<div class="friend-progress-row">`;
-      h += `<span class="friend-progress-name">${f.emoji} ${esc(f.nick)}${statusIcon}</span>`;
-      h += `<span class="friend-progress-dots">${dots}</span>`;
-      h += `<span class="friend-progress-count">${f.todayCount}/${f.totalHabits}</span>`;
-      h += `</div>`;
+      if (f.noHabits) {
+        h += `<div class="friend-progress-row">`;
+        h += `<span class="friend-progress-name">${f.emoji} ${esc(f.nick)}</span>`;
+        h += `<span class="friend-progress-dots" style="opacity:.4;font-size:11px;">습관 없음</span>`;
+        h += `<span class="friend-progress-count">—</span>`;
+        h += `</div>`;
+      } else {
+        const dots = buildDotProgress(f.todayCount, f.totalHabits);
+        const statusIcon = f.todayCount >= f.totalHabits && f.totalHabits > 0 ? ' ⭐' : f.todayCount > 0 ? ' 🔥' : ' 😴';
+        h += `<div class="friend-progress-row">`;
+        h += `<span class="friend-progress-name">${f.emoji} ${esc(f.nick)}${statusIcon}</span>`;
+        h += `<span class="friend-progress-dots">${dots}</span>`;
+        h += `<span class="friend-progress-count">${f.todayCount}/${f.totalHabits}</span>`;
+        h += `</div>`;
+      }
     });
     if (rest > 0) h += `<div class="friend-progress-more">외 ${rest}명</div>`;
     let summaryMsg = '';
@@ -3947,7 +4154,9 @@ window.sendCheer = async function (fid) {
   const input = $id('cheerInput');
   const text = input.value.trim(); if (!text) return;
   const ts = Date.now();
-  await set(ref(db, `cheers/${fid}/${ts}`), { from: localDash.nickname || currentUser.name, text, ts });
+  const myNick = localDash.nickname || currentUser.name;
+  await set(ref(db, `cheers/${fid}/${ts}`), { from: myNick, text, ts });
+  await createNotification(fid, 'cheer', `${myNick}님이 응원을 보냈어요: "${text}"`);
   showToast('💬 응원 전송!', 'done');
   openFriendDetail(fid);
 };
@@ -5426,3 +5635,4 @@ function renderCookingFAB() {
     section.appendChild(fab);
   }
 }
+

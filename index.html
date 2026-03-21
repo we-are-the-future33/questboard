@@ -34,7 +34,7 @@
   font-weight: bold;
 }
 </style>
-<link rel="stylesheet" href="style.css?v=20260304z">
+<link rel="stylesheet" href="style.css?v=20260305f">
 </head>
 <body>
 
@@ -201,6 +201,7 @@
     <nav class="topnav">
       <div class="nav-logo">키웁</div>
       <div class="nav-right">
+        <button class="noti-bell-btn" id="notiBellBtn" onclick="toggleNotiPanel()">🔔<span class="noti-bell-badge" id="notiBellBadge" style="display:none;"></span></button>
         <span class="nav-user" id="navUserName"></span>
         <div class="hamburger-wrap">
           <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleHamburger()">
@@ -218,6 +219,18 @@
         </div>
       </div>
     </nav>
+    </nav>
+    <!-- 알림 패널 -->
+    <div class="noti-panel" id="notiPanel" style="display:none;">
+      <div class="noti-panel-header">
+        <span class="noti-panel-title">🔔 알림</span>
+        <button class="noti-panel-close" onclick="toggleNotiPanel()">✕</button>
+      </div>
+      <div class="noti-panel-list" id="notiPanelList">
+        <div class="noti-empty">알림이 없어요</div>
+      </div>
+    </div>
+    <div class="noti-panel-overlay" id="notiPanelOverlay" style="display:none;" onclick="toggleNotiPanel()"></div>
     <div class="tab-bar" id="dashTabBar" style="display:none;">
       <button class="tab-btn active" onclick="switchTab('my')" id="tabBtnMy">🎯 나의 투두</button>
       <button class="tab-btn" onclick="switchTab('friends')" id="tabBtnFriends">👥 친구<span id="friendTabBadge" class="friend-tab-badge" style="display:none;"></span></button>
@@ -256,7 +269,6 @@
             </div>
             <div style="display:flex;align-items:center;">
               <select id="habitViewModeSelect" class="view-mode-select" onchange="changeViewMode(this.value)">
-                <option value="all">기본 보기</option>
                 <option value="time">시간대별</option>
                 <option value="category">카테고리별</option>
               </select>
@@ -277,10 +289,9 @@
             </div>
             <div style="display:flex;align-items:center;">
               <select id="challengeViewModeSelect" class="view-mode-select" onchange="changeChallengeViewMode(this.value)">
-                <option value="all">기본 보기</option>
+                <option value="month">일정별</option>
                 <option value="type">유형별</option>
                 <option value="category">카테고리별</option>
-                <option value="month">일정별</option>
               </select>
               <button class="filter-pill" id="challengeFilterPill" onclick="toggleChallengeFilter()">
                 모든 목표 <span class="filter-dot"></span>
@@ -334,7 +345,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script type="module" src="app.js?v=20260304z"></script>
+<script type="module" src="app.js?v=20260305f"></script>
 <script>
 /* 로그인 배경 애니메이션 */
 (function(){

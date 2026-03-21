@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-const APP_VERSION = '20260321c';
+const APP_VERSION = '20260321d';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -57,6 +57,8 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 let messaging = null;
 try { messaging = getMessaging(app); } catch(e) { console.log('FCM not supported:', e); }
+let _typingTimer = null;
+let _typingInterval = null;
 
 const VAPID_KEY = 'BCD5lOc8jd5MF-ij78y8BfmLQWowEqd9sMnwlqcQ0pru26h9pPsKjZ90wRknOM14GcevqDMPTgvkhlhDKKcB4Ec';
 
@@ -5426,8 +5428,6 @@ function renderMilestoneBar() {
 
 // --- Stage Message ---
 // --- 스테이지 메시지 타이핑 효과 ---
-let _typingTimer = null;
-let _typingInterval = null;
 function startTypingLoop() {
   if (_typingTimer) return;
   function triggerTyping() {

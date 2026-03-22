@@ -301,7 +301,16 @@ async function copyToClipboard(text) {
 // goal: 해당 goal 객체 (auto, autoTarget, autoUnit 포함)
 function isCompDone(value, goal) {
   if (value === true) return true;
-  if (!value || !goal?.auto) return false;
+  if (!value) return false;
+  if (goal?.unit === 'health_sleep') {
+    if (typeof value !== 'object' || !value.h) return false;
+    const target = goal.autoTarget || 7;
+    return value.h >= target;
+  }
+  if (goal?.unit === 'health_workout') {
+    return typeof value === 'object' && !!(value.kcal || value.min);
+  }
+  if (!goal?.auto) return false;
   if (typeof value === 'number') return value >= (goal.autoTarget || 0);
   if (typeof value === 'object') {
     const unit = goal.autoUnit || (goal.auto === 'sleep' ? 'h' : 'kcal');
@@ -314,6 +323,8 @@ function getAutoValue(value, goal) {
   if (!value || value === true) return null;
   if (typeof value === 'number') return value;
   if (typeof value === 'object') {
+    if (goal?.unit === 'health_sleep') return value.h ?? null;
+    if (goal?.unit === 'health_workout') return value.kcal ?? null;
     const unit = goal?.autoUnit || (goal?.auto === 'sleep' ? 'h' : 'kcal');
     return value[unit] ?? null;
   }
@@ -321,6 +332,8 @@ function getAutoValue(value, goal) {
 }
 // 자동 습관 표시 단위
 function getAutoUnitLabel(goal) {
+  if (goal?.unit === 'health_sleep') return 'h';
+  if (goal?.unit === 'health_workout') return 'kcal';
   if (!goal?.auto) return '';
   const u = goal.autoUnit || (goal.auto === 'sleep' ? 'h' : 'kcal');
   return { h: 'h', kcal: 'kcal', min: 'min', km: 'km' }[u] || u;
@@ -3266,7 +3279,7 @@ function renderCalendar(idx, g, y, m, canEdit) {
 
   // 날짜 셀
   const goal = localDash.goals[idx];
-  const isAuto = goal?.auto;
+  const isAuto = goal?.auto || goal?.unit === 'health_sleep' || goal?.unit === 'health_workout';
   for (let d = 1; d <= days; d++) {
     const k = `g${idx}_${y}_${m}_${d}`, val = localDash.completions[k];
     const isDone = isCompDone(val, goal);
@@ -3281,7 +3294,7 @@ function renderCalendar(idx, g, y, m, canEdit) {
     if (isAuto && autoVal !== null) {
       // 자동 습관: 수치 표시 + 색상 등급
       const unitLbl = getAutoUnitLabel(goal);
-      const target = goal.autoTarget || 1;
+      const target = goal?.unit === 'health_sleep' ? (goal.autoTarget || 7) : (goal.autoTarget || 1);
       const ratio = autoVal / target;
       let bg = '';
       if (ratio >= 1) bg = 'background:#dbeafe;color:#1e40af;';

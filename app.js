@@ -1,8 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const APP_VERSION = '20260321d';
+const APP_VERSION = '20260504a';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -55,6 +56,8 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 let messaging = null;
 try { messaging = getMessaging(app); } catch(e) { console.log('FCM not supported:', e); }
 let _typingTimer = null;
@@ -548,6 +551,7 @@ async function init() {
         $id('dashTabBar').style.display = has ? 'flex' : 'none';
         console.log('[INIT] renderDashboard 시작:', Date.now() - _t0, 'ms');
         activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); renderDashboard();
+        if (window.__triggerMigCheck) window.__triggerMigCheck();
         console.log('[INIT] 완료:', Date.now() - _t0, 'ms');
         clearTimeout(_safetyTimer); return;
       }
@@ -584,6 +588,7 @@ window.doLogin = async function () {
         $id('navUserName').textContent = u.name;
         await loadDash();
         activeGoalIdx = null; viewMonth = null; showScreen('dashboardScreen'); await setupDashTabs(id); renderDashboard();
+        if (window.__triggerMigCheck) window.__triggerMigCheck();
       }
     }
   } catch (e) { showToast('❌ 연결 오류'); }
@@ -5683,3 +5688,91 @@ function renderCookingFAB() {
     section.appendChild(fab);
   }
 }
+
+
+// ============== Google Auth & Migration ==============
+// (added 20260504a)
+
+window.startMigration = async function() {
+  const oldTextId = currentUser?.id;
+  if (!oldTextId) return;
+  const btn = document.getElementById('migBtnGo');
+  if (btn) { btn.disabled = true; btn.textContent = '연결 중...'; }
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const uid = result.user.uid;
+
+    const claimedSnap = await get(ref(db, `users/${uid}/migratedFrom`));
+    if (claimedSnap.exists() && claimedSnap.val() !== oldTextId) {
+      showToast('❌ 이 Google 계정은 다른 키웁 아이디에 연결되어 있어요');
+      if (btn) { btn.disabled = false; btn.textContent = 'Google로 통합하기'; }
+      return;
+    }
+
+    const userSnap = await get(ref(db, `users/${oldTextId}`));
+    const dashSnap = await get(ref(db, `dashboards/${oldTextId}`));
+    if (!userSnap.exists()) {
+      showToast('❌ 사용자 데이터를 찾지 못했어요');
+      if (btn) { btn.disabled = false; btn.textContent = 'Google로 통합하기'; }
+      return;
+    }
+    const userData = userSnap.val();
+    delete userData.password;
+
+    await set(ref(db, `users/${uid}`), {
+      ...userData,
+      migratedFrom: oldTextId,
+      googleEmail: result.user.email,
+      migratedAt: new Date().toISOString()
+    });
+    if (dashSnap.exists()) {
+      await set(ref(db, `dashboards/${uid}`), dashSnap.val());
+    }
+    await set(ref(db, `users/${oldTextId}/migratedTo`), uid);
+    await set(ref(db, `claimed_ids/${oldTextId}`), uid);
+
+    localStorage.setItem('qb_migrated', '1');
+    localStorage.setItem('qb_uid', uid);
+    localStorage.removeItem('qb_login');
+    currentUser.id = uid;
+
+    closeMigrationModal();
+    showToast('✅ Google 계정으로 통합 완료!', 'done');
+  } catch (e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      showToast('❌ 통합 실패: ' + (e.message || e.code || '알 수 없는 오류'));
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'Google로 통합하기'; }
+  }
+};
+
+window.skipMigration = function() {
+  closeMigrationModal();
+  sessionStorage.setItem('qb_mig_skip', '1');
+};
+
+function closeMigrationModal() {
+  const o = document.getElementById('migrationOverlay');
+  if (o) o.classList.remove('open');
+}
+
+async function checkAndShowMigrationModal() {
+  if (!currentUser || !currentUser.id) return;
+  if (currentUser.id.length > 25) return;
+  if (currentUser.role === 'admin') return;
+  if (localStorage.getItem('qb_migrated')) return;
+  if (sessionStorage.getItem('qb_mig_skip')) return;
+  try {
+    const migSnap = await get(ref(db, `users/${currentUser.id}/migratedTo`));
+    if (migSnap.exists()) {
+      localStorage.setItem('qb_migrated', '1');
+      return;
+    }
+  } catch(e) { return; }
+  const o = document.getElementById('migrationOverlay');
+  if (o) o.classList.add('open');
+}
+
+window.__triggerMigCheck = async function() {
+  setTimeout(() => { try { checkAndShowMigrationModal(); } catch(e){} }, 1500);
+};

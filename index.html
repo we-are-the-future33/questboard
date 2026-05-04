@@ -34,7 +34,7 @@
   font-weight: bold;
 }
 </style>
-<link rel="stylesheet" href="style.css?v=20260321d">
+<link rel="stylesheet" href="style.css?v=20260504a">
 </head>
 <body>
 
@@ -345,7 +345,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script type="module" src="app.js?v=20260321d"></script>
+<script type="module" src="app.js?v=20260504a"></script>
 <script>
 /* 로그인 배경 애니메이션 */
 (function(){
@@ -368,5 +368,28 @@
   obs.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
+
+<!-- Migration Modal (added 20260504a) -->
+<div id="migrationOverlay" class="migration-overlay">
+  <div class="migration-modal">
+    <div class="migration-emoji">🐣</div>
+    <h2 class="migration-title">Google 계정으로 통합</h2>
+    <p class="migration-sub">
+      더 안전하게 로그인할 수 있어요.<br>
+      한 번만 인증하면 자동으로 끝나요.
+    </p>
+    <div class="migration-benefits">
+      <div class="migration-benefit-row"><span class="migration-check">✓</span>기록한 데이터는 그대로 유지돼요</div>
+      <div class="migration-benefit-row"><span class="migration-check">✓</span>친구, 챌린지, 습관 모두 그대로</div>
+      <div class="migration-benefit-row"><span class="migration-check">✓</span>다음부턴 비밀번호 없이 로그인</div>
+    </div>
+    <button id="migBtnGo" class="btn-google-mig" onclick="startMigration()">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#fff" fill-opacity="0.9" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#fff" fill-opacity="0.85" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#fff" fill-opacity="0.8" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+      Google로 통합하기
+    </button>
+    <button class="btn-mig-skip" onclick="skipMigration()">나중에</button>
+  </div>
+</div>
+
 </body>
 </html>

@@ -3,7 +3,7 @@ import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.co
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const APP_VERSION = '20260611f';
+const APP_VERSION = '20260611g';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -1738,7 +1738,7 @@ function initHabitSwipe(idx) {
     const elapsed = Date.now() - touchStartTime;
     if (window._kiwupDebug) {
       let el = document.getElementById('_dbgLog');
-      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:80px;overflow-y:auto;'; document.body.appendChild(el); }
+      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
       el.innerHTML = `[END idx=${idx} swiping=${swiping} dx=${dx} totalMove=${totalMove} elapsed=${elapsed}]<br>` + el.innerHTML;
     }
     if (!swiping) {
@@ -1778,7 +1778,7 @@ function initHabitSwipe(idx) {
   card.addEventListener('touchend', onE);
   card.addEventListener('touchcancel', (e) => {
     if (window._kiwupDebug) {
-      const el = document.getElementById('_dbgLog') || (() => { const d = document.createElement('div'); d.id='_dbgLog'; d.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:80px;overflow-y:auto;'; document.body.appendChild(d); return d; })();
+      const el = document.getElementById('_dbgLog') || (() => { const d = document.createElement('div'); d.id='_dbgLog'; d.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(d); return d; })();
       el.innerHTML = `[CANCEL idx=${idx} swiping=${swiping}]<br>` + el.innerHTML;
     }
     onE();
@@ -2005,7 +2005,7 @@ function initBucketSwipe(idx) {
   card.addEventListener('touchcancel', () => {
     if (window._kiwupDebug) {
       let el = document.getElementById('_dbgLog');
-      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:80px;overflow-y:auto;'; document.body.appendChild(el); }
+      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
       el.innerHTML = `[CANCEL2 idx=${idx} swiping=${swiping} dx=${dx}]<br>` + el.innerHTML;
     }
     onE();
@@ -3181,7 +3181,7 @@ window.openGoalBottomSheet = function (idx) {
     const g = getAllGoals()[idx];
     if (window._kiwupDebug) {
       let el = document.getElementById('_dbgLog');
-      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:80px;overflow-y:auto;'; document.body.appendChild(el); }
+      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
       el.innerHTML = `[OPEN idx=${idx} g=${g ? g.title : 'null'} unit=${g ? g.unit : '?'}]<br>` + el.innerHTML;
     }
     if (!g) { openAddHabitSheet(); return; }
@@ -3194,7 +3194,7 @@ window.openGoalBottomSheet = function (idx) {
     openBS();
   } catch (e) {
     let el = document.getElementById('_dbgLog');
-    if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#f00;color:#fff;font-size:10px;padding:4px;z-index:99999;max-height:120px;overflow-y:auto;'; document.body.appendChild(el); }
+    if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#f00;color:#fff;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
     el.innerHTML = `[ERROR open idx=${idx}: ${e.message} / ${e.stack ? e.stack.split('\n')[1] : ''}]<br>` + el.innerHTML;
   }
 };
@@ -3206,7 +3206,7 @@ function openBS() {
     const bs = $id('bottomSheet');
     const cs = getComputedStyle(bs);
     let el = document.getElementById('_dbgLog');
-    if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:120px;overflow-y:auto;'; document.body.appendChild(el); }
+    if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
     const rect = bs.getBoundingClientRect();
     el.innerHTML = `[BS opened: transform=${cs.transform} display=${cs.display} z=${cs.zIndex} top=${rect.top} bot=${rect.bottom} h=${rect.height} cls=${bs.className}]<br>` + el.innerHTML;
   }

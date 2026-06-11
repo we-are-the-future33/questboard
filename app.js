@@ -3,7 +3,7 @@ import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.co
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const APP_VERSION = '20260611e';
+const APP_VERSION = '20260611f';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -3202,6 +3202,14 @@ window.openGoalBottomSheet = function (idx) {
 function openBS() {
   $id('bsOverlay').classList.add('open');
   $id('bottomSheet').classList.add('open');
+  if (window._kiwupDebug) {
+    const bs = $id('bottomSheet');
+    const cs = getComputedStyle(bs);
+    let el = document.getElementById('_dbgLog');
+    if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:120px;overflow-y:auto;'; document.body.appendChild(el); }
+    const rect = bs.getBoundingClientRect();
+    el.innerHTML = `[BS opened: transform=${cs.transform} display=${cs.display} z=${cs.zIndex} top=${rect.top} bot=${rect.bottom} h=${rect.height} cls=${bs.className}]<br>` + el.innerHTML;
+  }
 }
 window.closeBottomSheet = function () {
   $id('bsOverlay').classList.remove('open');

@@ -3,7 +3,7 @@ import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.co
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const APP_VERSION = '20260611h';
+const APP_VERSION = '20260611i';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -17,7 +17,6 @@ setTimeout(() => {
   if (msg && l && l.classList.contains('active')) { msg.textContent = '서버 연결 중...'; }
 }, 3000);
 
-if (location.search.includes('debug=1')) { window._kiwupDebug = true; }
 // Update check — fetch index.html and compare version
 let _updateBannerShown = false;
 async function checkAppUpdate() {
@@ -1736,11 +1735,6 @@ function initHabitSwipe(idx) {
   function onE() {
     if (outer) { outer.classList.remove('swiping-right', 'swiping-left'); }
     const elapsed = Date.now() - touchStartTime;
-    if (window._kiwupDebug) {
-      let el = document.getElementById('_dbgLog');
-      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
-      el.innerHTML = `[END idx=${idx} swiping=${swiping} dx=${dx} totalMove=${totalMove} elapsed=${elapsed}]<br>` + el.innerHTML;
-    }
     if (!swiping) {
       card.style.transform = '';
       card.classList.remove('swiping');
@@ -2002,14 +1996,6 @@ function initBucketSwipe(idx) {
   card.addEventListener('touchstart', onS, { passive: true });
   card.addEventListener('touchmove', onM, { passive: false });
   card.addEventListener('touchend', onE);
-  card.addEventListener('touchcancel', () => {
-    if (window._kiwupDebug) {
-      let el = document.getElementById('_dbgLog');
-      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
-      el.innerHTML = `[CANCEL2 idx=${idx} swiping=${swiping} dx=${dx}]<br>` + el.innerHTML;
-    }
-    onE();
-  });
 }
 async function swipeBucket(idx) {
   const c = localDash.challenges[idx];
@@ -3177,44 +3163,30 @@ function checkWeekClear(idx) {
 
 // ===== 바텀시트 =====
 window.openGoalBottomSheet = function (idx) {
-  try {
-    const g = getAllGoals()[idx];
-    if (window._kiwupDebug) {
-      let el = document.getElementById('_dbgLog');
-      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
-      el.innerHTML = `[OPEN idx=${idx} g=${g ? g.title : 'null'} unit=${g ? g.unit : '?'}]<br>` + el.innerHTML;
-    }
-    if (!g) { openAddHabitSheet(); return; }
-    if (!g.unit) { openUnitSetupSheet(idx); return; }
-    activeGoalIdx = idx;
-    viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
-    $text('bsTitle', g.title);
-    setHabitMetaTags(g);
-    renderBSBody(idx);
-    openBS();
-  } catch (e) {
-    let el = document.getElementById('_dbgLog');
-    if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#f00;color:#fff;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
-    el.innerHTML = `[ERROR open idx=${idx}: ${e.message} / ${e.stack ? e.stack.split('\n')[1] : ''}]<br>` + el.innerHTML;
-  }
+  const g = getAllGoals()[idx];
+  if (!g) { openAddHabitSheet(); return; }
+  if (!g.unit) { openUnitSetupSheet(idx); return; }
+  activeGoalIdx = idx;
+  viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
+  $text('bsTitle', g.title);
+  setHabitMetaTags(g);
+  renderBSBody(idx);
+  openBS();
 };
 
 function openBS() {
-  $id('bsOverlay').classList.add('open');
-  $id('bottomSheet').classList.add('open');
-  if (window._kiwupDebug) {
-    const bs = $id('bottomSheet');
-    const cs = getComputedStyle(bs);
-    let el = document.getElementById('_dbgLog');
-    if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
-    const rect = bs.getBoundingClientRect();
-    el.innerHTML = `[BS opened immediately: transform=${cs.transform}]<br>` + el.innerHTML;
-    setTimeout(() => {
-      const cs2 = getComputedStyle(bs);
-      const rect2 = bs.getBoundingClientRect();
-      el.innerHTML = `[BS after 1s: transform=${cs2.transform} top=${rect2.top} bot=${rect2.bottom} cls=${bs.className}]<br>` + el.innerHTML;
-    }, 1000);
-  }
+  const overlay = $id('bsOverlay');
+  const sheet = $id('bottomSheet');
+  // 초기 상태 강제 렌더 후 다음 프레임에 .open 추가 (Android Chrome transition 보장)
+  sheet.style.transform = 'translateX(-50%) translateY(100%)';
+  sheet.offsetHeight; // force reflow
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sheet.style.transform = '';
+      overlay.classList.add('open');
+      sheet.classList.add('open');
+    });
+  });
 }
 window.closeBottomSheet = function () {
   $id('bsOverlay').classList.remove('open');

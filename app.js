@@ -3,7 +3,7 @@ import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.co
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const APP_VERSION = '20260504b';
+const APP_VERSION = '20260611a';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -506,6 +506,15 @@ async function loadDash() {
 }
 async function saveDash() { localDash.lastUpdate = new Date().toISOString(); await set(ref(db, `dashboards/${currentUser.id}`), localDash); }
 
+// 그룹 멤버십 체크 helper (마이그된 사용자 호환)
+function isMemberOfGroup(group) {
+  if (!group || !group.members || !currentUser) return false;
+  const values = Object.values(group.members);
+  if (values.includes(currentUser.id)) return true;
+  if (currentUser.migratedFrom && values.includes(currentUser.migratedFrom)) return true;
+  return false;
+}
+
 // ===== 초기화 =====
 async function init() {
   const saved = JSON.parse(localStorage.getItem('qb_login') || 'null');
@@ -566,7 +575,7 @@ init();
 async function setupDashTabs(uid) {
   const snap = await get(ref(db, 'groups'));
   let has = false;
-  if (snap.exists()) has = Object.values(snap.val()).some(g => g.members && Object.values(g.members).includes(uid));
+  if (snap.exists()) has = Object.values(snap.val()).some(g => isMemberOfGroup(g));
   $id('dashTabBar').style.display = has ? 'flex' : 'none';
 }
 
@@ -1792,7 +1801,7 @@ async function notifyFriendsFirstActivity() {
     if (!grpSnap.exists()) return;
     const groups = grpSnap.val();
     let friendIds = new Set();
-    Object.values(groups).forEach(g => { if (g.members && Object.values(g.members).includes(currentUser.id)) Object.values(g.members).forEach(mid => { if (mid !== currentUser.id) friendIds.add(mid); }); });
+    Object.values(groups).forEach(g => { if (isMemberOfGroup(g)) Object.values(g.members).forEach(mid => { if (mid !== currentUser.id && mid !== currentUser.migratedFrom) friendIds.add(mid); }); });
     const myNick = localDash.nickname || currentUser.name;
     for (const fid of friendIds) {
       await createNotification(fid, 'activity', `${myNick}님이 오늘 첫 습관을 완료했어요! 🔥`);
@@ -3958,7 +3967,7 @@ async function checkFriendActivity() {
     if (!grpSnap.exists()) return;
     const groups = grpSnap.val();
     let friendIds = new Set();
-    Object.values(groups).forEach(g => { if (g.members && Object.values(g.members).includes(currentUser.id)) Object.values(g.members).forEach(m => { if (m !== currentUser.id) friendIds.add(m); }); });
+    Object.values(groups).forEach(g => { if (isMemberOfGroup(g)) Object.values(g.members).forEach(m => { if (m !== currentUser.id && m !== currentUser.migratedFrom) friendIds.add(m); }); });
     if (friendIds.size === 0) return;
 
     const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
@@ -4044,7 +4053,7 @@ async function renderFriends() {
   if (!grpSnap.exists()) { sec.innerHTML = '<div class="friends-empty">그룹이 없어요</div>'; return; }
   const groups = grpSnap.val();
   let friendIds = new Set();
-  Object.values(groups).forEach(g => { if (g.members && Object.values(g.members).includes(currentUser.id)) Object.values(g.members).forEach(m => { if (m !== currentUser.id) friendIds.add(m); }); });
+  Object.values(groups).forEach(g => { if (isMemberOfGroup(g)) Object.values(g.members).forEach(m => { if (m !== currentUser.id && m !== currentUser.migratedFrom) friendIds.add(m); }); });
   if (friendIds.size === 0) { sec.innerHTML = '<div class="friends-empty">아직 같은 그룹의 친구가 없어요</div>'; return; }
 
   // Clear badge on friends tab entry
@@ -5820,7 +5829,7 @@ async function loadDashByUid(uid, displayName) {
     if (ck.milestoneToday !== todayStr) { ck.milestoneToday = todayStr; ck.milestoneReached = []; ck.milestoneDrops = {}; }
 
     let has = false;
-    if (gSnap.exists()) has = Object.values(gSnap.val()).some(g => g.members && Object.values(g.members).includes(uid));
+    if (gSnap.exists()) has = Object.values(gSnap.val()).some(g => g.members && (Object.values(g.members).includes(uid) || (u.migratedFrom && Object.values(g.members).includes(u.migratedFrom))));
     $id('dashTabBar').style.display = has ? 'flex' : 'none';
 
     activeGoalIdx = null; viewMonth = null;

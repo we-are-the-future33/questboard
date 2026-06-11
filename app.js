@@ -3,7 +3,7 @@ import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.co
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const APP_VERSION = '20260611d';
+const APP_VERSION = '20260611e';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -3177,15 +3177,26 @@ function checkWeekClear(idx) {
 
 // ===== 바텀시트 =====
 window.openGoalBottomSheet = function (idx) {
-  const g = getAllGoals()[idx];
-  if (!g) { openAddHabitSheet(); return; }
-  if (!g.unit) { openUnitSetupSheet(idx); return; }
-  activeGoalIdx = idx;
-  viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
-  $text('bsTitle', g.title);
-  setHabitMetaTags(g);
-  renderBSBody(idx);
-  openBS();
+  try {
+    const g = getAllGoals()[idx];
+    if (window._kiwupDebug) {
+      let el = document.getElementById('_dbgLog');
+      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:80px;overflow-y:auto;'; document.body.appendChild(el); }
+      el.innerHTML = `[OPEN idx=${idx} g=${g ? g.title : 'null'} unit=${g ? g.unit : '?'}]<br>` + el.innerHTML;
+    }
+    if (!g) { openAddHabitSheet(); return; }
+    if (!g.unit) { openUnitSetupSheet(idx); return; }
+    activeGoalIdx = idx;
+    viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
+    $text('bsTitle', g.title);
+    setHabitMetaTags(g);
+    renderBSBody(idx);
+    openBS();
+  } catch (e) {
+    let el = document.getElementById('_dbgLog');
+    if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#f00;color:#fff;font-size:10px;padding:4px;z-index:99999;max-height:120px;overflow-y:auto;'; document.body.appendChild(el); }
+    el.innerHTML = `[ERROR open idx=${idx}: ${e.message} / ${e.stack ? e.stack.split('\n')[1] : ''}]<br>` + el.innerHTML;
+  }
 };
 
 function openBS() {

@@ -184,7 +184,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .habit-card-outer.swiping-left .habit-card-swipe-bg-right{display:flex;}
 .swipe-bg-text{color:#fff;font-size:11px;font-weight:800;letter-spacing:1px;opacity:.9;}
 /* 미완료 카드 - 파란 그라데이션 + 흰색 텍스트 */
-.habit-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:16px;padding:12px 14px;cursor:pointer;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),box-shadow .2s;touch-action:pan-y;user-select:none;box-shadow:0 6px 16px rgba(25,82,245,0.25);min-height:100px;display:flex;flex-direction:column;justify-content:space-between;}
+.habit-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:16px;padding:12px 14px;cursor:pointer;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),box-shadow .2s;touch-action:manipulation;user-select:none;box-shadow:0 6px 16px rgba(25,82,245,0.25);min-height:100px;display:flex;flex-direction:column;justify-content:space-between;}
 .habit-card:active:not(.swiping){transform:scale(0.97);box-shadow:0 4px 10px rgba(25,82,245,0.2);}
 .habit-card:active{box-shadow:0 4px 10px rgba(25,82,245,0.4);transform:scale(0.96);}
 .habit-card.swiping{transition:none;}
@@ -225,7 +225,7 @@ body{background:#f1f5f9;color:var(--text);font-family:var(--font-main);min-heigh
 .habit-card.completed .habit-card-bot{opacity:.5;}
 
 /* 도전 카드 - 파란 그라데이션 기본 */
-.challenge-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:16px;padding:12px 14px;cursor:pointer;box-shadow:0 6px 16px rgba(25,82,245,0.25);min-height:100px;display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),box-shadow .2s;touch-action:pan-y;user-select:none;}
+.challenge-card{position:relative;z-index:2;background:linear-gradient(135deg,var(--accent) 0%,#527cff 100%);border:none;border-radius:16px;padding:12px 14px;cursor:pointer;box-shadow:0 6px 16px rgba(25,82,245,0.25);min-height:100px;display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.1s cubic-bezier(0.175,0.885,0.32,1.275),box-shadow .2s;touch-action:manipulation;user-select:none;}
 .challenge-card:active:not(.swiping){transform:scale(0.97);box-shadow:0 4px 10px rgba(25,82,245,0.2);}
 .challenge-card:active{box-shadow:0 4px 10px rgba(25,82,245,0.4);transform:scale(0.96);}
 .challenge-card.type-bucket{border:none;}

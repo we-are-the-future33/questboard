@@ -3,7 +3,7 @@ import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.co
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const APP_VERSION = '20260611c';
+const APP_VERSION = '20260611d';
 
 const _safetyTimer = setTimeout(() => {
   const l = $id('loadingScreen');
@@ -17,6 +17,7 @@ setTimeout(() => {
   if (msg && l && l.classList.contains('active')) { msg.textContent = '서버 연결 중...'; }
 }, 3000);
 
+if (location.search.includes('debug=1')) { window._kiwupDebug = true; }
 // Update check — fetch index.html and compare version
 let _updateBannerShown = false;
 async function checkAppUpdate() {
@@ -1735,6 +1736,11 @@ function initHabitSwipe(idx) {
   function onE() {
     if (outer) { outer.classList.remove('swiping-right', 'swiping-left'); }
     const elapsed = Date.now() - touchStartTime;
+    if (window._kiwupDebug) {
+      let el = document.getElementById('_dbgLog');
+      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:80px;overflow-y:auto;'; document.body.appendChild(el); }
+      el.innerHTML = `[END idx=${idx} swiping=${swiping} dx=${dx} totalMove=${totalMove} elapsed=${elapsed}]<br>` + el.innerHTML;
+    }
     if (!swiping) {
       card.style.transform = '';
       card.classList.remove('swiping');
@@ -1770,6 +1776,13 @@ function initHabitSwipe(idx) {
   card.addEventListener('touchstart', onS, { passive: true });
   card.addEventListener('touchmove', onM, { passive: false });
   card.addEventListener('touchend', onE);
+  card.addEventListener('touchcancel', (e) => {
+    if (window._kiwupDebug) {
+      const el = document.getElementById('_dbgLog') || (() => { const d = document.createElement('div'); d.id='_dbgLog'; d.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:80px;overflow-y:auto;'; document.body.appendChild(d); return d; })();
+      el.innerHTML = `[CANCEL idx=${idx} swiping=${swiping}]<br>` + el.innerHTML;
+    }
+    onE();
+  });
 }
 
 async function habitMarkDone(idx) {
@@ -1989,6 +2002,14 @@ function initBucketSwipe(idx) {
   card.addEventListener('touchstart', onS, { passive: true });
   card.addEventListener('touchmove', onM, { passive: false });
   card.addEventListener('touchend', onE);
+  card.addEventListener('touchcancel', () => {
+    if (window._kiwupDebug) {
+      let el = document.getElementById('_dbgLog');
+      if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;max-height:80px;overflow-y:auto;'; document.body.appendChild(el); }
+      el.innerHTML = `[CANCEL2 idx=${idx} swiping=${swiping} dx=${dx}]<br>` + el.innerHTML;
+    }
+    onE();
+  });
 }
 async function swipeBucket(idx) {
   const c = localDash.challenges[idx];

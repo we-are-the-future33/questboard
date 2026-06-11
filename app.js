@@ -1770,13 +1770,6 @@ function initHabitSwipe(idx) {
   card.addEventListener('touchstart', onS, { passive: true });
   card.addEventListener('touchmove', onM, { passive: false });
   card.addEventListener('touchend', onE);
-  card.addEventListener('touchcancel', (e) => {
-    if (window._kiwupDebug) {
-      const el = document.getElementById('_dbgLog') || (() => { const d = document.createElement('div'); d.id='_dbgLog'; d.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(d); return d; })();
-      el.innerHTML = `[CANCEL idx=${idx} swiping=${swiping}]<br>` + el.innerHTML;
-    }
-    onE();
-  });
 }
 
 async function habitMarkDone(idx) {

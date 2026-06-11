@@ -3208,7 +3208,12 @@ function openBS() {
     let el = document.getElementById('_dbgLog');
     if (!el) { el = document.createElement('div'); el.id='_dbgLog'; el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:4px;z-index:99999;height:60vh;overflow-y:auto;'; document.body.appendChild(el); }
     const rect = bs.getBoundingClientRect();
-    el.innerHTML = `[BS opened: transform=${cs.transform} display=${cs.display} z=${cs.zIndex} top=${rect.top} bot=${rect.bottom} h=${rect.height} cls=${bs.className}]<br>` + el.innerHTML;
+    el.innerHTML = `[BS opened immediately: transform=${cs.transform}]<br>` + el.innerHTML;
+    setTimeout(() => {
+      const cs2 = getComputedStyle(bs);
+      const rect2 = bs.getBoundingClientRect();
+      el.innerHTML = `[BS after 1s: transform=${cs2.transform} top=${rect2.top} bot=${rect2.bottom} cls=${bs.className}]<br>` + el.innerHTML;
+    }, 1000);
   }
 }
 window.closeBottomSheet = function () {
